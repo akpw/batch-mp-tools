@@ -1,2 +1,2 @@
-denoiser
-========
+FFmpeg batch runner
+===================
