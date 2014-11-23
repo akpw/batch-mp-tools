@@ -28,9 +28,9 @@ Scripts
 
 Install
 -------
-  . Copy the content of src dir to your hard drive
+  Copy the content of src dir to your hard drive
   
-  . Run the scripts from there
+  Run the scripts from there
   
-  . Or, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
+  Or, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
 
