@@ -5,6 +5,7 @@ Requires Python 3.x
 src/ffmptools
 --------------
   A Python package for running batch FFmpeg commands
+  
   Uses Python multiprocessing to leverage available CPU cores
   
   Supports recursive processing of media files in all subdirectoris
