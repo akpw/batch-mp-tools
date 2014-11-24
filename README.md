@@ -32,16 +32,15 @@ Requirements
 ------------
     . Python 3.x
   
-    . 
-    [FFmpeg](http://www.ffmpeg.org/download.html)
+    . FFmpeg [installed](http://www.ffmpeg.org/download.html)
  
 
 Install
 -------
-    . Copy the content of src dir to your hard drive
+    . Copy the content of the src dir to your hard drive
 
     . Run the scripts from there
 
-    . Or, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
+    . Optionally, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
   
 
