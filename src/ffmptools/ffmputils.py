@@ -87,14 +87,14 @@ def get_media_files(src_dir=os.curdir, recursive = False):
     """Gets all media files from source directory and (if recursive) its subdirectories
     """
     if recursive:
-        fnames = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
+        fpathes = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
                             for f in files if f.endswith(SUPPORTED_MEDIA)]
     else:
-        fnames = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
+        fpathes = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
                                                 if fname.endswith(SUPPORTED_MEDIA))
-        fnames = [f for f in fnames if os.path.isfile(f)]
+        fpathes = [f for f in fpathes if os.path.isfile(f)]
 
-    return fnames
+    return fpathes
 
 def setup_backup_dirs(files):
     """ Given list of files pathes,

@@ -153,7 +153,7 @@ class FFMPTests(FFMPTest):
         # get the original media files md5 hashes
         orig_hashes = {fname: self.file_md5(fname, hex=True) for fname in media_files}
 
-        hpass, lpass, num_passes, recursive, quiet = 200, 0, 4, True, True
+        hpass, lpass, num_passes, recursive, quiet = 200, 0, 4, True, False
         cpu_core_time, total_elapsed = self.ffmp.apply_af_filters(
                                                 highpass=hpass,
                                                 lowpass=lpass,

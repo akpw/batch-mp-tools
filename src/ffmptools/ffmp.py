@@ -154,14 +154,13 @@ class FFMP(object):
         # start showing progress
         with progress_bar() as p_bar:
             # init the pool and kick it off
-            pool = multiprocessing.Pool(cpu_count)
-            #
-            for res in pool.imap_unordered(self._af_worker, tasks_params_list):
-                if not quiet:
-                    p_bar.info_msg = res[0][0]
-                cpu_core_time += res[1]
-                tasks_done += 1
-                p_bar.progress = tasks_done / num_tasks * 100
+            with multiprocessing.Pool(cpu_count) as pool:
+                for res in pool.imap_unordered(self._af_worker, tasks_params_list):
+                    if not quiet:
+                        p_bar.info_msg = res[0][0]
+                    cpu_core_time += res[1]
+                    tasks_done += 1
+                    p_bar.progress = tasks_done / num_tasks * 100
 
         return cpu_core_time
 
