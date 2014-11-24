@@ -2,6 +2,7 @@
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
+
 src/ffmptools
 --------------
     . Python package for batch processing of media files
@@ -32,7 +33,7 @@ Requirements
 ------------
     . Python 3.x
   
-    . FFmpeg [installed](http://www.ffmpeg.org/download.html)
+    . FFmpeg [installed](ffmpeg.org/download.html)
  
 
 Install
