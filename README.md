@@ -33,7 +33,7 @@ Requirements
 ------------
     . Python 3.x
   
-    . FFmpeg [installed](https://ffmpeg.org/download.html)
+    . FFmpeg [installed](http://ffmpeg.org/download.html)
  
 
 Install
