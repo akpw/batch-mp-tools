@@ -1,47 +1,48 @@
 #Batch media processing
 
 
-[Blog][http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python]
+[Blog](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
 src/ffmptools
 --------------
-  . Python package for batch processing of media files
+    . Python package for batch processing of media files
 
-  . Uses Python multiprocessing to leverage available CPU cores
+    . Uses Python multiprocessing to leverage available CPU cores
 
-  . Supports recursive processing of media files in subfolders
+    . Supports recursive processing of media files in subfolders
 
-  . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
+    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
 
-  . Supports backing up original media in their respective folders
+    . Supports backing up original media in their respective folders
 
-  . Displays continuos progress
+    . Displays continuos progress
 
 
 Scripts
 --------
  src/denoiser.py
 
-  . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
+    . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
-  Usage: denoiser.py -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
+    . Usage: denoiser.py -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
 
-    ('denoiser.py -h' for help)
+            ('denoiser.py -h' for help)
 
 
 Requirements
 ------------
-  . Python 3.x
-  . [FFmpeg][http://www.ffmpeg.org/download.html]
+    . Python 3.x
+  
+    . [FFmpeg](http://www.ffmpeg.org/download.html)
  
 
 Install
 -------
-  . Copy the content of src dir to your hard drive
+    . Copy the content of src dir to your hard drive
 
-  . Run the scripts from there
+    . Run the scripts from there
 
-  . Or, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
+    . Or, add the scripts location to your PATH (export PATH="<path to scripts>:$PATH")
   
 
