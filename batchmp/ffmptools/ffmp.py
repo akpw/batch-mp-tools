@@ -24,7 +24,7 @@ import json, math
 import os, sys, shutil, multiprocessing
 import subprocess, datetime, shlex, tempfile
 
-from .progressbar import progress_bar
+from ..commons.progressbar import progress_bar
 from .ffmputils import (
     ffmpeg_installed,
     timed,
@@ -138,14 +138,8 @@ class FFMP(object):
         else:
             backup_dirs = [None for bd in media_files]
 
-        # list of parameters for the pool workers
-        tasks_params_list = [(media_file, backup_dir, highpass, lowpass, num_passes)
-                     for media_file, backup_dir in zip(media_files, backup_dirs)]
-
-        tasks_done, num_tasks, cpu_core_time = 0, len(tasks_params_list), 0.0
+        tasks_done, num_tasks, cpu_core_time = 0, len(media_files), 0.0
         cpu_count = multiprocessing.cpu_count()
-
-
         print('Processing {0} media files ({1} {2} each)'.format(
                                                 num_tasks, num_passes,
                                                'passes' if num_passes > 1 else 'pass'))
@@ -153,9 +147,12 @@ class FFMP(object):
 
         # start showing progress
         with progress_bar() as p_bar:
+
             # init the pool and kick it off
+            tasks_params = ((media_file, backup_dir, highpass, lowpass, num_passes)
+                                for media_file, backup_dir in zip(media_files, backup_dirs))
             with multiprocessing.Pool(cpu_count) as pool:
-                for res in pool.imap_unordered(self._af_worker, tasks_params_list):
+                for res in pool.imap_unordered(self._af_worker, tasks_params):
                     if not quiet:
                         p_bar.info_msg = res[0][0]
                     cpu_core_time += res[1]

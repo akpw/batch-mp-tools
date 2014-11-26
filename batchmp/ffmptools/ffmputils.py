@@ -30,9 +30,9 @@ class FFmpegArgsError(Exception):
 
 # A subset of common media formats supported by FFmpeg
 # run <ffmpeg -formats> for full list
-SUPPORTED_MEDIA = tuple(['.aif', '.m4a', '.mp3',
+SUPPORTED_MEDIA = ('.aif', '.m4a', '.mp3',
                         '.wma', '.avi', '.flv', '.m4v',
-                        '.mov', '.mp4', '.mpg', '.wmv', '.mkv'])
+                        '.mov', '.mp4', '.mpg', '.wmv', '.mkv')
 BACKUP_DIR_PREFIX = '_origs_'
 
 @contextmanager

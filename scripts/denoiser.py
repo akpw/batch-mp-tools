@@ -16,7 +16,7 @@
 
 import datetime
 from argparse import ArgumentParser
-from ffmptools.ffmp import FFMP
+from batchmp.ffmptools.ffmp import FFMP
 
 """ Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
       . Processes all media files in a source directory, when recursive (-r) also goes to subfolders
@@ -66,21 +66,23 @@ def parse_options():
                 default = 3000)
     return vars(parser.parse_args())
 
+def main():
+  args = parse_options()
+
+  ffmp = FFMP(args['dir'])
+  cpu_core_time, total_elapsed = ffmp.apply_af_filters(
+                                          num_passes=args['num_passes'],
+                                          recursive = args['recursive'],
+                                          highpass=args['high_pass'],
+                                          lowpass=args['low_pass'],
+                                          backup=not args['no_b'],
+                                          quiet=args['quiet'])
+
+  ttd = datetime.timedelta(seconds=total_elapsed)
+  ctd = datetime.timedelta(seconds=cpu_core_time)
+  print('All done in: {}'.format(str(ttd)[:10]))
+  print('FFmpeg CPU Cores time: {}'.format(str(ctd)[:10]))
+
 if __name__ == '__main__':
-    args = parse_options()
-
-    ffmp = FFMP(args['dir'])
-    cpu_core_time, total_elapsed = ffmp.apply_af_filters(
-                                            num_passes=args['num_passes'],
-                                            recursive = args['recursive'],
-                                            highpass=args['high_pass'],
-                                            lowpass=args['low_pass'],
-                                            backup=not args['no_b'],
-                                            quiet=args['quiet'])
-
-    ttd = datetime.timedelta(seconds=total_elapsed)
-    ctd = datetime.timedelta(seconds=cpu_core_time)
-    print('All done in: {}'.format(str(ttd)[:10]))
-    print('FFmpeg CPU Cores time: {}'.format(str(ctd)[:10]))
-
+    main()
 
