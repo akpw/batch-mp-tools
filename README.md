@@ -2,23 +2,22 @@
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
-. Python package for batch processing of media files
+Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
+    
+#Descriptio
 
-. Uses Python multiprocessing to leverage available CPU cores
+    . Python package for batch processing of media files
 
-. Supports recursive processing of media files in subfolders
+    . Uses Python multiprocessing to leverage available CPU cores
 
-. Supports multi-passes processing, e.g. 3 times for each media file in a source dir
+    . Supports recursive processing of media files in subfolders
 
-. Supports backing up original media in their respective folders
+    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
 
-. Displays continuos progress
+    . Supports backing up original media in their respective folders
 
+    . Displays continuos progress
 
-Requirements
-------------
-    FFmpeg [installed](http://ffmpeg.org/download.html)
-    Python 3.x
 
 Scripts
 --------
