@@ -22,6 +22,8 @@ Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
 
 Scripts
 --------
+intended to provide convinient CLI interface 
+
   denoiser.py: Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
     . Usage: denoiser.py -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
