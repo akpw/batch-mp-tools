@@ -1,27 +1,28 @@
 #Blog
-FFmpeg [installed](http://ffmpeg.org/download.html)
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
+. Python package for batch processing of media files
 
-src/ffmptools
---------------
-    . Python package for batch processing of media files
+. Uses Python multiprocessing to leverage available CPU cores
 
-    . Uses Python multiprocessing to leverage available CPU cores
+. Supports recursive processing of media files in subfolders
 
-    . Supports recursive processing of media files in subfolders
+. Supports multi-passes processing, e.g. 3 times for each media file in a source dir
 
-    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
+. Supports backing up original media in their respective folders
 
-    . Supports backing up original media in their respective folders
+. Displays continuos progress
 
-    . Displays continuos progress
 
+Requirements
+------------
+    FFmpeg [installed](http://ffmpeg.org/download.html)
+    Python 3.x
 
 Scripts
 --------
- src/denoiser.py
+ denoiser.py
 
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
@@ -30,10 +31,7 @@ Scripts
             ('denoiser.py -h' for help)
 
 
-Requirements
-------------
-    FFmpeg [installed](http://ffmpeg.org/download.html)
-    Python 3.x
+
 
      
     
