@@ -2,6 +2,7 @@
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
+#Install
 Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
     
 #Description
