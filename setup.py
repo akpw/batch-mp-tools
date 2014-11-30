@@ -1,3 +1,15 @@
+## Copyright (c) 2014 Arseniy Kuznetsov
+##
+## This program is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License
+## as published by the Free Software Foundation; either version 2
+## of the License, or (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+
 from setuptools import setup, find_packages
 
 setup(
@@ -7,9 +19,10 @@ setup(
     author='Arseniy Kuznetsov',
     author_email='k.arseniy@gmail.com',
     description=('CLI tools for batch media processing'),
-    license='Apache License, Version 2.0',
+    license='GNU General Public License v2 (GPLv2)',
     packages=find_packages(),
     keywords = "batch processing media video audio CLI ",
+    install_requires = ['mutagen>=1.27'],
     scripts=['scripts/denoiser.py'],
     entry_points={'console_scripts': [
         'denoiser = scripts.denoiser:main',
@@ -17,7 +30,7 @@ setup(
     zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'License :: OSI Approved :: Apache License',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',

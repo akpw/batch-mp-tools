@@ -4,7 +4,8 @@
 
 #Install
 Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
-    
+
+
 #Description
 
     . Python package for batch processing of media files
@@ -22,7 +23,7 @@ Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
 
 Scripts
 --------
-intended to provide convinient CLI interface 
+Intended to provide convinient CLI interface
 
   denoiser.py: Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
@@ -33,7 +34,7 @@ intended to provide convinient CLI interface
 
 
 
-     
-    
+
+
 
 
