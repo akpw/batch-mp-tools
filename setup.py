@@ -15,14 +15,22 @@ from setuptools import setup, find_packages
 setup(
     name='BatchMediaProcessingTools',
     version="0.1",
+
     url='https://github.com/akpw/batch-mp-tools',
+
     author='Arseniy Kuznetsov',
     author_email='k.arseniy@gmail.com',
+
     description=('CLI tools for batch media processing'),
     license='GNU General Public License v2 (GPLv2)',
-    packages=find_packages(),
+
+    packages=find_packages(exclude=['tests']),
     keywords = "batch processing media video audio CLI ",
+
     install_requires = ['mutagen>=1.27'],
+
+    test_suite = "tests.batch_mp_test_suite",
+
     scripts=['scripts/denoiser.py'],
     entry_points={'console_scripts': [
         'denoiser = scripts.denoiser:main',

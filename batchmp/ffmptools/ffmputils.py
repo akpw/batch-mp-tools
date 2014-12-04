@@ -65,6 +65,16 @@ def run_cmd(cmd):
         raise CmdProcessingError(output)
     return output
 
+def run_cmd_shell(cmd):
+    ''' Runs command in a separate process
+    '''
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True)
+    output = proc.communicate()[0].decode('utf-8')
+    if proc.returncode != 0:
+        raise CmdProcessingError(output)
+    return output
+
+
 def ffmpeg_installed():
     """ Checks if ffmpeg is installed
         P.S.

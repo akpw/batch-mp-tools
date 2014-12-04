@@ -14,9 +14,11 @@
 
 
 import unittest, os, inspect, sys
-import shutil, hashlib, datetime
-from test_ffmp_base import FFMPTest
-import batchmp.ffmptools.ffmputils as utils
+import shutil, datetime
+import batchmp.ffmptools.ffmputils as ffutils
+from batchmp.fstools.fsutils import FSH
+
+from .test_ffmp_base import FFMPTest
 from batchmp.ffmptools.ffmp import FFMP
 
 class FFMPTests(FFMPTest):
@@ -25,21 +27,21 @@ class FFMPTests(FFMPTest):
         self.ffmp = FFMP(self.src_dir)
 
     def test_get_media_length(self):
-        media_files = utils.get_media_files(self.src_dir, recursive = True)
+        media_files = ffutils.get_media_files(self.src_dir, recursive = True)
         for fpath in media_files:
             fname = os.path.split(fpath)[1]
             length = self.ffmp.get_media_length(fpath)
             self.assertTrue(abs(length - self.media_info[fname]) < 2)
 
     def test_apply_af_filters_raise(self):
-        self.assertRaises(utils.FFmpegArgsError, self.ffmp.apply_af_filters)
+        self.assertRaises(ffutils.FFmpegArgsError, self.ffmp.apply_af_filters)
 
     def test_apply_af_filters(self):
         print('Now testing applying filters, might take a while...')
-        media_files = utils.get_media_files(src_dir = self.src_dir, recursive = True)
+        media_files = ffutils.get_media_files(src_dir = self.src_dir, recursive = True)
 
         # get the original media files md5 hashes
-        orig_hashes = {fname: self.file_md5(fname, hex=True) for fname in media_files}
+        orig_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
 
         hpass, lpass, num_passes, recursive, quiet = 200, 0, 4, True, False
         cpu_core_time, total_elapsed = self.ffmp.apply_af_filters(
@@ -54,13 +56,13 @@ class FFMPTests(FFMPTest):
         print('apply_af_filters: CPU Cores time: {}'.format(str(ctd)[:10]))
 
         # check that the original files were replaced with their denoised versions
-        denoised_hashes = {fname: self.file_md5(fname, hex=True) for fname in media_files}
+        denoised_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
         for hash_key in orig_hashes.keys():
             self.assertNotEqual(orig_hashes[hash_key], denoised_hashes[hash_key])
 
         # cleanup
-        backup_dirs = utils.get_backup_dirs(self.src_dir, recursive = recursive)
-        fpathes = [fpath for b_d in backup_dirs for fpath in utils.get_media_files(src_dir = b_d)]
+        backup_dirs = ffutils.get_backup_dirs(self.src_dir, recursive = recursive)
+        fpathes = [fpath for b_d in backup_dirs for fpath in ffutils.get_media_files(src_dir = b_d)]
         # move all backed-up file back to their origin
         for fpath in fpathes:
             fpath_dir, fpath_fname = os.path.split(fpath)
@@ -73,13 +75,8 @@ class FFMPTests(FFMPTest):
                 os.rmdir(b_d)
 
         # check that all got back to the originals
-        restored_hashes = {fname: self.file_md5(fname, hex=True) for fname in media_files}
+        restored_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
         for hash_key in orig_hashes.keys():
             self.assertEqual(orig_hashes[hash_key], restored_hashes[hash_key])
-
-if __name__ == "__main__":
-    if sys.version_info >= (3, 0):
-        unittest.main()
-
 
 
