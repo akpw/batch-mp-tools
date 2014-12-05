@@ -24,7 +24,7 @@ setup(
     description=('CLI tools for batch media processing'),
     license='GNU General Public License v2 (GPLv2)',
 
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['test*']),
     keywords = "batch processing media video audio CLI ",
 
     install_requires = ['mutagen>=1.27'],

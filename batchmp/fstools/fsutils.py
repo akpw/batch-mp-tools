@@ -224,6 +224,28 @@ class DWalker(object):
                 target_fpath = os.path.join(target_dir_path, entry.basename)
                 shutil.move(entry.realpath, target_fpath)
 
+    @staticmethod
+    def dir_stats(src_dir, max_depth = sys.maxsize, flatten = False,
+                        include = '*', exclude = '', include_size = False):
+        """ Returns base stats for given directory
+        """
+        if not os.path.exists(src_dir):
+            raise ValueError('Not a valid path')
+
+        # count number of files, folders, and their total size
+        fcnt = dcnt = total_size = 0
+        for entry in DWalker.entries(src_dir = src_dir, max_depth = max_depth,
+                                         flatten=flatten, include=include, exclude=exclude):
+            if entry.type == DWalker.ENTRY_TYPE_FILE:
+                fcnt += 1
+            else:
+                dcnt += 1
+
+            if include_size:
+                total_size += os.path.getsize(entry.realpath)
+
+        return fcnt, dcnt, total_size
+
 
 
 

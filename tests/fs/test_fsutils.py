@@ -13,14 +13,14 @@
 ## GNU General Public License for more details.
 
 
-import sys, unittest, re, math
-from batchmp.fstools.dirtools import DHandler
+import sys, unittest, re
+from batchmp.fstools.fsutils import DWalker
 from batchmp.ffmptools import ffmputils
 from .test_fs_base import FSTest
 
 class FSTests(FSTest):
     def test_fs_print_dir(self):
-        fcnt, dcnt, total_size = DHandler.dir_stats(src_dir = self.src_dir, include_size = True)
+        fcnt, dcnt, total_size = DWalker.dir_stats(src_dir = self.src_dir, include_size = True)
 
         p = re.compile('(\d+)[^\d]*$')
 
@@ -36,4 +36,5 @@ class FSTests(FSTest):
 
     def test_fs_flatten_folders(self):
         src_dir = './data'
-        DHandler.flatten_folders(src_dir = self.src_dir, target_depth = 0)
+        DWalker.flatten_folders(src_dir = self.src_dir, target_depth = 0)
+        self.resetDataFromBackup()

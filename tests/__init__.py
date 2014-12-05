@@ -1,7 +1,7 @@
 import unittest
-import tests.ffmp.test_ffmp_utils as utils
-import tests.ffmp.test_ffmp_tools as tools
-import tests.fs.test_fstools as fstools
+import tests.ffmp.test_ffmp_utils
+import tests.ffmp.test_ffmp_tools
+import tests.fs.test_fsutils
 
 def batch_mp_test_suite():
 
@@ -9,12 +9,12 @@ def batch_mp_test_suite():
     batch_mp_test_suite = unittest.TestSuite()
 
     # load tests from the ffmp package
-    ffmp_utils_suite = loader.loadTestsFromModule(utils)
-    ffmp_tools_suite = loader.loadTestsFromModule(tools)
+    ffmp_utils_suite = loader.loadTestsFromModule(tests.ffmp.test_ffmp_utils)
+    ffmp_tools_suite = loader.loadTestsFromModule(tests.ffmp.test_ffmp_tools)
 
-    # load tests from the fstools package
+    # load tests from the fs package
     loader = unittest.TestLoader()
-    fstools_utils_suite = loader.loadTestsFromModule(fstools)
+    fstools_utils_suite = loader.loadTestsFromModule(tests.fs.test_fsutils)
 
 
     batch_mp_test_suite.addTests(ffmp_utils_suite)

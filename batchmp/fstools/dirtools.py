@@ -18,28 +18,6 @@ from .fsutils import DWalker, FSH
 
 class DHandler:
     @staticmethod
-    def dir_stats(src_dir, max_depth = sys.maxsize, flatten = False,
-                        include = '*', exclude = '', include_size = False):
-        """ Returns base stats for given directory
-        """
-        if not os.path.exists(src_dir):
-            raise ValueError('Not a valid path')
-
-        # count number of files, folders, and their total size
-        fcnt = dcnt = total_size = 0
-        for entry in DWalker.entries(src_dir = src_dir, max_depth = max_depth,
-                                         flatten=flatten, include=include, exclude=exclude):
-            if entry.type == DWalker.ENTRY_TYPE_FILE:
-                fcnt += 1
-            else:
-                dcnt += 1
-
-            if include_size:
-                total_size += os.path.getsize(entry.realpath)
-
-        return fcnt, dcnt, total_size
-
-    @staticmethod
     def print_dir(src_dir, start_level = 0, max_depth = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             flatten = False, ensure_uniq = False,

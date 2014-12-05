@@ -20,15 +20,19 @@ class BMPTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.resetDataFromBackup()
+
+    @classmethod
+    def resetDataFromBackup(cls):
         ''' If needed, resets tests data to its original state
         '''
         if cls.src_dir == cls.bckp_dir == None:
             # reset check not required
             return
 
-        # for dir entries, build list of dictionaries {realpath: basepath}
+        # helper functions
         rpath = lambda r,f: os.path.join(os.path.realpath(r),f)
-        base_path = lambda f: os.path.basename(f)
+        partial_path = lambda f,s: f[len(s):]
 
         # check the files
         data_files = [rpath(r,f)
@@ -41,8 +45,8 @@ class BMPTest(unittest.TestCase):
             print('Need restore on num files mismatch')
         else:
             # file names matches
-            restore_needed = set((base_path(f) for f in data_files)) != \
-                                set((base_path(f) for f in bckp_files))
+            restore_needed = set((partial_path(f, cls.src_dir) for f in data_files)) != \
+                             set((partial_path(f, cls.bckp_dir) for f in bckp_files))
             if restore_needed:
                 print('Need restore on files names mismatch')
 
@@ -58,16 +62,16 @@ class BMPTest(unittest.TestCase):
                 print('Need restore on num dirs mismatch')
             else:
                 # dir names matches
-                restore_needed =    set((base_path(d) for d in data_dirs)) != \
-                                    set((base_path(d) for d in bckp_dirs))
+                restore_needed =    set((partial_path(d, cls.src_dir) for d in data_dirs)) != \
+                                    set((partial_path(d, cls.bckp_dir) for d in bckp_dirs))
                 if restore_needed:
                     print('Need restore on dir names mismatch')
 
         if not restore_needed:
            # compare files hashes
-            data_files_hashes = {base_path(fpath): FSH.file_md5(fpath, hex=True)
+            data_files_hashes = {partial_path(fpath, cls.src_dir): FSH.file_md5(fpath, hex=True)
                                                         for fpath in data_files}
-            bckp_files_hashes = {base_path(fpath): FSH.file_md5(fpath, hex=True)
+            bckp_files_hashes = {partial_path(fpath, cls.bckp_dir): FSH.file_md5(fpath, hex=True)
                                                         for fpath in bckp_files}
             restore_needed = set(data_files_hashes.items()) != set (bckp_files_hashes.items())
             if restore_needed:
@@ -81,14 +85,3 @@ class BMPTest(unittest.TestCase):
         else:
             print('No restore needed')
 
-
-
-
-        """
-                base_path = lambda f: os.path.os.path.dirname(os.path.split(f)[0])
-
-
-        base_path = lambda r,f: os.path.join(os.path.dirname(r),f)
-        pathes = lambda r,f: {rpath(r,f): base_path(r,f)}
-
-        """

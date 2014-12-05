@@ -16,7 +16,7 @@ from ..base import test_base
 class FSTest(test_base.BMPTest):
     @classmethod
     def setUpClass(cls):
-        cls.src_dir = os.path.join(os.path.dirname(__file__), 'data')
-        cls.bckp_dir = os.path.join(os.path.dirname(__file__), '.data')
+        cls.src_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), 'data'))
+        cls.bckp_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '.data'))
         super(FSTest, cls).setUpClass()
 
