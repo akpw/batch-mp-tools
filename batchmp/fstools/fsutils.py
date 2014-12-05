@@ -96,6 +96,7 @@ class DWalker(object):
     @staticmethod
     def entries(src_dir, start_level = 0, max_depth = sys.maxsize,
                                     include = '*', exclude = '', sort = 'n',
+                                    filter_dirs = True, filter_files = True,
                                     flatten = False, ensure_uniq = False):
         """ generates a sequence of directory elements
             supports recursion, include / exclude patterns, sorting
@@ -106,6 +107,10 @@ class DWalker(object):
         # sorting
         reversed = True if sort.endswith('d') else False
         by_size = True if sort.startswith('s') else False
+
+
+        # filtering
+        passed_filters = lambda s: fnmatch.fnmatch(s, include) and not fnmatch.fnmatch(s, exclude)
 
         root_depth = os.path.realpath(src_dir).count(os.path.sep)
         for r, dnames, fnames in os.walk(src_dir):
@@ -133,9 +138,9 @@ class DWalker(object):
             yield entry
 
             # filter non-matching files
-            fnames_filtered = (fname for fname in fnames
-                                        if fnmatch.fnmatch(fname, include)
-                                            and not fnmatch.fnmatch(fname, exclude))
+            if filter_files:
+                fnames = (fname for fname in fnames if passed_filters(fname))
+
             # files sort key
             if by_size:
                 sort_key = lambda fname: os.path.getsize(os.path.join(r,fname))
@@ -150,7 +155,7 @@ class DWalker(object):
                 if ensure_uniq:
                     unique_name = FSH.unique_fnames()
 
-            for fname in sorted(fnames_filtered, key = sort_key, reverse = reversed):
+            for fname in sorted(fnames, key = sort_key, reverse = reversed):
                 fpath = os.path.realpath(os.path.join(r, fname))
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE, fname, fpath, siblings_indent)
                 if not flatten:
@@ -167,9 +172,10 @@ class DWalker(object):
                 dpath = os.path.realpath(os.path.join(r, dname))
 
                 # remove non-matching subfolders
-                if not fnmatch.fnmatch(dname, include) or fnmatch.fnmatch(dname, exclude):
-                    dnames.remove(dname)
-                    continue
+                if filter_dirs:
+                    if not passed_filters(dname):
+                        dnames.remove(dname)
+                        continue
 
                 # check the depth from root
                 elif depth == max_depth:
@@ -183,11 +189,9 @@ class DWalker(object):
                         # flattening, yield the underlying files instead
                         for dr, _, dfnames in os.walk(dpath):
                             # filter non-matching files
-                            fnames_filtered = (fname for fname in dfnames
-                                                    if fnmatch.fnmatch(fname, include)
-                                                        and not fnmatch.fnmatch(fname, exclude))
-
-                            for fname in fnames_filtered:
+                            if filter_files:
+                                dfnames = (fname for fname in dfnames if passed_filters(fname))
+                            for fname in dfnames:
                                 fpath = os.path.realpath(os.path.join(dr, fname))
                                 if ensure_uniq:
                                     next(unique_name)
@@ -207,13 +211,17 @@ class DWalker(object):
                     yield entry
 
     @staticmethod
-    def flatten_folders(src_dir, target_depth = 2):
+    def flatten_folders(src_dir, target_depth = sys.maxsize,
+                                        include = '*', exclude = '',
+                                        filter_dirs = True, filter_files = True):
         """ moves files from folders below target depth
             to their respective parent folders at target depth
             checks for file names uniqueness
         """
         for entry in DWalker.entries(src_dir = src_dir,
                                     start_level = target_depth, max_depth=target_depth,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = True, ensure_uniq = True):
 
             root_depth = os.path.realpath(src_dir).count(os.path.sep)
@@ -246,6 +254,11 @@ class DWalker(object):
 
         return fcnt, dcnt, total_size
 
+if __name__ == '__main__':
+    src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/fs/data'
+    DWalker.flatten_folders(src_dir = src_dir, target_depth = 0, include='unit*', filter_dirs = False)
 
+    # remove excessive folders
+    FSH.remove_empty_folders_below_target_depth(src_dir, target_depth)
 
 

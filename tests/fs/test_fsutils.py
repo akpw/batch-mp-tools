@@ -14,7 +14,7 @@
 
 
 import sys, unittest, re
-from batchmp.fstools.fsutils import DWalker
+from batchmp.fstools.fsutils import DWalker, FSH
 from batchmp.ffmptools import ffmputils
 from .test_fs_base import FSTest
 
@@ -35,6 +35,10 @@ class FSTests(FSTest):
         self.assertTrue(dcnt == dcnt_ref)
 
     def test_fs_flatten_folders(self):
-        src_dir = './data'
-        DWalker.flatten_folders(src_dir = self.src_dir, target_depth = 0)
-        self.resetDataFromBackup()
+        DWalker.flatten_folders(src_dir = self.src_dir,
+                                target_depth = 0, include='unit*', filter_dirs = False)
+
+        # remove excessive folders
+        FSH.remove_empty_folders_below_target_depth(self.src_dir, target_depth = 0)
+
+        self.resetDataFromBackup(quiet=True)

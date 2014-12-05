@@ -23,7 +23,7 @@ class BMPTest(unittest.TestCase):
         cls.resetDataFromBackup()
 
     @classmethod
-    def resetDataFromBackup(cls):
+    def resetDataFromBackup(cls, quiet = False):
         ''' If needed, resets tests data to its original state
         '''
         if cls.src_dir == cls.bckp_dir == None:
@@ -42,13 +42,15 @@ class BMPTest(unittest.TestCase):
         #  num files
         restore_needed = len(data_files) != len(bckp_files)
         if restore_needed:
-            print('Need restore on num files mismatch')
+            if not quiet:
+                print('Need restore on num files mismatch')
         else:
             # file names matches
             restore_needed = set((partial_path(f, cls.src_dir) for f in data_files)) != \
                              set((partial_path(f, cls.bckp_dir) for f in bckp_files))
             if restore_needed:
-                print('Need restore on files names mismatch')
+                if not quiet:
+                    print('Need restore on files names mismatch')
 
         if not restore_needed:
             # check the dirs
@@ -59,13 +61,15 @@ class BMPTest(unittest.TestCase):
             # num dirs
             restore_needed = len(data_dirs) != len(bckp_dirs)
             if restore_needed:
-                print('Need restore on num dirs mismatch')
+                if not quiet:
+                    print('Need restore on num dirs mismatch')
             else:
                 # dir names matches
                 restore_needed =    set((partial_path(d, cls.src_dir) for d in data_dirs)) != \
                                     set((partial_path(d, cls.bckp_dir) for d in bckp_dirs))
                 if restore_needed:
-                    print('Need restore on dir names mismatch')
+                    if not quiet:
+                        print('Need restore on dir names mismatch')
 
         if not restore_needed:
            # compare files hashes
@@ -75,13 +79,16 @@ class BMPTest(unittest.TestCase):
                                                         for fpath in bckp_files}
             restore_needed = set(data_files_hashes.items()) != set (bckp_files_hashes.items())
             if restore_needed:
-                print('Need restore on changes in files:')
+                if not quiet:
+                    print('Need restore on changes in files:')
 
         if restore_needed:
             # reset everything back to original
-            print('\nRestoring files...\n')
+            if not quiet:
+                print('\nRestoring files...\n')
             shutil.rmtree(cls.src_dir)
             shutil.copytree(cls.bckp_dir, cls.src_dir)
         else:
-            print('No restore needed')
+            if not quiet:
+                print('No restore needed')
 
