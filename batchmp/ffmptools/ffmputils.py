@@ -17,7 +17,7 @@ import os, shutil, tempfile, subprocess, shlex
 import copyreg, types, time, datetime
 from functools import wraps
 from contextlib import contextmanager
-
+import batchmp.fstools.fsutils as fsutils
 
 class FFmpegNotInstalled(Exception):
     pass
@@ -94,15 +94,8 @@ def ffmpeg_installed():
 def get_media_files(src_dir=os.curdir, recursive = False):
     """Gets all media files from source directory and (if recursive) its subdirectories
     """
-    if recursive:
-        fpathes = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
-                            for f in files if f.endswith(SUPPORTED_MEDIA)]
-    else:
-        fpathes = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
-                                                if fname.endswith(SUPPORTED_MEDIA))
-        fpathes = [f for f in fpathes if os.path.isfile(f)]
-
-    return fpathes
+    pass_filter = lambda f: f.endswith(SUPPORTED_MEDIA)
+    return fsutils.FSH.get_files(src_dir = src_dir, recursive = recursive, pass_filter = pass_filter)
 
 def setup_backup_dirs(files):
     """ Given list of files pathes,

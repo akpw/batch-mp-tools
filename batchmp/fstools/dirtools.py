@@ -13,15 +13,15 @@
 
 import os, sys
 import mutagen
-from distutils.util import strtobool
 from .fsutils import DWalker, FSH
 
 class DHandler:
     @staticmethod
     def print_dir(src_dir, start_level = 0, max_depth = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
+                            filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
-                            show_size = False):
+                            show_size = False, formatter = lambda entry: entry.basename):
         """ Prints content of given directory
             supports recursion to max_depth level
             supports flattening folders beyond max_depth (making their files show at max_depth levels)
@@ -29,6 +29,7 @@ class DHandler:
             sorting:
                 's' / 'sd': by size / by size descending
                 'n' / 'nd': by name / by name descending
+            formatter: additional display name processing, as supplied by the caller
         """
         if not os.path.exists(src_dir):
             raise ValueError('Not a valid path')
@@ -39,6 +40,7 @@ class DHandler:
         for entry in DWalker.entries(src_dir = src_dir,
                                     start_level = start_level, max_depth = max_depth,
                                     include = include, exclude = exclude, sort = sort,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq):
 
             if entry.type == DWalker.ENTRY_TYPE_FILE:
@@ -47,38 +49,38 @@ class DHandler:
                     fsize = os.path.getsize(entry.realpath)
                     size = ' {} '.format(file_size(fsize))
                     total_size += fsize
-            else:
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
                 dcnt += 1
-            print('{0}{1}{2}'.format(entry.indent, size, entry.basename))
+            print('{0}{1}{2}'.format(entry.indent, size, formatter(entry)))
 
         # print summary
-        print('\n{0} files in {1} folders'.format(fcnt, dcnt))
+        print('{0} files, {1} folders'.format(fcnt, dcnt))
         if show_size:
             print('Total size: {}'.format(file_size(total_size)))
 
 
     @staticmethod
-    def flatten_folders(src_dir, target_depth = 2):
+    def flatten_folders(src_dir, target_depth = sys.maxsize,
+                                    include = '*', exclude = '',
+                                    filter_dirs = True, filter_files = True):
 
         print('Current source directory structure:')
-        DHandler.print_dir(src_dir = src_dir)
+        DHandler.print_dir(src_dir = src_dir,
+                            include = include, exclude = exclude,
+                            filter_dirs = filter_dirs, filter_files = filter_files)
 
         print ('\nTargeted new structure:')
         DHandler.print_dir(src_dir = src_dir, max_depth = target_depth,
-                                            flatten = True, ensure_uniq = True)
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    flatten = True, ensure_uniq = True)
 
-        answer = input('\nProceed? [y/n]: ')
-        try:
-            answer = True if strtobool(answer) else False
-        except ValueError:
-            print('Not confirmative, going to quit')
-            sys.exit(1)
 
-        if not answer:
-            print('Not confirmed, exiting')
-        else:
+        if FSH.get_user_input():
             # OK to go
-            DWalker.flatten_folders(src_dir = src_dir, target_depth = target_depth)
+            DWalker.flatten_folders(src_dir = src_dir, target_depth = target_depth,
+                                        include = include, exclude = exclude,
+                                        filter_dirs = filter_dirs, filter_files = filter_files)
 
             # remove excessive folders
             FSH.remove_empty_folders_below_target_depth(src_dir, target_depth)

@@ -13,6 +13,7 @@
 import os, sys, fnmatch, shutil
 import hashlib
 from collections import namedtuple
+from distutils.util import strtobool
 
 class FSH(object):
     """ FS helper
@@ -84,10 +85,41 @@ class FSH(object):
                 md5.update(chunk)
         return md5.hexdigest() if hex else md5.digest()
 
+    @staticmethod
+    def get_files(src_dir=os.curdir, recursive = False, pass_filter = lambda f: True):
+        """Gets all files from source directory and (if recursive) its subdirectories
+        """
+        if recursive:
+            fpathes = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
+                                                for f in files if pass_filter(f)]
+        else:
+            fpathes = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
+                                                if pass_filter(fname))
+            fpathes = [f for f in fpathes if os.path.isfile(f)]
+
+        return fpathes
+
+    @staticmethod
+    def get_user_input(quiet = False):
+        answer = input('\nProceed? [y/n]: ')
+        try:
+            answer = True if strtobool(answer) else False
+        except ValueError:
+            print('Not confirmative, exiting')
+            return False
+
+        if not quiet:
+            if answer:
+                print('Confirmed, processing...')
+            else:
+                print('Not confirmed, exiting')
+
+        return answer
 
 class DWalker(object):
     """ Walks content of a directory
     """
+    ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
     ENTRY_TYPE_FILE = 'F'
 
@@ -130,7 +162,7 @@ class DWalker(object):
             rname = os.path.basename(rpath)
             if r == src_dir:
                 # src dir goes in full and without indent
-                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
+                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_ROOT,
                                     rname, rpath, os.path.dirname(rpath) + os.path.sep)
             else:
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
@@ -178,7 +210,7 @@ class DWalker(object):
                         continue
 
                 # check the depth from root
-                elif depth == max_depth:
+                if depth == max_depth:
                     # not going any deeper
                     if not flatten:
                         # yield the dir
@@ -212,8 +244,8 @@ class DWalker(object):
 
     @staticmethod
     def flatten_folders(src_dir, target_depth = sys.maxsize,
-                                        include = '*', exclude = '',
-                                        filter_dirs = True, filter_files = True):
+                            include = '*', exclude = '',
+                            filter_dirs = True, filter_files = True, quiet = False):
         """ moves files from folders below target depth
             to their respective parent folders at target depth
             checks for file names uniqueness
@@ -225,12 +257,22 @@ class DWalker(object):
                                     flatten = True, ensure_uniq = True):
 
             root_depth = os.path.realpath(src_dir).count(os.path.sep)
-            if entry.type == DWalker.ENTRY_TYPE_DIR:
+            flattened_dirs_cnt = flattened_files_cnt = 0
+            if entry.type in (DWalker.ENTRY_TYPE_DIR, DWalker.ENTRY_TYPE_ROOT):
                 if entry.realpath.count(os.path.sep) - root_depth == target_depth:
                     target_dir_path = entry.realpath
+                else:
+                    flattened_dirs_cnt += 1
             else:
-                target_fpath = os.path.join(target_dir_path, entry.basename)
-                shutil.move(entry.realpath, target_fpath)
+                if entry.realpath.count(os.path.sep) - root_depth > target_depth:
+                    target_fpath = os.path.join(target_dir_path, entry.basename)
+                    shutil.move(entry.realpath, target_fpath)
+                    flattened_files_cnt += 1
+
+        # print summary
+        if not quiet:
+            print('Flattened: {0} files, {1} folders'.format(flattened_files_cnt, flattened_dirs_cnt))
+
 
     @staticmethod
     def dir_stats(src_dir, max_depth = sys.maxsize, flatten = False,
@@ -244,9 +286,10 @@ class DWalker(object):
         fcnt = dcnt = total_size = 0
         for entry in DWalker.entries(src_dir = src_dir, max_depth = max_depth,
                                          flatten=flatten, include=include, exclude=exclude):
+
             if entry.type == DWalker.ENTRY_TYPE_FILE:
                 fcnt += 1
-            else:
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
                 dcnt += 1
 
             if include_size:
@@ -254,11 +297,45 @@ class DWalker(object):
 
         return fcnt, dcnt, total_size
 
+    @staticmethod
+    def rename_entries(src_dir, start_level = 0, max_depth = sys.maxsize,
+                            include = '*', exclude = '',
+                            filter_dirs = True, filter_files = True,
+                            formatter = None, quiet = False):
+        """ Renames directory entries via applying formatter function supplied by the caller
+        """
+        if not formatter:
+            return
+
+        # print the dir tree
+        fcnt = dcnt = 0
+        for entry in DWalker.entries(src_dir = src_dir,
+                                    start_level = start_level, max_depth = max_depth,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files):
+
+            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+                continue
+
+            basename = formatter(entry)
+            if basename == entry.basename:
+                continue
+
+            if entry.type == DWalker.ENTRY_TYPE_FILE:
+                fcnt += 1
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                dcnt += 1
+
+            dirname = os.path.dirname(entry.realpath)
+            shutil.move(entry.realpath, os.path.join(dirname, basename))
+
+        # print summary
+        if not quiet:
+            print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
+
 if __name__ == '__main__':
-    src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/fs/data'
-    DWalker.flatten_folders(src_dir = src_dir, target_depth = 0, include='unit*', filter_dirs = False)
-
-    # remove excessive folders
-    FSH.remove_empty_folders_below_target_depth(src_dir, target_depth)
-
-
+   for entry in DWalker.entries(src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools',
+                                    max_depth = 2,
+                                    include = '*', exclude = '',
+                                    filter_dirs = True, filter_files = True):
+        pass

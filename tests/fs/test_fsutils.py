@@ -15,11 +15,12 @@
 
 import sys, unittest, re
 from batchmp.fstools.fsutils import DWalker, FSH
+from batchmp.fstools.dirtools import DHandler
 from batchmp.ffmptools import ffmputils
 from .test_fs_base import FSTest
 
 class FSTests(FSTest):
-    def test_fs_print_dir(self):
+    def test_dir_stats(self):
         fcnt, dcnt, total_size = DWalker.dir_stats(src_dir = self.src_dir, include_size = True)
 
         p = re.compile('(\d+)[^\d]*$')
@@ -31,7 +32,7 @@ class FSTests(FSTest):
 
         dcnt_ref = ffmputils.run_cmd_shell('find {} -type d | wc -l'.format(self.src_dir))
         res = p.search(dcnt_ref)
-        dcnt_ref = int(res.group(1))
+        dcnt_ref = int(res.group(1)) - 1 # not counting src_dir
         self.assertTrue(dcnt == dcnt_ref)
 
     def test_fs_flatten_folders(self):
@@ -42,3 +43,11 @@ class FSTests(FSTest):
         FSH.remove_empty_folders_below_target_depth(self.src_dir, target_depth = 0)
 
         self.resetDataFromBackup(quiet=True)
+
+    def test_print_dir(self):
+        print('\nTest Data:')
+        DHandler.print_dir(src_dir = self.src_dir, max_depth = 4,
+                                    include = '*', exclude = 'nested_3',
+                                    filter_dirs = True, filter_files = True)
+
+
