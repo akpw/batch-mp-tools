@@ -23,8 +23,8 @@ import json, math
 import os, sys, shutil, multiprocessing
 import subprocess, datetime, shlex, tempfile
 
-from ..commons.progressbar import progress_bar
-from .ffmputils import (
+from batchmp.commons.progressbar import progress_bar
+from batchmp.ffmptools.ffmputils import (
     ffmpeg_installed,
     timed,
     run_cmd,

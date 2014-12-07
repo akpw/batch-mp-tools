@@ -11,20 +11,20 @@
 ## GNU General Public License for more details.
 
 
-import os, sys
+import os, sys, shutil
 import mutagen
-from .fsutils import DWalker, FSH
+from batchmp.fstools.fsutils import DWalker, FSH
 
 class DHandler:
     @staticmethod
-    def print_dir(src_dir, start_level = 0, max_depth = sys.maxsize,
+    def print_dir(src_dir, start_level = 0, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
                             show_size = False, formatter = lambda entry: entry.basename):
         """ Prints content of given directory
-            supports recursion to max_depth level
-            supports flattening folders beyond max_depth (making their files show at max_depth levels)
+            supports recursion to end_level
+            supports flattening folders beyond end_level
             allows for include / exclude patterns (Unix style)
             sorting:
                 's' / 'sd': by size / by size descending
@@ -38,7 +38,7 @@ class DHandler:
         fcnt = dcnt = 0
         size, total_size = '', 0
         for entry in DWalker.entries(src_dir = src_dir,
-                                    start_level = start_level, max_depth = max_depth,
+                                    start_level = start_level, end_level = end_level,
                                     include = include, exclude = exclude, sort = sort,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq):
@@ -58,9 +58,72 @@ class DHandler:
         if show_size:
             print('Total size: {}'.format(file_size(total_size)))
 
+    @staticmethod
+    def dir_stats(src_dir, start_level = 0, end_level = sys.maxsize, flatten = False,
+                        include = '*', exclude = '',
+                        filter_dirs = True, filter_files = True,
+                        include_size = False):
+        """ Returns base stats for given directory
+        """
+        if not os.path.exists(src_dir):
+            raise ValueError('Not a valid path')
+
+        # count number of files, folders, and their total size
+        fcnt = dcnt = total_size = 0
+        for entry in DWalker.entries(src_dir = src_dir,
+                                        start_level = start_level, end_level = end_level,
+                                        flatten=flatten, include=include, exclude=exclude,
+                                        filter_dirs = filter_dirs, filter_files = filter_files):
+
+            if entry.type == DWalker.ENTRY_TYPE_FILE:
+                fcnt += 1
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                if FSH.level_from_root(src_dir, entry.realpath) > start_level:
+                    dcnt += 1
+
+            if include_size:
+                total_size += os.path.getsize(entry.realpath)
+
+        return fcnt, dcnt, total_size
 
     @staticmethod
-    def flatten_folders(src_dir, target_depth = sys.maxsize,
+    def rename_entries(src_dir, start_level = 0, end_level = sys.maxsize,
+                            include = '*', exclude = '',
+                            filter_dirs = True, filter_files = True,
+                            formatter = None, quiet = False):
+        """ Renames directory entries via applying formatter function supplied by the caller
+        """
+        if not formatter:
+            return
+
+        # print the dir tree
+        fcnt = dcnt = 0
+        for entry in DWalker.entries(src_dir = src_dir,
+                                    start_level = start_level, end_level = end_level,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files):
+
+            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+                continue
+
+            basename = formatter(entry)
+            if basename == entry.basename:
+                continue
+
+            if entry.type == DWalker.ENTRY_TYPE_FILE:
+                fcnt += 1
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                dcnt += 1
+
+            dirname = os.path.dirname(entry.realpath)
+            shutil.move(entry.realpath, os.path.join(dirname, basename))
+
+        # print summary
+        if not quiet:
+            print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
+
+    @staticmethod
+    def flatten_folders(src_dir, target_level = sys.maxsize,
                                     include = '*', exclude = '',
                                     filter_dirs = True, filter_files = True):
 
@@ -70,7 +133,7 @@ class DHandler:
                             filter_dirs = filter_dirs, filter_files = filter_files)
 
         print ('\nTargeted new structure:')
-        DHandler.print_dir(src_dir = src_dir, max_depth = target_depth,
+        DHandler.print_dir(src_dir = src_dir, end_level = target_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = True, ensure_uniq = True)
@@ -78,11 +141,11 @@ class DHandler:
 
         if FSH.get_user_input():
             # OK to go
-            DWalker.flatten_folders(src_dir = src_dir, target_depth = target_depth,
+            DWalker.flatten_folders(src_dir = src_dir, target_level = target_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files)
 
             # remove excessive folders
-            FSH.remove_empty_folders_below_target_depth(src_dir, target_depth)
+            FSH.remove_empty_folders_below_level(src_dir, target_level)
 
         print('\nDone')
