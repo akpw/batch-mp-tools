@@ -13,6 +13,7 @@
 
 import os, sys, shutil
 import mutagen
+from collections import namedtuple
 from batchmp.fstools.fsutils import DWalker, FSH
 
 class DHandler:
@@ -62,7 +63,7 @@ class DHandler:
     def dir_stats(src_dir, start_level = 0, end_level = sys.maxsize, flatten = False,
                         include = '*', exclude = '',
                         filter_dirs = True, filter_files = True,
-                        include_size = False):
+                        include_size = True):
         """ Returns base stats for given directory
         """
         if not os.path.exists(src_dir):
@@ -96,8 +97,9 @@ class DHandler:
         if not formatter:
             return
 
-        # print the dir tree
         fcnt = dcnt = 0
+        DirEntry = namedtuple('DirEntry', ['orig_path', 'target_path'])
+        dir_entries = []
         for entry in DWalker.entries(src_dir = src_dir,
                                     start_level = start_level, end_level = end_level,
                                     include = include, exclude = exclude,
@@ -106,17 +108,25 @@ class DHandler:
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
                 continue
 
-            basename = formatter(entry)
-            if basename == entry.basename:
+            target_name = formatter(entry)
+            if target_name == entry.basename:
                 continue
 
-            if entry.type == DWalker.ENTRY_TYPE_FILE:
-                fcnt += 1
-            elif entry.type == DWalker.ENTRY_TYPE_DIR:
-                dcnt += 1
+            target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
 
-            dirname = os.path.dirname(entry.realpath)
-            shutil.move(entry.realpath, os.path.join(dirname, basename))
+            if entry.type == DWalker.ENTRY_TYPE_DIR:
+                # for dirs, need to postpone rename
+                dcnt += 1
+                dir_entries.append(DirEntry(entry.realpath, target_path))
+
+            elif entry.type == DWalker.ENTRY_TYPE_FILE:
+                # for files, just rename
+                fcnt += 1
+                shutil.move(entry.realpath, target_path)
+
+        #rename the dirs
+        for dir_entry in reversed(dir_entries):
+            shutil.move(dir_entry.orig_path, dir_entry.target_path)
 
         # print summary
         if not quiet:

@@ -29,8 +29,8 @@ class FSH(object):
         """
         root_depth = os.path.realpath(src_dir).count(os.sep)
         for r,d,f in os.walk(src_dir):
-           if FSH.level_from_root(src, r) == target_level:
-                yield rpath
+           if FSH.level_from_root(src_dir, r) == target_level:
+                yield os.path.realpath(r)
 
     @staticmethod
     def remove_empty_folders_below_target_level(src_dir, target_level):
@@ -166,7 +166,7 @@ class DWalker(object):
                                         basename, rpath, os.path.dirname(rpath) + os.path.sep)
             else:
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
-                                        basename, rpath, current_indent)
+                                        basename, rpath, current_indent[:-1] + os.path.sep)
             yield entry
 
             # filter non-matching files
@@ -215,7 +215,7 @@ class DWalker(object):
                     if not flatten:
                         # yield the dir
                         entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
-                                            dname, dpath, siblings_indent)
+                                            dname, dpath, siblings_indent[:-1] + os.path.sep)
                         yield entry
                     else:
                         # flattening, yield the underlying files instead

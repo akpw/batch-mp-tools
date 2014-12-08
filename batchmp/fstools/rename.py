@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 import os, sys, fnmatch, re, shutil
-import datetime
+import datetime, copy
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import FSH, DWalker
@@ -63,10 +63,14 @@ class Renamer(object):
             fcnt, dcnt, _ = DHandler.dir_stats(src_dir = src_dir,
                                             start_level = level, end_level = level,
                                             include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files)
+                                            filter_dirs = filter_dirs, filter_files = filter_files,
+                                            include_size = False)
             dir_entry_info = EntryInfo(num_digits(dcnt), 0)
             files_entry_info = EntryInfo(num_digits(fcnt), 0)
             levels.append(LevelInfo(dir_entry_info, files_entry_info))
+
+        # copy levels info for subsequent pass
+        levels_copy = copy.deepcopy(levels)
 
         print('Current source directory:')
         DHandler.print_dir(src_dir = src_dir, end_level = end_level,
@@ -74,13 +78,12 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files)
 
         def add_index_transform(entry):
-            level = FSH.level_from_root(src_dir, entry.realpath)
-
-            dirs_info = levels[level-1].dirs_info
-            files_info = levels[level-1].files_info
-
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
                 return entry.basename
+
+            level = FSH.level_from_root(src_dir, entry.realpath)
+            dirs_info = levels[level-1].dirs_info
+            files_info = levels[level-1].files_info
 
             if entry.type == DWalker.ENTRY_TYPE_DIR:
                 if not include_dirs:
@@ -88,24 +91,27 @@ class Renamer(object):
                 else:
                     dir_cnt = dirs_info.counter + 1
                     num_digits = dirs_info.num_digits
-                    addition = (str(dir_cnt).zfill(num_digits))
+                    addition = str(dir_cnt).zfill(num_digits)
+
                     # update the entry for level
                     levels[level-1] = LevelInfo(EntryInfo(num_digits, dir_cnt), files_info)
 
-            if entry.type == DWalker.ENTRY_TYPE_FILE:
+            elif entry.type == DWalker.ENTRY_TYPE_FILE:
                 if not include_files:
                     return entry.basename
                 else:
                     files_cnt = files_info.counter + 1
                     num_digits = files_info.num_digits
-                    addition = (str(files_cnt).zfill(num_digits))
+                    addition = str(files_cnt).zfill(num_digits)
+
                     # update the entry for level
                     levels[level-1] = LevelInfo(dirs_info, EntryInfo(num_digits, files_cnt))
 
             if as_prefix:
                 return join_str.join((addition, entry.basename))
             else:
-                return join_str.join((entry.basename, addition))
+                name_base, name_ext = os.path.splitext(entry.basename)
+                return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         print('\nTargeted after rename:')
         DHandler.print_dir(src_dir = src_dir, end_level = end_level,
@@ -114,7 +120,8 @@ class Renamer(object):
                                     formatter = add_index_transform)
 
         if FSH.get_user_input():
-            DWalker.rename_entries(src_dir = src_dir, end_level = end_level,
+            levels = levels_copy
+            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_index_transform)
@@ -146,7 +153,8 @@ class Renamer(object):
             if as_prefix:
                 return join_str.join((addition, entry.basename))
             else:
-                return join_str.join((entry.basename, addition))
+                name_base, name_ext = os.path.splitext(entry.basename)
+                return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         print('\nTargeted after rename:')
         DHandler.print_dir(src_dir = src_dir, end_level = end_level,
@@ -167,7 +175,7 @@ class Renamer(object):
 
 if __name__ == '__main__':
     src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/fs/data'
-    #Renamer.add_index(src_dir, end_level=2, include = '[!.]*',
-    #                  as_prefix = False, include_dirs = True, min_digits = 2, join_str = ' ')
+    Renamer.add_index(src_dir, end_level=6, include = '[!.]*',
+                      as_prefix = True, include_dirs = True, min_digits = 2)
 
-    Renamer.add_date(src_dir)
+    #Renamer.add_date(src_dir)
