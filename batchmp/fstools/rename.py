@@ -53,59 +53,51 @@ class Renamer(object):
                 n_d += 1
             return max(min_digits, n_d)
 
-        # for each level to index,
-        # need to know number of digits for formatting,
-        # as well as current index counters
-        levels = []
-        LevelInfo = namedtuple('LevelInfo', ['dirs_info', 'files_info'])
-        EntryInfo = namedtuple('EntryInfo', ['num_digits', 'counter'])
-        for level in range(0, end_level + 1):
-            fcnt, dcnt, _ = DHandler.dir_stats(src_dir = src_dir,
-                                            start_level = level, end_level = level,
-                                            include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files,
-                                            include_size = False)
-            dir_entry_info = EntryInfo(num_digits(dcnt), 0)
-            files_entry_info = EntryInfo(num_digits(fcnt), 0)
-            levels.append(LevelInfo(dir_entry_info, files_entry_info))
-
-        # copy levels info for subsequent pass
-        levels_copy = copy.deepcopy(levels)
+        files_cnt = dirs_cnt = start_from
+        total_files, total_dirs, _ = DHandler.dir_stats(src_dir = src_dir)
+        parent_dir = os.path.realpath(src_dir)
 
         print('Current source directory:')
         DHandler.print_dir(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files)
 
+        dirs_info = {}
+        DirInfo = namedtuple('DirInfo', ['total_files', 'total_dirs', 'files_cnt', 'dirs_cnt'])
+        def get_dir_info(dirname):
+            if not dirname in dirs_info.keys():
+                total_files, total_dirs, _ = DHandler.dir_stats(src_dir = dirname)
+                dir_info = DirInfo(total_files, total_dirs, start_from, start_from)
+                dirs_info[dirname] = dir_info
+
+            return dirs_info[dirname]
+
         def add_index_transform(entry):
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
                 return entry.basename
 
-            level = FSH.level_from_root(src_dir, entry.realpath)
-            dirs_info = levels[level-1].dirs_info
-            files_info = levels[level-1].files_info
+            parent_dir = os.path.dirname(entry.realpath)
+            dir_info = get_dir_info(parent_dir)
 
             if entry.type == DWalker.ENTRY_TYPE_DIR:
                 if not include_dirs:
                     return entry.basename
                 else:
-                    dir_cnt = dirs_info.counter + 1
-                    num_digits = dirs_info.num_digits
-                    addition = str(dir_cnt).zfill(num_digits)
+                    addition = str(dir_info.dirs_cnt).zfill(num_digits(dir_info.total_dirs))
 
-                    # update the entry for level
-                    levels[level-1] = LevelInfo(EntryInfo(num_digits, dir_cnt), files_info)
-
+                    #need to update the dirs counter
+                    dirs_info[parent_dir] = DirInfo(dir_info.total_files, dir_info.total_dirs,
+                                                        dir_info.files_cnt, dir_info.dirs_cnt + 1)
+            # files
             elif entry.type == DWalker.ENTRY_TYPE_FILE:
                 if not include_files:
                     return entry.basename
                 else:
-                    files_cnt = files_info.counter + 1
-                    num_digits = files_info.num_digits
-                    addition = str(files_cnt).zfill(num_digits)
+                    addition = str(dir_info.files_cnt).zfill(num_digits(dir_info.total_files))
 
-                    # update the entry for level
-                    levels[level-1] = LevelInfo(dirs_info, EntryInfo(num_digits, files_cnt))
+                    #need to update the dirs counter
+                    dirs_info[parent_dir] = DirInfo(dir_info.total_files, dir_info.total_dirs,
+                                                        dir_info.files_cnt + 1, dir_info.dirs_cnt)
 
             if as_prefix:
                 return join_str.join((addition, entry.basename))
@@ -120,7 +112,12 @@ class Renamer(object):
                                     formatter = add_index_transform)
 
         if FSH.get_user_input():
-            levels = levels_copy
+            # reset counters
+            for parent_dir in dirs_info.keys():
+                dir_info = get_dir_info(parent_dir)
+                dirs_info[parent_dir] = DirInfo(dir_info.total_files, dir_info.total_dirs,
+                                                        start_from, start_from)
+            # ...and rename
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -176,6 +173,6 @@ class Renamer(object):
 if __name__ == '__main__':
     src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/fs/data'
     Renamer.add_index(src_dir, end_level=6, include = '[!.]*',
-                      as_prefix = True, include_dirs = True, min_digits = 2)
+                      as_prefix = True, join_str = ' ',include_dirs = True, min_digits = 2)
 
     #Renamer.add_date(src_dir)
