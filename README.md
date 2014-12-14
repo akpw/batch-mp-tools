@@ -12,11 +12,11 @@ Requires Python 3.x and FFmpeg [installed](http://ffmpeg.org/download.html)
 
 
 
-Scripts
---------
+#Scripts
 Intended to provide convinient CLI interface
 
-#denoiser
+
+###denoiser
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
     . Uses Python multiprocessing to leverage available CPU cores
