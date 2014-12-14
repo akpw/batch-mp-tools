@@ -1,15 +1,16 @@
 
 #Description
-
 Python package for batch processing of media files
+    
     
 # Blog 
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
 #Requirements
-Python 3.x 
+Python 3.x
 FFmpeg [installed](http://ffmpeg.org/download.html)
+
 
 #Install
 A standard install via "python setup.py install"
@@ -28,7 +29,6 @@ Run via "python setup.py test"
     . Supports backing up original media in their respective folders
     . Displays continuos progress
     . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
-
         ('denoiser.py -h' for help)
 
 
