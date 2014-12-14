@@ -37,12 +37,8 @@ class FSTests(FSTest):
         self.assertTrue(dcnt == dcnt_ref)
 
     def test_fs_flatten_folders(self):
-        DWalker.flatten_folders(src_dir = self.src_dir,
-                                target_level = 0, include='unit*', filter_dirs = False)
-
-        # remove excessive folders
-        FSH.remove_empty_folders_below_target_level(self.src_dir, target_level = 0)
-
+        DHandler.flatten_folders(src_dir = self.src_dir,
+                                target_level = 0, include = '*', filter_dirs = False, quiet = True)
         self.resetDataFromBackup(quiet=True)
 
 

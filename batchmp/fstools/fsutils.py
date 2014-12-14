@@ -13,13 +13,14 @@
 import os, sys, fnmatch, shutil
 import hashlib
 from collections import namedtuple
-from distutils.util import strtobool
 
 class FSH(object):
     """ FS helper
     """
     @staticmethod
     def level_from_root(root, nested_path):
+        """ determines the level from root folder
+        """
         return os.path.realpath(nested_path).count(os.path.sep) - \
                             os.path.realpath(root).count(os.path.sep)
 
@@ -33,15 +34,18 @@ class FSH(object):
                 yield os.path.realpath(r)
 
     @staticmethod
-    def remove_empty_folders_below_target_level(src_dir, target_level):
-        """ removes empty folders below target level
+    def remove_folders_below_target_level(src_dir, target_level=sys.maxsize, empty_only=True):
+        """ removes folders below target level
         """
+        folders_removed = 0
         for tpath in FSH.folders_at_level(src_dir, target_level):
             for r,d,f in os.walk(tpath, topdown = False):
                 for dname in d:
                     dpath = os.path.join(r,dname)
-                    if not os.listdir(dpath):
+                    if not (empty_only and os.listdir(dpath)):
+                        folders_removed +=1
                         os.rmdir(dpath)
+        return folders_removed
 
     @staticmethod
     def unique_fnames():
@@ -91,7 +95,7 @@ class FSH(object):
 
     @staticmethod
     def get_files(src_dir=os.curdir, recursive = False, pass_filter = lambda f: True):
-        """Gets all files from source directory and (if recursive) its subdirectories
+        """ gets all files from source directory and (if recursive) its subdirectories
         """
         if recursive:
             fpathes = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
@@ -104,24 +108,24 @@ class FSH(object):
         return fpathes
 
     @staticmethod
-    def get_user_input(quiet = False):
-        answer = input('\nProceed? [y/n]: ')
+    def move_FS_entry(orig_path, target_path,
+                      check_unique = True,
+                      quiet = False, stop = False):
         try:
-            answer = True if strtobool(answer) else False
-        except ValueError:
-            print('Not confirmative, exiting')
-            return False
-
-        if not quiet:
-            if answer:
-                print('Confirmed, processing...')
-            else:
-                print('Not confirmed, exiting')
-
-        return answer
+            if check_unique and os.path.exists(target_path):
+                raise OSError('\nTarget path entry already exists')
+            shutil.move(orig_path, target_path)
+        except OSError as e:
+            if not quiet:
+                print(str(e))
+                print('Failed to move entry:\n\t{0}\n\t{1}'.format(orig_path, target_path))
+                print('Exiting...') if stop else print('Skipping...')
+            if stop:
+                sys.exit(1)
 
 class DWalker(object):
-    """ Walks content of a directory
+    """ Walks content of a directory, generating
+        a sequence of structured directory elements (FSEntry)
     """
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
@@ -134,10 +138,13 @@ class DWalker(object):
                                     include = '*', exclude = '', sort = 'n',
                                     filter_dirs = True, filter_files = True,
                                     flatten = False, ensure_uniq = False):
-        """ generates a sequence of directory elements
-            supports recursion, include / exclude patterns, sorting
-            supports start level and end_level (slicing directory by folder levels)
+        """ generates a sequence of FSEntries elements
+            supports recursion and slicing directory by folder levels
             supports flattening, with optional checking for unique file names
+            allows for include / exclude patterns (Unix style)
+            sorting:
+                's' / 'sd': by size / by size descending
+                'n' / 'nd': by name / by name descending
         """
 
         # sorting
@@ -241,42 +248,3 @@ class DWalker(object):
                     sort_key = lambda entry: os.path.basename(entry.realpath)
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
-
-    @staticmethod
-    def flatten_folders(src_dir, target_level = sys.maxsize,
-                            include = '*', exclude = '',
-                            filter_dirs = True, filter_files = True, quiet = False):
-        """ moves files from folders below target current_level
-            to their respective parent folders at target level
-            checks for file names uniqueness
-        """
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    start_level = target_level, end_level=target_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    flatten = True, ensure_uniq = True):
-
-            flattened_dirs_cnt = flattened_files_cnt = 0
-            if entry.type in (DWalker.ENTRY_TYPE_DIR, DWalker.ENTRY_TYPE_ROOT):
-                if FSH.level_from_root(src_dir, entry.realpath) == target_level:
-                    target_dir_path = entry.realpath
-                else:
-                    flattened_dirs_cnt += 1
-            else:
-                if FSH.level_from_root(src_dir, entry.realpath) > target_level:
-                    target_fpath = os.path.join(target_dir_path, entry.basename)
-                    shutil.move(entry.realpath, target_fpath)
-                    flattened_files_cnt += 1
-
-        # print summary
-        if not quiet:
-            print('Flattened: {0} files, {1} folders'.format(flattened_files_cnt, flattened_dirs_cnt))
-
-
-# Quick dev testing
-if __name__ == '__main__':
-   for entry in DWalker.entries(src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools',
-                                    end_level = 2,
-                                    include = '*', exclude = '',
-                                    filter_dirs = True, filter_files = True):
-        pass
