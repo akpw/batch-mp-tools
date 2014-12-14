@@ -9,6 +9,7 @@ Python package for batch processing of media files
 
 #Requirements
 Python 3.x
+
 FFmpeg [installed](http://ffmpeg.org/download.html)
 
 
