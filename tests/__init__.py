@@ -18,7 +18,7 @@ def batch_mp_test_suite():
 
 
     batch_mp_test_suite.addTests(ffmp_utils_suite)
-    #batch_mp_test_suite.addTests(ffmp_tools_suite)
+    batch_mp_test_suite.addTests(ffmp_tools_suite)
     batch_mp_test_suite.addTests(fstools_utils_suite)
 
     return batch_mp_test_suite

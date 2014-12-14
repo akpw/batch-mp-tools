@@ -121,17 +121,17 @@ class DHandler:
 
             if entry.type == DWalker.ENTRY_TYPE_DIR:
                 # for dirs, need to postpone
-                dcnt += 1
                 dir_entries.append(DirEntry(entry.realpath, target_path))
 
             elif entry.type == DWalker.ENTRY_TYPE_FILE:
                 # for files, just rename
-                fcnt += 1
-                FSH.move_FS_entry(entry.realpath, target_path)
+                if FSH.move_FS_entry(entry.realpath, target_path):
+                    fcnt += 1
 
         #rename the dirs
         for dir_entry in reversed(dir_entries):
-            FSH.move_FS_entry(dir_entry.orig_path, dir_entry.target_path)
+            if FSH.move_FS_entry(dir_entry.orig_path, dir_entry.target_path):
+                dcnt += 1
 
         # print summary
         if not quiet:
@@ -204,8 +204,8 @@ class DHandler:
                     # files
                     if FSH.level_from_root(src_dir, entry.realpath) - 1 > target_level:
                         target_fpath = os.path.join(target_dir_path, entry.basename)
-                        FSH.move_FS_entry(entry.realpath, target_fpath)
-                        flattened_files_cnt += 1
+                        if FSH.move_FS_entry(entry.realpath, target_fpath):
+                            flattened_files_cnt += 1
 
             # remove excessive folders
             if remove_empty_folders:
@@ -217,15 +217,6 @@ class DHandler:
 
         if not quiet:
             print('\nDone')
-
-if __name__ == '__main__':
-    src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/fs/data'
-    DHandler.flatten_folders(src_dir = src_dir,
-                                target_level = 0, include = '*', filter_dirs = False)
-
-
-
-
 
 
 

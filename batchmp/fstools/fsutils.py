@@ -111,10 +111,12 @@ class FSH(object):
     def move_FS_entry(orig_path, target_path,
                       check_unique = True,
                       quiet = False, stop = False):
+        succeeded = False
         try:
             if check_unique and os.path.exists(target_path):
                 raise OSError('\nTarget path entry already exists')
             shutil.move(orig_path, target_path)
+            succeeded = True
         except OSError as e:
             if not quiet:
                 print(str(e))
@@ -122,6 +124,7 @@ class FSH(object):
                 print('Exiting...') if stop else print('Skipping...')
             if stop:
                 sys.exit(1)
+        return succeeded
 
 class DWalker(object):
     """ Walks content of a directory, generating

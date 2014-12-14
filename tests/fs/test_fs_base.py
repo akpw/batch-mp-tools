@@ -10,7 +10,8 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os
+import os, re
+from batchmp.ffmptools import ffmputils
 from ..base import test_base
 
 class FSTest(test_base.BMPTest):
@@ -20,3 +21,12 @@ class FSTest(test_base.BMPTest):
         cls.bckp_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '.data'))
         super(FSTest, cls).setUpClass()
 
+    def get_last_digit_from_shell_cmd(self, cmd):
+        cmd_output = ffmputils.run_cmd_shell(cmd)
+
+        p = re.compile('(\d+)(?!.*\d)')
+        match = p.search(cmd_output)
+        if match:
+            return int(match.group())
+        else:
+            return -1

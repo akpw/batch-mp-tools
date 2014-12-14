@@ -12,33 +12,114 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-
-import sys, unittest, re
+import os, sys, unittest
 from batchmp.fstools.fsutils import DWalker, FSH
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-from batchmp.ffmptools import ffmputils
 from .test_fs_base import FSTest
 
 class FSTests(FSTest):
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_dir_stats(self):
         fcnt, dcnt, total_size = DHandler.dir_stats(src_dir = self.src_dir, include_size = True)
 
-        p = re.compile('(\d+)[^\d]*$')
-
-        fcnt_ref = (ffmputils.run_cmd_shell('find {} -type f | wc -l'.format(self.src_dir)))
-        res = p.search(fcnt_ref)
-        fcnt_ref = int(res.group(1))
+        cmd = 'find {} -type f | wc -l'.format(self.src_dir)
+        fcnt_ref = self.get_last_digit_from_shell_cmd(cmd)
         self.assertTrue(fcnt == fcnt_ref)
 
-        dcnt_ref = ffmputils.run_cmd_shell('find {} -type d | wc -l'.format(self.src_dir))
-        res = p.search(dcnt_ref)
-        dcnt_ref = int(res.group(1)) - 1 # not counting src_dir
+        cmd = 'find {} -type d | wc -l'.format(self.src_dir)
+        dcnt_ref = self.get_last_digit_from_shell_cmd(cmd)  - 1 # not counting the src_dir
         self.assertTrue(dcnt == dcnt_ref)
 
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_fs_flatten_folders(self):
         DHandler.flatten_folders(src_dir = self.src_dir,
                                 target_level = 0, include = '*', filter_dirs = False, quiet = True)
+
+        fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir, include_size = False)
+        self.assertTrue(fcnt == 30 and dcnt == 0)
         self.resetDataFromBackup(quiet=True)
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_renamer_replace(self):
+        Renamer.replace(src_dir = self.src_dir, end_level = 4,
+                                find_str = r'test', replace_str = r'flower',
+                                include_dirs = True, quiet = True)
+
+        cmd = 'find {} -type f -iname "*flower*" | wc -l'.format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 22)
+        self.resetDataFromBackup(quiet=True)
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_renamer_add_index(self):
+        Renamer.add_index(src_dir = self.src_dir, end_level = 5,
+                                include = '[!.]*', exclude='test_*',
+                                as_prefix = True, join_str = ' ',
+                                include_dirs = True, min_digits = 2, quiet = True)
+
+        cmd = "find {} | grep '/\d\d ' | grep -v 'test_' | grep -v '.DS_Store' | wc -l".format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 23)
+        self.resetDataFromBackup(quiet=True)
+
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_remove_n_characters(self):
+        Renamer.remove_n_characters(src_dir = self.src_dir, end_level = 2,
+                                num_chars = 2, from_head = True,
+                                include = '*', exclude = '',
+                                filter_dirs = True, filter_files = True,
+                                include_dirs = True, include_files = True, quiet = True)
+
+        cmd = "find {} -type f | grep 'st_\d' | wc -l".format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 14)
+        self.resetDataFromBackup(quiet=True)
+
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_add_text(self):
+        Renamer.add_text(src_dir = self.src_dir, end_level = 4,
+                                text = 'The', as_prefix = True, join_str = ' ',
+                                include = '*', exclude = '',
+                                filter_dirs = True, filter_files = True,
+                                include_dirs = False, include_files = True, quiet = True)
+
+        cmd = "find {} -type f | grep 'The ' | wc -l".format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 30)
+        self.resetDataFromBackup(quiet=True)
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_add_date(self):
+        Renamer.add_date(src_dir = self.src_dir,
+                                as_prefix = False, join_str = '_', format = '%Y-%m-%d',
+                                end_level = 5, include = '*', exclude = '',
+                                filter_dirs = True, filter_files = True,
+                                include_dirs = False, include_files = True, quiet = True)
+
+        cmd = 'find . -type f | grep "_\d\d\d\d-\d\d-\d\d" | wc -l'.format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 30)
+        self.resetDataFromBackup(quiet=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

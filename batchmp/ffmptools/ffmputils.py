@@ -74,7 +74,6 @@ def run_cmd_shell(cmd):
         raise CmdProcessingError(output)
     return output
 
-
 def ffmpeg_installed():
     """ Checks if ffmpeg is installed
         P.S.
