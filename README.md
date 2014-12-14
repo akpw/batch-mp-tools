@@ -7,14 +7,16 @@ Python package for batch processing of media files
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
-#Install
-    . A standard install via "python setup.py install"
-    
-
 #Requirements
+Python 3.x 
+FFmpeg [installed](http://ffmpeg.org/download.html)
 
-    . Python 3.x 
-    . FFmpeg [installed](http://ffmpeg.org/download.html)
+#Install
+A standard install via "python setup.py install"
+
+
+#Tests
+Run via "python setup.py test"
 
 
 #Scripts
