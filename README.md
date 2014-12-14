@@ -1,9 +1,13 @@
 
 #Description
 Python package for batch processing of media files
+
+
+#Status
+A weekend project, under development :)
     
     
-# Blog 
+#Blog 
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
