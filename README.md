@@ -16,11 +16,8 @@ Scripts
 --------
 Intended to provide convinient CLI interface
 
-  denoiser.py: Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
-
-    . Usage: denoiser.py -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
-
-        ('denoiser.py -h' for help)
+#denoiser
+    . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
     . Uses Python multiprocessing to leverage available CPU cores
 
@@ -31,6 +28,10 @@ Intended to provide convinient CLI interface
     . Supports backing up original media in their respective folders
 
     . Displays continuos progress
+    
+    . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
+
+        ('denoiser.py -h' for help)
 
 
 
