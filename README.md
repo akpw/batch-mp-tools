@@ -1,10 +1,10 @@
 
 #Description
 
-    . Python package for batch processing of media files
+Python package for batch processing of media files
     
 # Blog 
-    . [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
+[Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
 #Install
@@ -18,9 +18,6 @@
 
 
 #Scripts
-Intended to provide convinient CLI interface
-
-
 ###denoiser
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
 
