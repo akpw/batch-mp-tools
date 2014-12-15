@@ -53,7 +53,7 @@ class DHandler:
                 fcnt += 1
                 if show_size:
                     fsize = os.path.getsize(entry.realpath)
-                    size = ' {} '.format(file_size(fsize))
+                    size = ' {} '.format(FSH.file_size(fsize))
                     total_size += fsize
             elif entry.type == DWalker.ENTRY_TYPE_DIR:
                 dcnt += 1
@@ -62,7 +62,7 @@ class DHandler:
         # print summary
         print('{0} files, {1} folders'.format(fcnt, dcnt))
         if show_size:
-            print('Total size: {}'.format(file_size(total_size)))
+            print('Total size: {}'.format(FSH.file_size(total_size)))
 
     @staticmethod
     def dir_stats(src_dir, start_level = 0, end_level = sys.maxsize, flatten = False,

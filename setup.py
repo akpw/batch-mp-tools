@@ -34,6 +34,7 @@ setup(
     scripts=['scripts/denoiser.py'],
     entry_points={'console_scripts': [
         'denoiser = scripts.denoiser:main',
+        'renamer = scripts.renamer:main',
     ]},
     zip_safe=True,
     classifiers=[
