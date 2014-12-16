@@ -137,17 +137,19 @@ class DWalker(object):
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
     @staticmethod
-    def entries(src_dir, start_level = 0, end_level = sys.maxsize,
-                                    include = '*', exclude = '', sort = 'n',
-                                    filter_dirs = True, filter_files = True,
-                                    flatten = False, ensure_uniq = False):
+    def entries(src_dir,
+                    start_level = 0, end_level = sys.maxsize,
+                    include = '*', exclude = '', sort = 'n',
+                    filter_dirs = True, filter_files = True,
+                    flatten = False, ensure_uniq = False):
         """ generates a sequence of FSEntries elements
-            supports recursion and slicing directory by folder levels
-            supports flattening, with optional checking for unique file names
+            supports recursion to end_level
+            supports slicing directory by folder levels
+            supports flattening beyond end_level, with optional checking for unique file names
             allows for include / exclude patterns (Unix style)
             sorting:
-                's' / 'sd': by size / by size descending
-                'n' / 'nd': by name / by name descending
+                'na' / 'nd': by name / by name descending
+                'sa' / 'sd': by size / by size descending
         """
 
         # sorting
@@ -158,10 +160,18 @@ class DWalker(object):
         passed_filters = lambda s: fnmatch.fnmatch(s, include) and not fnmatch.fnmatch(s, exclude)
 
         for r, dnames, fnames in os.walk(src_dir):
-            # current level from the src_dir root
+            # remove non-matching subfolders
+            if filter_dirs:
+                for dname in dnames:
+                    if not passed_filters(dname):
+                        dnames.remove(dname)
+
+            # check the levels
             current_level = FSH.level_from_root(src_dir, r)
             if current_level < start_level:
                 continue
+            if current_level > end_level and not flatten:
+                return
 
             # indents
             current_indent  = '{0}{1}'.format("\t" * (current_level), '|- ')
@@ -212,12 +222,6 @@ class DWalker(object):
             # dirs
             for dname in sorted(dnames):
                 dpath = os.path.realpath(os.path.join(r, dname))
-
-                # remove non-matching subfolders
-                if filter_dirs:
-                    if not passed_filters(dname):
-                        dnames.remove(dname)
-                        continue
 
                 # check the current_level from root
                 if current_level == end_level:

@@ -72,10 +72,10 @@ def parse_options():
               required=True,
               type = lambda d: is_valid_path(parser, d),
               help = "Source directory")
-  parser.add_argument("-e", "--endlevel", dest = "end_level",
+  parser.add_argument("-el", "--endlevel", dest = "end_level",
               help = "End level for recursion",
               type = int,
-              default = 0)
+              default = 1)
   parser.add_argument("-in", "--include",
               help = "Include Pattern",
               type = str,
@@ -100,10 +100,11 @@ def parse_options():
               help = "Include files for processing",
               action = 'store_true',
               default = True)
-  parser.add_argument('-s', '--sort', nargs = '*', dest = 'sort',
+  parser.add_argument('-s', '--sort', dest = 'sort',
               help = 'Sorting for files / folders',
-              choices = ['sa', 'sd', 'da', 'dd'],
-              default = 'sa')
+              type=str,
+              choices = ['na', 'nd', 'sa', 'sd'],
+              default = 'na')
   parser.add_argument("-q", "--quiet", dest = 'quiet',
               help = "Do not visualise / show messages during processing",
               action = 'store_true',
@@ -124,16 +125,16 @@ def parse_options():
                   default = False)
 
   # Flatten
-  flatten_parser = subparsers.add_parser('flatten', help='Flatten folders below target level, \
-                                                          moving their files at the target level')
+  flatten_parser = subparsers.add_parser('flatten',
+                  help='Remove all folders below target level, moving their files up the target level')
   flatten_parser.add_argument('-tl', '--targetlevel', dest='target_level',
                   help='Target level below which all folders will be flattened',
                   type=int,
                   default = sys.maxsize)
-  flatten_parser.add_argument('-rm', '--removeemptydirs', dest='remove_empty',
-                  help='Remove flattened dirs, if empty',
+  flatten_parser.add_argument('-le', '--leaveempty', dest='leave_empty',
+                  help='Do not remove empty flattened dirs',
                   action = 'store_true',
-                  default = True)
+                  default = False)
   # Add index
 
   return vars(parser.parse_args())
@@ -151,7 +152,7 @@ def flatten(args):
                     target_level = args['target_level'],
                     include = args['include'], exclude = args['exclude'],
                     filter_dirs = True, filter_files = True,
-                    remove_empty_folders = args['remove_empty'], quiet = args['quiet'])
+                    remove_empty_folders = not args['leave_empty'], quiet = args['quiet'])
 
 def main():
   args = parse_options()
@@ -166,7 +167,6 @@ def main():
     print_dir(args)
   elif args['sub_cmd'] == 'flatten':
     flatten(args)
-
 
 if __name__ == '__main__':
     main()

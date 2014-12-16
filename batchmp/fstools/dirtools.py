@@ -30,8 +30,8 @@ class DHandler:
             supports flattening folders beyond end_level
             allows for include / exclude patterns (Unix style)
             sorting:
-                's' / 'sd': by size / by size descending
-                'n' / 'nd': by name / by name descending
+                'na' / 'nd': by name / by name descending
+                'sa' / 'sd': by size / by size descending
             formatter: additional display name processing, as supplied by the caller
         """
         if not os.path.exists(src_dir):
