@@ -162,7 +162,7 @@ class DWalker(object):
         for r, dnames, fnames in os.walk(src_dir):
             # remove non-matching subfolders
             if filter_dirs:
-                for dname in dnames:
+                for dname in sorted(dnames):
                     if not passed_filters(dname):
                         dnames.remove(dname)
 
