@@ -148,16 +148,20 @@ def print_dir(args):
                     show_size = args['show_size'], formatter = None)
 
 def flatten(args):
-  DHandler.flatten_folders(src_dir = args['dir'],
-                    target_level = args['target_level'],
+  end_level = args['end_level']
+  target_level = args['target_level']
+  if (end_level) < target_level:
+    raise ValueError('Target Level for flattening should be greater than or equal to End Level')
+  else:
+    DHandler.flatten_folders(src_dir = args['dir'],
+                    end_level = end_level,
+                    target_level = target_level,
                     include = args['include'], exclude = args['exclude'],
                     filter_dirs = True, filter_files = True,
                     remove_empty_folders = not args['leave_empty'], quiet = args['quiet'])
 
 def main():
   args = parse_options()
-  print(args)
-
   if not args['sub_cmd']:
     args['sub_cmd'] = 'print'
     args['start_level'] = 0

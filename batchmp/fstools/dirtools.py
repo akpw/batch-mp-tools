@@ -178,12 +178,13 @@ class DHandler:
         return DHandler.get_user_input()
 
     @staticmethod
-    def flatten_folders(src_dir, target_level = sys.maxsize,
+    def flatten_folders(src_dir, target_level = sys.maxsize, end_level = sys.maxsize,
                                     include = '*', exclude = '',
                                     filter_dirs = True, filter_files = True,
                                     remove_empty_folders = True, quiet = False):
 
         proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                        orig_end_level = end_level,
                                         target_end_level = target_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
