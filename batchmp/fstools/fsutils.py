@@ -44,7 +44,7 @@ class FSH(object):
                     dpath = os.path.join(r,dname)
                     if not (empty_only and os.listdir(dpath)):
                         folders_removed +=1
-                        os.rmdir(dpath)
+                        shutil.rmtree(dpath)
         return folders_removed
 
     @staticmethod

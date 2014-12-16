@@ -58,7 +58,8 @@ class Renamer(object):
     @staticmethod
     def add_index(src_dir, as_prefix = False, join_str = '_',
                             start_from = 1, min_digits = 1,
-                            end_level = 0, include = '*', exclude = '',
+                            end_level = 0, sort = 'n',
+                            include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
                             include_dirs = False, include_files = True, quiet = False):
         """ adds indexing
@@ -109,7 +110,7 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -127,7 +128,8 @@ class Renamer(object):
 
     @staticmethod
     def add_date(src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
-                                end_level = 0, include = '*', exclude = '',
+                                end_level = 0, sort = 'n',
+                                include = '*', exclude = '',
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = False):
         """ adds current date
@@ -150,7 +152,7 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -163,10 +165,12 @@ class Renamer(object):
 
 
     @staticmethod
-    def add_text(src_dir, text, as_prefix = False, join_str = ' ',
-                                end_level = 0, include = '*', exclude = '',
-                                filter_dirs = True, filter_files = True,
-                                include_dirs = False, include_files = True, quiet = False):
+    def add_text(src_dir, text,
+                    as_prefix = False, join_str = ' ',
+                    end_level = 0, sort = 'n',
+                    include = '*', exclude = '',
+                    filter_dirs = True, filter_files = True,
+                    include_dirs = False, include_files = True, quiet = False):
         """ adds text
         """
         addition = text
@@ -187,7 +191,7 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -199,7 +203,7 @@ class Renamer(object):
                                     formatter = add_text_transform, quiet = quiet)
 
     @staticmethod
-    def remove_n_characters(src_dir,
+    def remove_n_characters(src_dir, sort = 'n',
                             num_chars = 0, from_head = True,
                             end_level = 0, include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
@@ -224,7 +228,7 @@ class Renamer(object):
             return ''.join((name_base, name_ext))
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -238,7 +242,8 @@ class Renamer(object):
     @staticmethod
     def replace(src_dir,
                     find_str, replace_str, case_insensitive=False,
-                    end_level = 0, include = '*', exclude = '',
+                    end_level = 0, sort = 'n',
+                    include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True, quiet = False):
         """ replaces text
@@ -259,13 +264,16 @@ class Renamer(object):
             match = p.search(entry.basename)
             if match:
                 name_base, name_ext = os.path.splitext(entry.basename)
-                name_base = p.sub(replace_str, name_base)
+                if replace_str:
+                    name_base = p.sub(replace_str, name_base)
+                else:
+                    name_base = match.group()
                 return '{0}{1}'.format(name_base, name_ext)
             else:
                 return entry.basename
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
@@ -275,3 +283,5 @@ class Renamer(object):
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_replace_transform, quiet = quiet)
+
+

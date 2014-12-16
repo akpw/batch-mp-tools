@@ -158,18 +158,18 @@ class DHandler:
     def visualise_changes(src_dir, before_msg = 'Current source directory:',
                                     after_msg = '\nTargeted after rename:',
                                     orig_end_level = sys.maxsize, target_end_level = 0,
-                                    include = '*', exclude = '',
+                                    include = '*', exclude = '', sort = 'n',
                                     filter_dirs = True, filter_files = True,
                                     include_dirs = False, include_files = True,
                                     flatten = False, ensure_uniq = False, formatter = None):
 
         print(before_msg)
-        DHandler.print_dir(src_dir = src_dir, end_level = orig_end_level,
+        DHandler.print_dir(src_dir = src_dir, end_level = orig_end_level, sort = sort,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files)
 
         print(after_msg)
-        DHandler.print_dir(src_dir = src_dir, end_level = target_end_level,
+        DHandler.print_dir(src_dir = src_dir, end_level = target_end_level, sort = sort,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq,
@@ -181,7 +181,11 @@ class DHandler:
     def flatten_folders(src_dir, target_level = sys.maxsize, end_level = sys.maxsize,
                                     include = '*', exclude = '',
                                     filter_dirs = True, filter_files = True,
-                                    remove_empty_folders = True, quiet = False):
+                                    remove_folders = True, remove_non_empty_folders = False,
+                                    quiet = False):
+
+        if end_level < target_level:
+            end_level = target_level
 
         proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
                                         orig_end_level = end_level,
@@ -209,9 +213,10 @@ class DHandler:
                             flattened_files_cnt += 1
 
             # remove excessive folders
-            if remove_empty_folders:
-                flattened_dirs_cnt = FSH.remove_folders_below_target_level(src_dir, target_level)
-
+            if remove_folders:
+                flattened_dirs_cnt = FSH.remove_folders_below_target_level(src_dir,
+                                                       target_level = target_level,
+                                                       empty_only = not remove_non_empty_folders)
             # print summary
             if not quiet:
                 print('Flattened: {0} files, {1} folders'.format(flattened_files_cnt, flattened_dirs_cnt))
@@ -220,5 +225,6 @@ class DHandler:
             print('\nDone')
 
 
-
+if __name__ == '__main__':
+    DHandler.print_dir(src_dir = '/Volumes/BluePassport/99 miniMedia/_TV/Constantine', include = '*.mkv')
 
