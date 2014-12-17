@@ -4,6 +4,7 @@ Python package for batch processing of media files
 
 
 **Status**
+
 A weekend project under occasional development :)
 
     
@@ -12,6 +13,7 @@ A weekend project under occasional development :)
 
 
 **Requirements**
+
     . Python 3.x
 
 
