@@ -68,7 +68,7 @@ def is_valid_path(parser, path_arg):
         return path_arg
 
 def parse_options():
-  parser = ArgumentParser(prog = 'renamer')
+  parser = ArgumentParser(prog = 'renamer', description = 'Global Options')
 
   # Global Options
   parser.add_argument("-d", "--dir", dest = "dir",
@@ -89,12 +89,10 @@ def parse_options():
               default = '')
   parser.add_argument("-fd", "--filterdirs", dest = "filter_dirs",
               help = "Do not apply Include/Exclude patterns on directories",
-              action = 'store_true',
-              default = False)
+              action = 'store_true')
   parser.add_argument("-ff", "--filterfiles", dest = "filter_files",
               help = "Do not apply Include/Exclude patterns on files",
-              action = 'store_true',
-              default = False)
+              action = 'store_true')
   parser.add_argument('-s', '--sort', dest = 'sort',
               help = "Sorting for files ('na', i.e. by name ascending by default)",
               type=str,
@@ -102,11 +100,10 @@ def parse_options():
               default = 'na')
   parser.add_argument("-q", "--quiet", dest = 'quiet',
               help = "Do not visualise / show messages during processing",
-              action = 'store_true',
-              default = False)
+              action = 'store_true')
 
   # Commands
-  subparsers = parser.add_subparsers(help = 'Renamer commands', dest='sub_cmd')
+  subparsers = parser.add_subparsers(help = 'Renamer commands', dest='sub_cmd', title = 'Renamer Commands')
 
   # Print
   print_parser = subparsers.add_parser('print', help = 'Print source directory')
@@ -116,8 +113,7 @@ def parse_options():
                   default = 0)
   print_parser.add_argument('-ss', '--showsize', dest='show_size',
                   help ='Show files size',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   # Flatten
   flatten_parser = subparsers.add_parser('flatten',
@@ -140,8 +136,7 @@ def parse_options():
   add_index_parser = subparsers.add_parser('index', help = 'Adds index to files and directories')
   add_index_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                   help = 'Add index as prefix to names',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_index_parser.add_argument('-js', '--joinstring', dest='join_str',
                   help = "Join string for appending indices ('_' by default)",
                   type = str,
@@ -156,19 +151,16 @@ def parse_options():
                   default = 2)
   add_index_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
                   help = "Include directories for rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_index_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                   help = "Exclude files from rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   # Add Date
   add_date_parser = subparsers.add_parser('date', help = 'Adds date to files and directories')
   add_date_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                   help = 'Add date as prefix to names',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_date_parser.add_argument('-js', '--joinstring', dest='join_str',
                   help = "Join string for appending dates ('_' by default)",
                   type = str,
@@ -179,19 +171,16 @@ def parse_options():
                   default = '%Y-%m-%d')
   add_date_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
                   help = "Include directories for rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_date_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                   help = "Exclude files from rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   # Add Text
   add_text_parser = subparsers.add_parser('text', help = 'Adds text to files and directories')
   add_text_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                   help = 'Add text as prefix to names',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_text_parser.add_argument('-js', '--joinstring', dest='join_str',
                   help = "Join string for appending text ('_' by default)",
                   type = str,
@@ -202,12 +191,10 @@ def parse_options():
                   default = '')
   add_text_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
                   help = "Include directories for rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_text_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                   help = "Exclude files from rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   # Remove chars
   remove_chars_parser = subparsers.add_parser('remove', help = 'Removes n characters from files and directories')
@@ -217,16 +204,13 @@ def parse_options():
                   default = 0)
   remove_chars_parser.add_argument('-ft', '--fromtail', dest='from_tail',
                   help = 'Removes text from tail',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   remove_chars_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
                   help = "Include directories for rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   remove_chars_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                   help = "Exclude files from rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   # Replace
   add_text_parser = subparsers.add_parser('replace', help = 'RegExp-based replace in files and directories')
@@ -241,16 +225,13 @@ def parse_options():
                   type = str)
   add_text_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                   help = 'Case insensitive',
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_text_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
                   help = "Include directories for rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
   add_text_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                   help = "Exclude files from rename processing",
-                  action = 'store_true',
-                  default = False)
+                  action = 'store_true')
 
   return vars(parser.parse_args())
 
