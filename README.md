@@ -16,20 +16,19 @@ A weekend project under occasional development :)
 
 
 #Install
-**With [pip](https://pip.pypa.io/en/latest/):**
-    "pip install git+https://github.com/akpw/batch-mp-tools.git"
-
-Or, clone the repo and run: "python setup.py install"
+- With [pip](https://pip.pypa.io/en/latest/):
+"pip install git+https://github.com/akpw/batch-mp-tools.git"
+- Or, clone the repo and run: "python setup.py install"
 
 **Development version**
-Clone the repo, then run "python setup.py develop"
+- Clone the repo, then run "python setup.py develop"
 
 **Tests**
-Run via "python setup.py test"
+- Run via "python setup.py test"
 
 
 #Scripts
-**denoiser**
+###denoiser
     . requires FFmpeg (http://ffmpeg.org)
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
     . Uses Python multiprocessing to leverage available CPU cores
