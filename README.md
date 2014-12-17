@@ -1,5 +1,5 @@
 
-##Description
+#Description
 Python package for batch processing of media files
 
 
@@ -26,7 +26,6 @@ A weekend project under occasional development :)
 
 **Running Tests**
 - Run via "python setup.py test"
-
 
 ##Scripts
 ###denoiser
