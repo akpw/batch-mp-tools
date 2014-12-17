@@ -4,10 +4,10 @@ Python package for batch processing of media files
 
 
 #Status
-A weekend project, under development :)
+A weekend project under occasional development :)
+
     
-    
-#Blog 
+#Blogs 
 [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
@@ -18,10 +18,10 @@ A weekend project, under development :)
 #Install
     . from terminal, run: "pip install git+https://github.com/akpw/batch-mp-tools.git"
 
-#Development version install
+###Development version
     . clone the repo, then run "python setup.py develop"
 
-#Tests
+###Tests
 Run via "python setup.py test"
 
 
@@ -37,7 +37,7 @@ Run via "python setup.py test"
     . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
         ('denoiser.py -h' for help)
         
-###Renamer
+###renamer
     Batch renaming of files and directories
     . visualises original / targeted folders structure before actual rename action
     . supports recursion to specified end_level
@@ -59,14 +59,17 @@ Run via "python setup.py test"
             flattened folders will be deleted
 
     Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
+    
       Global Options (renamer -h for additional help)
         [-e END_LEVEL]                        End level for recursion into nested folders
         [-i INCLUDE] [-e EXCLUDE]             Include names pattern
         [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
         [-s SORT]                             Sorting for files / folders
         [-q QUIET]                            Do not visualise / show messages during processing
+        
       Commands: 
         {print, flatten, index, date, text, remove,replace}
+        
     More Info:  
         "renamer -h" for additional help on global options
         "renamer Command -h" for additional help on specific commands
