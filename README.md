@@ -16,10 +16,10 @@ A weekend project under occasional development :)
 
 
 #Install
-    . from terminal, run: "pip install git+https://github.com/akpw/batch-mp-tools.git"
+From terminal, run: "pip install git+https://github.com/akpw/batch-mp-tools.git"
 
 ###Development version
-    . clone the repo, then run "python setup.py develop"
+Clone the repo, then run "python setup.py develop"
 
 ###Tests
 Run via "python setup.py test"
@@ -72,7 +72,7 @@ Run via "python setup.py test"
         
     More Info:  
         "renamer -h" for additional help on global options
-        "renamer Command -h" for additional help on specific commands
+        "renamer <command> -h" for additional help on specific commands
 
 
 
