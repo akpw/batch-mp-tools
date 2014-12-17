@@ -29,8 +29,7 @@ A weekend project under occasional development :)
 - Run via: ```python setup.py test```
 
 ##Scripts
-###denoiser
-- requires FFmpeg (http://ffmpeg.org)
+###denoiser (requires [FFmpeg](http://ffmpeg.org))
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
     . Uses Python multiprocessing to leverage available CPU cores
     . Supports recursive processing of media files in subfolders
