@@ -13,9 +13,7 @@ def batch_mp_test_suite():
     ffmp_tools_suite = loader.loadTestsFromModule(tests.ffmp.test_ffmp_tools)
 
     # load tests from the fs package
-    loader = unittest.TestLoader()
     fstools_utils_suite = loader.loadTestsFromModule(tests.fs.test_fsutils)
-
 
     batch_mp_test_suite.addTests(ffmp_utils_suite)
     batch_mp_test_suite.addTests(ffmp_tools_suite)
