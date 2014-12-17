@@ -18,9 +18,13 @@ A weekend project under occasional development :)
 ##Install
 **Standard install**
 - via [pip](https://pip.pypa.io/en/latest/):
---```pip install git+https://github.com/akpw/batch-mp-tools.git```
-- Or, clone the repo and run
-    ```python setup.py install```
+```
+    pip install git+https://github.com/akpw/batch-mp-tools.git
+```
+- Or, clone the repo and run:
+```
+python setup.py install
+```
 
 **Development version**
 - Clone the repo, then run "python setup.py develop"
