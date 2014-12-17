@@ -18,10 +18,10 @@ A weekend project under occasional development :)
 #Install
 From terminal, run: "pip install git+https://github.com/akpw/batch-mp-tools.git"
 
-###Development version
+####Development version
 Clone the repo, then run "python setup.py develop"
 
-###Tests
+####Tests
 Run via "python setup.py test"
 
 
@@ -55,8 +55,7 @@ Run via "python setup.py test"
         .. add text
         .. remove n characters
         .. flatten all folders below target level, moving the files
-            up the target level. By default, all empty
-            flattened folders will be deleted
+           up the target level. 
 
     Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
     
