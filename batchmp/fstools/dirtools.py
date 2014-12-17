@@ -224,7 +224,3 @@ class DHandler:
         if not quiet:
             print('\nDone')
 
-
-if __name__ == '__main__':
-    DHandler.print_dir(src_dir = '/Volumes/BluePassport/99 miniMedia/_TV/Constantine', include = '*.mkv')
-
