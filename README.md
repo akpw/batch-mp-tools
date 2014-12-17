@@ -1,5 +1,5 @@
 
-#Description
+##Description
 Python package for batch processing of media files
 
 
@@ -7,16 +7,16 @@ Python package for batch processing of media files
 A weekend project under occasional development :)
 
     
-#Blogs
+##Blogs
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
-#Requirements
+##Requirements
 - [Python 3.x](https://www.python.org/download/releases/3.4.1/)
 
 
-#Install
-###Standard install**
+##Install
+**Standard install**
 - With [pip](https://pip.pypa.io/en/latest/):
 "pip install git+https://github.com/akpw/batch-mp-tools.git"
 - Or, clone the repo and run: "python setup.py install"
@@ -24,11 +24,11 @@ A weekend project under occasional development :)
 **Development version**
 - Clone the repo, then run "python setup.py develop"
 
-###Running Tests**
+**Running Tests**
 - Run via "python setup.py test"
 
 
-#Scripts
+##Scripts
 ###denoiser
     . requires FFmpeg (http://ffmpeg.org)
     . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
