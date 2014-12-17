@@ -42,22 +42,20 @@ A weekend project under occasional development :)
 ###renamer
     Batch renaming of files and directories
     . visualises original / targeted folders structure before actual rename action
-    . supports recursion to specified end_level
-    . supports flattening folders beyond end_level
-    . can print directory from given a start_level to specified end_level
+    . supports recursion to specified end level
+    . supports flattening folders beyond end level
+    . directory print 'slicing', from a given start level to specified end_level
     . allows for include / exclude patterns (Unix style)
-    . allows global include/exclude of directories and folders
     . display sorting:
         .. by size/date, ascending/descending
     . action commands:
         .. print source directory
+        .. flatten folders below target level (moves the files up the target level)
         .. regexp-based replace
         .. add index
         .. add date
-        .. add text
+        .. add text 
         .. remove n characters
-        .. flatten all folders below target level, moving the files
-           up the target level. 
 
     Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
     
