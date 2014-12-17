@@ -25,14 +25,18 @@ from batchmp.fstools.rename import Renamer
       . can print directory from given a start_level to specified end_level
       . allows for include / exclude patterns (Unix style)
       . allows global include/exclude of directories and folders
-      . rename actions:
+      . display sorting:
+          .. by size/date, ascending/descending
+      . action commands:
+          .. print source directory
           .. regexp-based replace
           .. add index
           .. add date
           .. add text
           .. remove n characters
-      . display sorting:
-          .. by size/date, ascending/descending
+          .. flatten all folders below target level, moving the files
+             up the target level. By default, all empty
+             flattened folders will be deleted
 
     Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
       Global Options (renamer -h for additional help)

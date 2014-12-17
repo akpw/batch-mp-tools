@@ -13,8 +13,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='BatchMediaProcessingTools',
-    version="0.1",
+    name='batchmp',
+    version="0.3",
 
     url='https://github.com/akpw/batch-mp-tools',
 
