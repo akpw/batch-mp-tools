@@ -76,9 +76,9 @@ def parse_options():
 
   # Global Options
   parser.add_argument("-d", "--dir", dest = "dir",
-              required = True,
               type = lambda d: is_valid_path(parser, d),
-              help = "Source directory")
+              help = "Source directory",
+              default = os.curdir)
   parser.add_argument("-el", "--endlevel", dest = "end_level",
               help = "End level for recursion into nested folders",
               type = int,
