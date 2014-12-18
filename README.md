@@ -46,16 +46,6 @@ A weekend project under occasional development :)
         .. add date
         .. add text 
         .. remove n characters
-        
-###denoiser (requires [FFmpeg](http://ffmpeg.org))
-    . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
-    . Uses Python multiprocessing to leverage available CPU cores
-    . Supports recursive processing of media files in subfolders
-    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
-    . Supports backing up original media in their respective folders
-    . Displays continuos progress
-    . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
-        ('denoiser.py -h' for help)        
 
     Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
     
@@ -71,7 +61,19 @@ A weekend project under occasional development :)
         
     More Info:  
         "renamer -h" for additional help on global options
-        "renamer <command> -h" for additional help on specific commands
+        "renamer <command> -h" for additional help on specific commands        
+        
+        
+###denoiser (requires [FFmpeg](http://ffmpeg.org))
+    . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
+    . Uses Python multiprocessing to leverage available CPU cores
+    . Supports recursive processing of media files in subfolders
+    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
+    . Supports backing up original media in their respective folders
+    . Displays continuos progress
+    . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
+        ('denoiser.py -h' for help)        
+
 
 
 
