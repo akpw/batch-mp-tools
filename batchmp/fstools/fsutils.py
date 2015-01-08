@@ -141,7 +141,7 @@ class DWalker(object):
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True,
-                    flatten = False, ensure_uniq = False):
+                    flatten = False, ensure_uniq = False, unique_fname = FSH.unique_fnames()):
         """ generates a sequence of FSEntries elements
             supports recursion to end_level
             supports slicing directory by folder levels
@@ -204,8 +204,6 @@ class DWalker(object):
             # and check for file name uniqueness, if required
             if flatten:
                 flattens = []
-                if ensure_uniq:
-                    unique_name = FSH.unique_fnames()
 
             for fname in sorted(fnames, key = sort_key, reverse = reversed):
                 fpath = os.path.realpath(os.path.join(r, fname))
@@ -216,8 +214,8 @@ class DWalker(object):
                     flattens.append(entry)
                     if ensure_uniq:
                         # store the name generator init values
-                        next(unique_name)
-                        unique_name.send(fname)
+                        next(unique_fname)
+                        unique_fname.send(fname)
 
             # dirs
             for dname in sorted(dnames):
@@ -240,8 +238,8 @@ class DWalker(object):
                             for fname in dfnames:
                                 fpath = os.path.realpath(os.path.join(dr, fname))
                                 if ensure_uniq:
-                                    next(unique_name)
-                                    fname = unique_name.send(fname)
+                                    next(unique_fname)
+                                    fname = unique_fname.send(fname)
                                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE,
                                                     fname, fpath, siblings_indent)
                                 flattens.append(entry)
