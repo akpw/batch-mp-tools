@@ -113,9 +113,9 @@ class FFMP(object):
             shutil.rmtree(tmp_dir)
 
         # log report
-        td = datetime.timedelta(seconds=task_elapsed)
+        td = datetime.timedelta(seconds = math.ceil(task_elapsed))
         output.append('Done processing:\n {0}\n {2} {3} in {1}'.format(
-                                fpath, str(td)[:10],
+                                fpath, str(td),
                                 num_passes, 'passes' if num_passes > 1 else 'pass'))
         return output, task_elapsed
 
@@ -159,27 +159,6 @@ class FFMP(object):
                     p_bar.progress = tasks_done / num_tasks * 100
 
         return cpu_core_time
-
-    def get_media_length(self, fpath):
-        ''' Gets media length in seconds
-        '''
-        p_in = ' '.join(('ffprobe ',
-                            '-loglevel "error"',
-                            '-show_format',
-                            '-print_format json',
-                            '"{}"'.format(fpath)))
-        try:
-            output, _ = run_cmd(p_in)
-        except CmdProcessingError as e:
-            print('A problem while processing media file:\n\t"{0}"'
-                  '\nOriginal error message:\n\t{1}'.format(fpath, e.args[0]))
-            sys.exit()
-        else:
-           return math.ceil(float(json.loads(output)['format']['duration']))
-
-
-
-
 
 
 

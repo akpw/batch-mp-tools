@@ -13,7 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-import sys, os
+import sys, os, datetime, math
 from batchmp.fstools.dirtools import DHandler
 from batchmp.tags.handlers import MutagenTagHandler, FFmpegTagHandler
 
@@ -47,14 +47,17 @@ class THandler:
                     media_str = '\n{0}Title: {1}'.format(indent, handler.title)
                 if handler.album:
                     media_str = '{0}\n{1}Album: {2}'.format(media_str, indent, handler.album)
+
                 if handler.albumartist:
                     media_str = '{0}\n{1}Artist: {2}'.format(media_str, indent, handler.albumartist)
                 elif handler.artist:
                     media_str = '{0}\n{1}Artist: {2}'.format(media_str, indent, handler.artist)
+
                 if handler.genre:
                     media_str = '{0}\n{1}Genre: {2}'.format(media_str, indent, handler.genre)
                 if handler.composer:
                     media_str = '{0}\n{1}Composer: {2}'.format(media_str, indent, handler.composer)
+
                 if handler.track:
                     if handler.tracktotal:
                         track = '{}/{}'.format(handler.track, handler.tracktotal)
@@ -63,9 +66,13 @@ class THandler:
                     media_str = '{0}\n{1}Track Number: {2}'.format(media_str, indent, track)
 
                 if handler.art:
-                    media_str = '{0}\n{1}Artwork Exists'.format(media_str, indent)
-                else:
-                    media_str = '{0}\n{1}No artwork'.format(media_str, indent)
+                    media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
+
+                duration = datetime.timedelta(seconds = math.ceil(handler.length)) if handler.length else 0
+                bitrate = math.ceil(handler.bitrate / 1000) if handler.bitrate else 0
+                samplerate = handler.samplerate if handler.samplerate else 0
+                media_str = '{0}\n{1}Duration: {2}, Bit rate: {3}kb/s, Sampling: {4}Hz'.format(media_str, indent,
+                                                           duration, bitrate, samplerate)
 
                 return '{0}{1}'.format(entry.basename, media_str)
 
@@ -78,11 +85,6 @@ class THandler:
                             flatten = flatten, ensure_uniq = ensure_uniq,
                             show_size = show_size, formatter = formatter)
 
-
-# quick dev test
-if __name__ == '__main__':
-    th = THandler()
-    th.print_dir(os.curdir)
 
 
 

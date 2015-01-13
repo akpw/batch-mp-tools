@@ -13,7 +13,7 @@
 ## GNU General Public License for more details.
 
 
-import unittest, os, inspect, sys
+import unittest, os, inspect, sys, math
 import shutil, datetime
 import batchmp.ffmptools.ffmputils as ffutils
 from batchmp.fstools.fsutils import FSH
@@ -26,7 +26,7 @@ class FFMPTests(FFMPTest):
         super(FFMPTests, self).setUp()
         self.ffmp = FFMP(self.src_dir)
 
-    def test_get_media_length(self):
+    def tt_get_media_length(self): #
         media_files = ffutils.get_media_files(self.src_dir, recursive = True)
         for fpath in media_files:
             fname = os.path.split(fpath)[1]
@@ -50,10 +50,10 @@ class FFMPTests(FFMPTest):
                                                 num_passes=num_passes,
                                                 recursive = recursive,
                                                 quiet=quiet)
-        ttd = datetime.timedelta(seconds=total_elapsed)
-        ctd = datetime.timedelta(seconds=cpu_core_time)
-        print('apply_af_filters: All done in: {}'.format(str(ttd)[:10]))
-        print('apply_af_filters: CPU Cores time: {}'.format(str(ctd)[:10]))
+        ttd = datetime.timedelta(seconds = math.ceil(total_elapsed))
+        ctd = datetime.timedelta(seconds=math.ceil(cpu_core_time))
+        print('apply_af_filters: All done in: {}'.format(str(ttd)))
+        print('apply_af_filters: CPU Cores time: {}'.format(str(ctd)))
 
         # check that the original files were replaced with their denoised versions
         denoised_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}

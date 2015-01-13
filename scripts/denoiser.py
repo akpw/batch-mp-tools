@@ -13,7 +13,7 @@
 ## GNU General Public License for more details.
 
 
-import datetime
+import datetime, math
 from argparse import ArgumentParser
 from batchmp.ffmptools.ffmp import FFMP
 
@@ -77,10 +77,10 @@ def main():
                                           backup=not args['no_b'],
                                           quiet=args['quiet'])
 
-  ttd = datetime.timedelta(seconds=total_elapsed)
-  ctd = datetime.timedelta(seconds=cpu_core_time)
-  print('All done in: {}'.format(str(ttd)[:10]))
-  print('FFmpeg CPU Cores time: {}'.format(str(ctd)[:10]))
+  ttd = datetime.timedelta(seconds = math.ceil(total_elapsed))
+  ctd = datetime.timedelta(seconds = math.ceil(cpu_core_time))
+  print('All done in: {}'.format(str(ttd)))
+  print('FFmpeg CPU Cores time: {}'.format(str(ctd)))
 
 if __name__ == '__main__':
     main()
