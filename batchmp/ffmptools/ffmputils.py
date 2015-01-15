@@ -93,7 +93,7 @@ def ffmpeg_installed():
 def get_media_files(src_dir=os.curdir, recursive = False):
     """Gets all media files from source directory and (if recursive) its subdirectories
     """
-    pass_filter = lambda f: f.endswith(SUPPORTED_MEDIA)
+    pass_filter = lambda f: os.path.splitext(f)[1] in SUPPORTED_MEDIA
     return fsutils.FSH.get_files(src_dir = src_dir, recursive = recursive, pass_filter = pass_filter)
 
 def setup_backup_dirs(files):
