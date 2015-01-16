@@ -10,9 +10,21 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os, sys, fnmatch, shutil
+import os, sys, fnmatch, shutil, tempfile
 import hashlib
 from collections import namedtuple
+from contextlib import contextmanager
+
+@contextmanager
+def temp_dir():
+    """ Temp dir context manager
+    """
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        yield tmp_dir
+    finally:
+        # remove tmp dir
+        shutil.rmtree(tmp_dir)
 
 class FSH(object):
     """ FS helper

@@ -13,10 +13,9 @@
 """ Utility functions for use in ffmp module
 """
 
-import os, shutil, tempfile, subprocess, shlex
+import os, subprocess, shlex
 import copyreg, types, time, datetime
 from functools import wraps
-from contextlib import contextmanager
 import batchmp.fstools.fsutils as fsutils
 
 class FFmpegNotInstalled(Exception):
@@ -33,16 +32,6 @@ SUPPORTED_MEDIA =  ('.aif', '.m4a', '.mp3',
                     '.mov', '.mp4', '.mpg', '.wmv', '.mkv')
 BACKUP_DIR_PREFIX = '_origs_'
 
-@contextmanager
-def temp_dir():
-    """ Temp dir context manager
-    """
-    tmp_dir = tempfile.mkdtemp()
-    try:
-        yield tmp_dir
-    finally:
-        # remove tmp dir
-        shutil.rmtree(tmp_dir)
 
 def timed(f):
     """ A simple timing decorator

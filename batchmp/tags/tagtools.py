@@ -65,7 +65,7 @@ class THandler:
                         track = handler.track
                     media_str = '{0}\n{1}Track Number: {2}'.format(media_str, indent, track)
 
-                if handler.art:
+                if handler.has_artwork:
                     media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
 
                 duration = datetime.timedelta(seconds = math.ceil(handler.length)) if handler.length else 0
