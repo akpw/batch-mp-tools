@@ -113,7 +113,7 @@ class THandler:
                     disc = '{}/{}'.format(handler.disc, handler.disctotal)
                 else:
                     disc = handler.disc
-                media_str = '{0}\n{1}Disk: {2}'.format(media_str, indent, disc)
+                media_str = '{0}\n{1}Disc: {2}'.format(media_str, indent, disc)
 
             if handler.has_artwork:
                 media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
