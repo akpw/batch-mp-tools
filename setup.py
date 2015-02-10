@@ -35,6 +35,7 @@ setup(
     entry_points={'console_scripts': [
         'denoiser = scripts.denoiser:main',
         'renamer = scripts.renamer:main',
+        'tagger = scripts.tagger:main',
     ]},
     zip_safe=True,
     classifiers=[

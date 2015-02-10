@@ -172,16 +172,15 @@ def _unpack_asf_image(data):
         pos += 2
     pos += 2
     image_data = data[pos:pos + size]
-    return (mime.decode("utf-16-le"), image_data, type,
-            description.decode("utf-16-le"))
+    return (mime, image_data, type, description)
 
 
 def _pack_asf_image(mime, data, type=3, description=""):
     """Pack image data for a WM/Picture tag.
     """
     tag_data = struct.pack("<bi", type, len(data))
-    tag_data += mime.encode("utf-16-le") + "\x00\x00"
-    tag_data += description.encode("utf-16-le") + "\x00\x00"
+    tag_data += mime + "\x00\x00"
+    tag_data += description + "\x00\x00"
     tag_data += data
     return tag_data
 
@@ -425,8 +424,6 @@ class StorageStyle(object):
             if isinstance(value, bool):
                 # Store bools as 1/0 instead of True/False.
                 value = str(int(bool(value)))
-            elif isinstance(value, str):
-                value = value.decode('utf8', 'ignore')
             else:
                 value = str(value)
         else:
@@ -535,8 +532,6 @@ class MP4StorageStyle(StorageStyle):
 
     def serialize(self, value):
         value = super(MP4StorageStyle, self).serialize(value)
-        if self.key.startswith('----:') and isinstance(value, str):
-            value = value.encode('utf8')
         return value
 
 
@@ -805,7 +800,7 @@ class MP3ImageStorageStyle(ListStorageStyle, MP3StorageStyle):
         frame = mutagen.id3.Frames[self.key]()
         frame.data = image.data
         frame.mime = image.mime_type
-        frame.desc = (image.desc or '').encode('utf8')
+        frame.desc = image.desc or ''
         frame.encoding = 3  # UTF-8 encoding of desc
         frame.type = image.type_index
         return frame

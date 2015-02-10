@@ -42,22 +42,26 @@ class DHandler:
 
         # print the dir tree
         fcnt = dcnt = 0
-        size, total_size = '', 0
+        total_size = 0
         for entry in DWalker.entries(src_dir = src_dir,
                                     start_level = start_level, end_level = end_level,
                                     include = include, exclude = exclude, sort = sort,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq):
 
-            if entry.type == DWalker.ENTRY_TYPE_FILE:
-                fcnt += 1
-                if show_size:
-                    fsize = os.path.getsize(entry.realpath)
-                    size = ' {} '.format(FSH.file_size(fsize))
-                    total_size += fsize
-            elif entry.type == DWalker.ENTRY_TYPE_DIR:
-                dcnt += 1
-            print('{0}{1}{2}'.format(entry.indent, size, formatter(entry)))
+            formatted_output = formatter(entry)
+            if formatted_output:
+                size = ''
+                if entry.type == DWalker.ENTRY_TYPE_FILE:
+                    fcnt += 1
+                    if show_size:
+                        fsize = os.path.getsize(entry.realpath)
+                        size = ' {} '.format(FSH.file_size(fsize))
+                        total_size += fsize
+                elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                    dcnt += 1
+
+                print('{0}{1}{2}'.format(entry.indent, size, formatted_output))
 
         # print summary
         print('{0} files, {1} folders'.format(fcnt, dcnt))
@@ -156,20 +160,24 @@ class DHandler:
 
     @staticmethod
     def visualise_changes(src_dir, before_msg = 'Current source directory:',
-                                    after_msg = '\nTargeted after rename:',
+                                    after_msg = '\nTargeted after processing:',
                                     orig_end_level = sys.maxsize, target_end_level = 0,
                                     include = '*', exclude = '', sort = 'n',
                                     filter_dirs = True, filter_files = True,
                                     include_dirs = False, include_files = True,
-                                    flatten = False, ensure_uniq = False, formatter = None):
+                                    flatten = False, ensure_uniq = False,
+                                    preformatter = None, formatter = None):
 
         print(before_msg)
-        DHandler.print_dir(src_dir = src_dir, end_level = orig_end_level, sort = sort,
+        DHandler.print_dir(src_dir = src_dir,
+                                    end_level = orig_end_level, sort = sort,
                                     include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files)
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    formatter = preformatter)
 
         print(after_msg)
-        DHandler.print_dir(src_dir = src_dir, end_level = target_end_level, sort = sort,
+        DHandler.print_dir(src_dir = src_dir,
+                                    end_level = target_end_level, sort = sort,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq,
