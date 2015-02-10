@@ -48,21 +48,30 @@ from functools import partial
       renamer Command -h for additional help
 """
 
-def is_valid_path(parser, path_arg):
+def is_valid_dir_path(parser, dpath_arg):
     """ Checks if path_arg is a valid dir path
     """
-    path_arg = os.path.realpath(path_arg)
-    if not (os.path.exists(path_arg) and os.path.isdir(path_arg)):
-        parser.error('Please enter a valid source directory'.format(path_arg))
+    dpath_arg = os.path.realpath(dpath_arg)
+    if not (os.path.exists(dpath_arg) and os.path.isdir(dpath_arg)):
+        parser.error('Please enter a valid source directory path'.format(dpath_arg))
     else:
-        return path_arg
+        return dpath_arg
+
+def is_valid_file_path(parser, fpath_arg):
+    """ Checks if path_arg is a valid dir path
+    """
+    fpath_arg = os.path.realpath(fpath_arg)
+    if not (os.path.exists(fpath_arg) and os.path.isfile(fpath_arg)):
+        parser.error('Please enter a valid file path'.format(fpath_arg))
+    else:
+        return fpath_arg
 
 def parse_options():
-  parser = ArgumentParser(prog = 'renamer', description = 'Global Options')
+  parser = ArgumentParser(prog = 'tagger', description = 'Global Options')
 
   # Global Options
   parser.add_argument("-d", "--dir", dest = "dir",
-              type = lambda d: is_valid_path(parser, d),
+              type = lambda d: is_valid_dir_path(parser, d),
               help = "Source directory (default is current directory)",
               default = os.curdir)
   parser.add_argument("-el", "--endlevel", dest = "end_level",
@@ -145,7 +154,7 @@ def parse_options():
                   type = str)
   set_tags_parser.add_argument('-at', '--art', dest='art',
                   help = "Sets artwork (/path to PNG or JPEG )",
-                  type = str)
+                  type = lambda f: is_valid_file_path(parser, f))
 
 
   return vars(parser.parse_args())
@@ -176,10 +185,8 @@ def set_tags(args):
 
   art, art_path = None, args['art']
   if art_path:
-    art_path = os.path.realpath(art_path)
-    if os.path.exists(art_path) and os.path.isfile(art_path):
-      with open(art_path, 'rb') as f:
-        art = f.read()
+    with open(art_path, 'rb') as f:
+      art = f.read()
   if art:
     tag_holder.art = art
 
