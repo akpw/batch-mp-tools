@@ -26,7 +26,7 @@ def temp_dir():
         # remove tmp dir
         shutil.rmtree(tmp_dir)
 
-class FSH(object):
+class FSH:
     """ FS helper
     """
     @staticmethod
@@ -76,6 +76,7 @@ class FSH(object):
                     yield fname
                     break
 
+    @staticmethod
     def file_size(size, kb_1024=False):
         """ human readable file size
         """
@@ -138,6 +139,21 @@ class FSH(object):
                 sys.exit(1)
         return succeeded
 
+class UniqueDirNamesChecker:
+    def __init__(self, src_dir, unique_fnames = FSH.unique_fnames):
+        self._src_dir = src_dir
+        self._uname_gen = unique_fnames()
+
+        fnames = (os.path.realpath(f) for f in os.listdir(self._src_dir) if os.path.isfile(f))
+        # init the generator function with existing file names from the dir
+        for f in fnames:
+            next(self._uname_gen)
+            self._uname_gen.send(f)
+
+    def unique_name(self, fname):
+        next(self._uname_gen)
+        return self._uname_gen.send(fname)
+
 class DWalker(object):
     """ Walks content of a directory, generating
         a sequence of structured directory elements (FSEntry)
@@ -153,7 +169,7 @@ class DWalker(object):
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True,
-                    flatten = False, ensure_uniq = False, unique_fname = FSH.unique_fnames()):
+                    flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
         """ generates a sequence of FSEntries elements
             supports recursion to end_level
             supports slicing directory by folder levels
@@ -214,13 +230,15 @@ class DWalker(object):
             # process files
             # if flattening, need to postpone yielding
             # and check for file name uniqueness, if required
-            if flatten:
+            flattening = flatten and (current_level == end_level)
+            if flattening:
                 flattens = []
+                unique_fname = unique_fnames()
 
             for fname in sorted(fnames, key = sort_key, reverse = reversed):
                 fpath = os.path.realpath(os.path.join(r, fname))
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE, fname, fpath, siblings_indent)
-                if not flatten:
+                if not flattening:
                     yield entry
                 else:
                     flattens.append(entry)
@@ -236,7 +254,7 @@ class DWalker(object):
                 # check the current_level from root
                 if current_level == end_level:
                     # not going any deeper
-                    if not flatten:
+                    if not flattening:
                         # yield the dir
                         entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
                                             dname, dpath, siblings_indent[:-1] + os.path.sep)
@@ -258,7 +276,7 @@ class DWalker(object):
                     dnames.remove(dname)
 
             # if flattening, time to render
-            if flatten:
+            if flattening:
                 if by_size:
                     sort_key = lambda entry: os.path.getsize(entry.realpath)
                 else:

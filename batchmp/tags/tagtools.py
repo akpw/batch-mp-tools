@@ -15,7 +15,8 @@
 
 import sys, os, datetime, math
 from batchmp.fstools.dirtools import DHandler, DWalker
-from batchmp.tags.handlers import MutagenTagHandler, FFmpegTagHandler, EmptyTagHandler
+from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
+from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from functools import partial
 
 class THandler:
@@ -37,7 +38,7 @@ class THandler:
         if not formatter:
             formatter = partial(self.tag_formatter, show_stats = show_stats)
 
-        DHandler.print_dir(src_dir = src_dir, start_level = 0, end_level = end_level,
+        DHandler.print_dir(src_dir = src_dir, start_level = start_level, end_level = end_level,
                             include = include, exclude = exclude, sort = sort,
                             filter_dirs = filter_dirs, filter_files = filter_files,
                             flatten = flatten, ensure_uniq = ensure_uniq,
@@ -115,10 +116,10 @@ class THandler:
                     disc = handler.disc
                 media_str = '{0}\n{1}Disc: {2}'.format(media_str, indent, disc)
 
-            if handler.has_artwork:
-                media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
-
             if show_stats:
+                if handler.has_artwork:
+                    media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
+
                 duration = datetime.timedelta(seconds = math.ceil(handler.length)) if handler.length else 0
                 bitrate = math.ceil(handler.bitrate / 1000) if handler.bitrate else 0
                 samplerate = handler.samplerate if handler.samplerate else 0
@@ -126,10 +127,3 @@ class THandler:
                                                        duration, bitrate, samplerate)
 
             return '{0}{1}'.format(entry.basename, media_str)
-
-
-
-
-
-
-

@@ -26,13 +26,6 @@ class FFMPTests(FFMPTest):
         super(FFMPTests, self).setUp()
         self.ffmp = FFMP(self.src_dir)
 
-    def tt_get_media_length(self): #
-        media_files = ffutils.get_media_files(self.src_dir, recursive = True)
-        for fpath in media_files:
-            fname = os.path.split(fpath)[1]
-            length = self.ffmp.get_media_length(fpath)
-            self.assertTrue(abs(length - self.media_info[fname]) < 2)
-
     def test_apply_af_filters_raise(self):
         self.assertRaises(ffutils.FFmpegArgsError, self.ffmp.apply_af_filters)
 

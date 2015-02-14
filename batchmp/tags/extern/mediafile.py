@@ -28,6 +28,7 @@ Internally ``MediaFile`` uses ``MediaField`` descriptors to access the
 data from the tags. In turn ``MediaField`` uses a number of
 ``StorageStyle`` strategies to handle format specific logic.
 """
+
 import mutagen
 import mutagen.mp3
 import mutagen.oggopus
@@ -53,7 +54,7 @@ __all__ = ['UnreadableFileError', 'FileTypeError', 'MediaFile']
 TYPES = {
     'mp3':  'MP3',
     'aac':  'AAC',
-    'alac':  'ALAC',
+    'alac': 'ALAC',
     'ogg':  'OGG',
     'opus': 'Opus',
     'flac': 'FLAC',
@@ -150,7 +151,6 @@ def _safe_cast(out_type, val):
 
 
 # Image coding for ASF/WMA.
-
 def _unpack_asf_image(data):
     """Unpack image data from a WM/Picture tag. Return a tuple
     containing the MIME type, the raw image data, a type indicator, and
@@ -159,34 +159,36 @@ def _unpack_asf_image(data):
     of exceptions (out-of-bounds, etc.). We should clean this up
     sometime so that the failure modes are well-defined.
     """
-    type, size = struct.unpack_from("<bi", data)
+    type, size = struct.unpack_from(b'<bi', data)
     pos = 5
-    mime = ""
-    while data[pos:pos + 2] != "\x00\x00":
+    # Quick Fix
+    mime = ''.encode("utf-16-le")
+    while data[pos:pos + 2] != b'\x00\x00':
         mime += data[pos:pos + 2]
         pos += 2
     pos += 2
-    description = ""
-    while data[pos:pos + 2] != "\x00\x00":
+    # Quick Fix
+    description = ''.encode("utf-16-le")
+    while data[pos:pos + 2] != b'\x00\x00':
         description += data[pos:pos + 2]
         pos += 2
     pos += 2
     image_data = data[pos:pos + size]
-    return (mime, image_data, type, description)
+    return (mime.decode("utf-16-le"), image_data, type, description.decode("utf-16-le"))
 
 
 def _pack_asf_image(mime, data, type=3, description=""):
-    """Pack image data for a WM/Picture tag.
+    """ Pack image data for a WM/Picture tag.
     """
-    tag_data = struct.pack("<bi", type, len(data))
-    tag_data += mime + "\x00\x00"
-    tag_data += description + "\x00\x00"
+    tag_data = struct.pack(b"<bi", type, len(data))
+    tag_data += mime.encode("utf-16-le") + b"\x00\x00"
+    tag_data += description.encode("utf-16-le") + b"\x00\x00"
     tag_data += data
     return tag_data
 
 
-# iTunes Sound Check encoding.
 
+# iTunes Sound Check encoding.
 def _sc_decode(soundcheck):
     """Convert a Sound Check string value to a (gain, peak) tuple as
     used by ReplayGain.
@@ -871,6 +873,8 @@ class VorbisImageStorageStyle(ListStorageStyle):
             del mutagen_file['coverart']
         if 'coverartmime' in mutagen_file:
             del mutagen_file['coverartmime']
+        # Quick Fix
+        image_data = [img.decode("ascii") for img in image_data]
         super(VorbisImageStorageStyle, self).store(mutagen_file, image_data)
 
     def serialize(self, image):
@@ -1879,4 +1883,6 @@ class MediaFile(object):
     def format(self):
         """A string describing the file format/codec."""
         return TYPES[self.type]
+
+
 

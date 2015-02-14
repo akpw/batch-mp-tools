@@ -31,7 +31,6 @@ setup(
 
     test_suite = "tests.batch_mp_test_suite",
 
-    scripts=['scripts/denoiser.py'],
     entry_points={'console_scripts': [
         'denoiser = scripts.denoiser:main',
         'renamer = scripts.renamer:main',
