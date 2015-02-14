@@ -119,7 +119,7 @@ class FFmpegTagHandler(TagHandler):
             elif self.tracktotal:
                     track_tagger = ' -metadata track="0/{}"'.format(self.tracktotal)
             else:
-                track_tagger = ''
+                track_tagger = ' -metadata track=""'
             if self.disc:
                 if self.disctotal:
                     disc_tagger = ' -metadata disc="{0}/{1}"'.format(self.disc, self.disctotal)
@@ -128,7 +128,7 @@ class FFmpegTagHandler(TagHandler):
             elif self.disctotal:
                     disc_tagger = ' -metadata disc="0/{}"'.format(self.disctotal)
             else:
-                disc_tagger = ''
+                disc_tagger = ' -metadata disc=""'
 
             cmd = ''.join(('ffmpeg ',
                             #' -v quiet',
