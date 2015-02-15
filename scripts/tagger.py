@@ -16,9 +16,10 @@
 import os, sys, datetime
 from argparse import ArgumentParser
 from scripts.base.bmpargp import BMPArgParser
-from batchmp.tags.tagtools import THandler
+from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.basehandler import TagHolder
 from batchmp.fstools.dirtools import DHandler
+from batchmp.tags.utils.formatters import TagOutputFormatter
 from functools import partial
 
 
@@ -124,7 +125,7 @@ class TaggerArgParser(BMPArgParser):
 class TagsDispatcher:
     @staticmethod
     def print_dir(args):
-        THandler().print_dir(src_dir = args['dir'],
+        BaseTagProcessor().print_dir(src_dir = args['dir'],
                 sort = args['sort'],
                 start_level = args['start_level'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
@@ -155,9 +156,20 @@ class TagsDispatcher:
             tag_holder.art = art
 
         # visualise changes to tags and proceed if confirmed
-        tag_handler = THandler()
-        preformatter = partial(tag_handler.tag_formatter, show_stats = False)
-        formatter = partial(tag_handler.tag_formatter, tag_holder = tag_holder, show_stats = False)
+        tag_processor = BaseTagProcessor()
+        preformatter = partial(TagOutputFormatter.tags_formatter,
+                                        format_type = TagOutputFormatter.FULL,
+                                        handler_factory = tag_processor.handler_factory,
+                                        show_stats = False)
+
+
+        formatter = partial(TagOutputFormatter.tags_formatter,
+                                        format_type = TagOutputFormatter.FULL,
+                                        handler_factory = tag_processor.handler_factory,
+                                        show_stats = False,
+                                        tag_holder = tag_holder)
+
+
         proceed = True if args['quiet'] else DHandler.visualise_changes(src_dir = args['dir'],
                     sort = args['sort'],
                     orig_end_level = args['end_level'], target_end_level = args['end_level'],
@@ -167,7 +179,7 @@ class TagsDispatcher:
                     formatter = formatter)
 
         if proceed:
-            tag_handler.set_tags(args['dir'],
+            tag_processor.set_tags(args['dir'],
                     start_level = 0, end_level = args['end_level'],
                     include = args['include'], exclude = args['exclude'],
                     filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],

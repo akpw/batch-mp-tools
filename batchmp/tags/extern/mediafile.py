@@ -963,7 +963,7 @@ class APEv2ImageStorageStyle(ListStorageStyle):
         for cover_type, cover_tag in list(self.TAG_NAMES.items()):
             try:
                 frame = mutagen_file[cover_tag]
-                text_delimiter_index = frame.value.find('\x00')
+                text_delimiter_index = frame.value.find(b'\x00')
                 comment = frame.value[0:text_delimiter_index] \
                     if text_delimiter_index > 0 else None
                 image_data = frame.value[text_delimiter_index + 1:]
@@ -980,7 +980,7 @@ class APEv2ImageStorageStyle(ListStorageStyle):
         for image in values:
             image_type = image.type or ImageType.other
             comment = image.desc or ''
-            image_data = comment + "\x00" + image.data
+            image_data = comment.encode("utf-16-le") + b"\x00" + image.data
             cover_tag = self.TAG_NAMES[image_type]
             mutagen_file[cover_tag] = image_data
 
