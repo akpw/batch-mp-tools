@@ -17,9 +17,9 @@ import os, sys, datetime
 from argparse import ArgumentParser
 from scripts.base.bmpargp import BMPArgParser
 from batchmp.tags.processors.basetp import BaseTagProcessor
-from batchmp.tags.handlers.basehandler import TagHolder
+from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.fstools.dirtools import DHandler
-from batchmp.tags.utils.formatters import TagOutputFormatter
+from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from functools import partial
 
 
@@ -64,9 +64,13 @@ class TaggerArgParser(BMPArgParser):
         print_parser.add_argument('-ss', '--showsize', dest='show_size',
                 help ='Shows files size',
                 action = 'store_true')
-        print_parser.add_argument('-st', '--showstats', dest='show_stats',
-                help ='Shows medial file statistics',
+        print_parser.add_argument('-ff', '--fullformat', dest='full_format',
+                help ='Shows all media tags',
                 action = 'store_true')
+        print_parser.add_argument('-st', '--showstats', dest='show_stats',
+                help ='Shows media file statistics',
+                action = 'store_true')
+
         # Set Tags
         set_tags_parser = subparsers.add_parser('set', help = 'Sets specified tags in media files')
         set_tags_parser.add_argument('-ti', '--title', dest='title',
@@ -115,6 +119,7 @@ class TaggerArgParser(BMPArgParser):
             args['start_level'] = 0
             args['show_size'] = False
             args['show_stats'] = False
+            args['full_format'] = False
 
         if args['sub_cmd'] == 'print':
             if args['file']:
@@ -131,7 +136,8 @@ class TagsDispatcher:
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
                 flatten = False, ensure_uniq = False,
-                show_size = args['show_size'], show_stats = args['show_stats'], formatter = None)
+                show_size = args['show_size'], show_stats = args['show_stats'],
+                format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
 
     @staticmethod
     def set_tags(args):
@@ -158,14 +164,13 @@ class TagsDispatcher:
         # visualise changes to tags and proceed if confirmed
         tag_processor = BaseTagProcessor()
         preformatter = partial(TagOutputFormatter.tags_formatter,
-                                        format_type = TagOutputFormatter.FULL,
-                                        handler_factory = tag_processor.handler_factory,
+                                        format_type = OutputFormatType.FULL,
+                                        handler = tag_processor.handler,
                                         show_stats = False)
 
-
         formatter = partial(TagOutputFormatter.tags_formatter,
-                                        format_type = TagOutputFormatter.FULL,
-                                        handler_factory = tag_processor.handler_factory,
+                                        format_type = OutputFormatType.FULL,
+                                        handler = tag_processor.handler,
                                         show_stats = False,
                                         tag_holder = tag_holder)
 

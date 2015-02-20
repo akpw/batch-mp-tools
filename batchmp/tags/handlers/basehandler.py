@@ -15,196 +15,130 @@
 
 """ Tag Handlers responsibility chain
 """
-
 import os
 from enum import Enum
-from abc import ABCMeta, abstractmethod, abstractproperty
-from weakref import WeakKeyDictionary
+from abc import ABCMeta, abstractmethod
 from batchmp.fstools.fsutils import UniqueDirNamesChecker
+from batchmp.commons.descriptors import LazyClassPropertyDescriptor, LazyFunctionPropertyDescriptor
+from weakref import ref, ReferenceType
 
-
-# Tag Field Descriptors
-class MediaFieldDescriptor:
-    def __init__(self):
-        self.data = WeakKeyDictionary()
-    def __get__(self, obj, type=None):
-        return self.data.get(obj)
-    def __set__(self, obj, value):
-        self.data[obj] = value
-
-# Art Field (lazy property)
-class ArtFieldDescriptor:
-    _default_value = object()
-    def __init__(self, func):
-        self._func = func
-    def __get__(self, obj, type=None):
-        if obj is None:
-            return self
-        # this method should only be called on an instance when
-        # the property has not yet been set on the instance level
-        # so checking the instance dictionary here is probably a bit superfluous...
-        value = obj.__dict__.get(self._func.__name__, self._default_value)
-        if value is self._default_value:
-            # the property has not been set yet
-            # calculate the value and store it on the instance level
-            value = self._func(obj)
-            obj.__dict__[self._func.__name__] = value
-        return value
-
-
-class ArtType(Enum):
+class DetauchedArtType(Enum):
+    ''' Detached art type specifier
+    '''
     PNG, JPEG = 0, 1
-
     @staticmethod
     def art_ext(type):
-        if type == ArtType.JPEG:
+        if type == DetauchedArtType.JPEG:
             return '.jpg'
         else:
             return '.png'
 
-
 class TagHandler(metaclass = ABCMeta):
-    ''' Abstract Tag Handler
-        Defines supported tags properties & the protocol
+    ''' Responsibilty Chain for Tag Handlers
     '''
-    title = MediaFieldDescriptor()
-    album = MediaFieldDescriptor()
-    artist = MediaFieldDescriptor()
-    albumartist = MediaFieldDescriptor()
-    genre = MediaFieldDescriptor()
-    composer = MediaFieldDescriptor()
-    track = MediaFieldDescriptor()
-    tracktotal = MediaFieldDescriptor()
-    disc = MediaFieldDescriptor()
-    disctotal = MediaFieldDescriptor()
-    year = MediaFieldDescriptor()
-    encoder = MediaFieldDescriptor()
+    class THChainDispatcher:
+        ''' Internal dispatcher for chained handlers
+        '''
+        def __init__(self):
+            self._handlers_refs_chain = []
+            self._receiver_idx = -1
+
+        def add_handler(self, tag_handler):
+            if not isinstance(tag_handler, TagHandler):
+                raise TypeError('TagHandler.__add__() expects a TagHandler instance')
+            else:
+                if len(self._handlers_refs_chain) == 0:
+                    self._handlers_refs_chain.append(ref(tag_handler))
+                else:
+                    self._handlers_refs_chain.append(tag_handler)
+
+        def has_responder(self, mfname):
+            ''' Returns suitable handler for a media file
+            '''
+            for idx, handler in enumerate(self._handlers_refs_chain):
+                if type(handler) is ReferenceType:
+                    handler = handler()
+                if handler and handler._can_handle(mfname):
+                    self._receiver_idx = idx
+                    return True
+            return False
+
+        @property
+        def responder(self):
+            if self._receiver_idx >= 0:
+                handler = self._handlers_refs_chain[self._receiver_idx]
+                if type(handler) is ReferenceType:
+                    handler = handler()
+                return handler
+            else:
+                return None
+
+    tag_holder = LazyClassPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
 
     def __init__(self):
-        self.mediaHandler = None
-        self.can_write_artwork = True
+        self._mediaHandler = None
+        self._can_write_artwork = True
 
-    @ArtFieldDescriptor
-    def art(self):
-        ''' default value for the class level property
-            specific handlers can override as appropriate
-        '''
-        return None
+    def _reset_handler(self):
+        self._mediaHandler = None
+        self._can_write_artwork = True
+        if 'tag_holder' in self.__dict__:
+            del self.__dict__['tag_holder']
 
-    # Read-only properties
-    @property
-    def has_artwork(self):
-        ''' Default impl via direct access
-            specific handlers can override for deferred access
+    @LazyFunctionPropertyDescriptor
+    def _handler_chain(self):
+        handler_chain = TagHandler.THChainDispatcher()
+        handler_chain.add_handler(self)
+        return handler_chain
+
+    def __add__(self, tag_handler):
+        ''' Adds a handler to hanlders chain
         '''
-        return self.art
-    @property
-    def length(self):
-        return 0
-    @property
-    def bitrate(self):
-        return 0
-    @property
-    def samplerate(self):
-        return 0
-    @property
-    def channels(self):
-        return 0
-    @property
-    def bitdepth(self):
-        return 0
-    @property
-    def format(self):
-        return None
+        if not isinstance(tag_handler, TagHandler):
+            raise TypeError('TagHandler.__add__() expects a TagHandler instance')
+        tag_handler._handler_chain = self._handler_chain
+        tag_handler.tag_holder = self.tag_holder
+        self._handler_chain.add_handler(tag_handler)
+
+        return self
+
+    def can_handle(self, path):
+        return self._handler_chain.has_responder(path)
+
+    def save(self):
+        self._handler_chain.responder._save()
 
     # Abstract methods
     @abstractmethod
-    def can_handle(self, path):
+    def _can_handle(self, path):
         ''' implement in specific handlers
         '''
         return False
 
+    # Abstract methods
     @abstractmethod
-    def save(self):
+    def _save(self):
         ''' implement in specific handlers
         '''
-        pass
+        return False
 
-    @classmethod
-    def fields(cls):
-        ''' generates names of all writable tag properties
-        '''
-        for c in cls.__mro__:
-            for prop, descr in vars(c).items():
-                if isinstance(descr, MediaFieldDescriptor):
-                    yield prop
-                if isinstance(descr, ArtFieldDescriptor):
-                    yield prop
+    # Helper methods
+    def copy_tags(self, tag_holder, copy_empty_vals = False):
+        self.tag_holder.copy_tags(tag_holder)
 
-    @classmethod
-    def readable_fields(cls):
-        ''' generates names of all tag properties
-        '''
-        for prop in cls.fields():
-            yield prop
-        for prop in ('has_artwork', 'length', 'samplerate', 'bitdepth',  'channels', 'format'):
-            yield prop
+    def clear_tags(self):
+        self.tag_holder.clear_tags()
 
-    def _reset_fields(self):
-        ''' clears the tags properties
-        '''
-        self.mediaHandler = None
-        self.can_write_artwork = True
-
-        for cls in type(self).__mro__:
-            for prop, descr in vars(cls).items():
-                if isinstance(descr, MediaFieldDescriptor):
-                    setattr(self, prop, None)
-                if isinstance(descr, ArtFieldDescriptor):
-                    if prop in self.__dict__:
-                        del self.__dict__[prop]
-
-    def copy_fields(self, tag_holder, copy_empty_vals = False):
-            ''' copies tags from passed tag_holder object
-            '''
-            for field in self.fields():
-                if hasattr(tag_holder, field):
-                    value = getattr(tag_holder, field)
-                    if value != None or copy_empty_vals:
-                        setattr(self, field, value)
-
-    def remove_tags(self):
-        ''' clears the tags properties
-        '''
-        for cls in type(self).__mro__:
-            for prop, descr in vars(cls).items():
-                if isinstance(descr, MediaFieldDescriptor) or isinstance(descr, ArtFieldDescriptor):
-                    setattr(self, prop, None)
-
-    def detauch_art(self, dir_path = None, type = ArtType.PNG):
+    def detauch_art(self, dir_path = None, type = DetauchedArtType.PNG):
         fpath = None
-        if self.art:
+        if self.tag_holder.art:
             if not dir_path:
                 dir_path = os.path.basename(self.mediaHandler.path)
-            fname = os.path.splitext(os.path.basename(self.mediaHandler.path))[0] + ArtType.art_ext(type)
+            fname = os.path.splitext(os.path.basename(self.mediaHandler.path))[0] + DetauchedArtType.art_ext(type)
             fname = UniqueDirNamesChecker(dir_path).unique_name(fname)
 
             fpath = os.path.join(dir_path, fname)
             with open(fpath, 'wb') as f:
-                f.write(self.art)
+                f.write(self.tag_holder.art)
 
         return fpath
-
-
-class TagHolder(TagHandler):
-    ''' Minimal Base Handler impl
-        Useful for passing tag values around
-    '''
-    def can_handle(self, path):
-        return False
-    def save(self):
-        pass
-
-
-
-

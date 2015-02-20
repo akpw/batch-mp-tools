@@ -196,7 +196,8 @@ def _sc_decode(soundcheck):
     # SoundCheck tags consist of 10 numbers, each represented by 8
     # characters of ASCII hex preceded by a space.
     try:
-        soundcheck = soundcheck.replace(' ', '').decode('hex')
+        soundcheck = soundcheck.replace(' ', '')
+        soundcheck = base64.b64encode(soundcheck)
         soundcheck = struct.unpack('!iiiiiiiiii', soundcheck)
     except (struct.error, TypeError, UnicodeEncodeError):
         # SoundCheck isn't in the format we expect, so return default
@@ -680,7 +681,7 @@ class MP3UFIDStorageStyle(MP3StorageStyle):
                 frame.data = value
         else:
             # New frame.
-            frame = mutagen.id3.UFID(owner=self.owner, data=value)
+            frame = mutagen.id3.UFID(owner=self.owner, data=value.encode("utf-16-le"))
             mutagen_file.tags.setall(self.key, [frame])
 
 

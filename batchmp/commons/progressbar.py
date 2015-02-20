@@ -129,7 +129,7 @@ class CmdProgressBar(object):
         sys.stdout.write(''.join(('\r', ' ' * 70, '\r')))
         sys.stdout.flush()
 
-# Quick Test
+# Quick Dev Test
 if __name__ == '__main__':
     start_from, msg_target, progress_target = 30, 40, 60
     with progress_bar(start_from) as p_bar:

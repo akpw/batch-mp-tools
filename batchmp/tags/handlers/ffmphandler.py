@@ -24,20 +24,17 @@ from batchmp.ffmptools.ffmputils import (
     CmdProcessingError
 )
 from batchmp.fstools.fsutils import temp_dir
-from batchmp.tags.handlers.basehandler import (
-    TagHandler,
-    ArtFieldDescriptor)
+from batchmp.tags.handlers.basehandler import TagHandler
 
 class FFmpegTagHandler(TagHandler):
     ''' FFmpeg-Based Tag Handler
     '''
     FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
 
-    def can_handle(self, path):
-        self._reset_fields()
+    def _can_handle(self, path):
+        self._reset_handler()
         if not ffmpeg_installed():
             return False
-
         cmd = ''.join(('ffprobe ',
                             ' -v quiet',
                             ' -show_streams',
@@ -67,27 +64,35 @@ class FFmpegTagHandler(TagHandler):
 
             self.mediaHandler = self.FFEntry(path, format, audio_stream, artwork_stream)
             self._parse_tags()
+        #print('ffmpeg can handle')
         return True
 
     def _parse_tags(self):
         ''' parses tags from FFmpeg output
         '''
-        if self.mediaHandler.audio:
-            self.encoder = self.mediaHandler.audio.get('codec_long_name')
+        # non-tagable fields defaults
+        self.tag_holder.length = 0.0
+        self.tag_holder.bitrate = 0
+        self.tag_holder.samplerate = 0
+        self.tag_holder.channels = 0
+        self.tag_holder.bitdepth = 0
 
         # Tags
         if self.mediaHandler.format:
+            self.tag_holder.bitrate = int(self.mediaHandler.format.get('bit_rate', 0))
+
             tag_info = self.mediaHandler.format['tags'] if 'tags' in self.mediaHandler.format else None
             if tag_info:
                 tag_info = {k.lower():v for k,v in tag_info.items()}
 
-                self.title = tag_info.get('title')
-                self.album = tag_info.get('album')
-                self.artist = tag_info.get('artist')
-                self.albumartist = tag_info.get('album_artist')
-                self.genre = tag_info.get('genre')
-                self.year = tag_info.get('date')
-                self.composer = tag_info.get('composer')
+                self.tag_holder.title = tag_info.get('title')
+                self.tag_holder.album = tag_info.get('album')
+                self.tag_holder.artist = tag_info.get('artist')
+                self.tag_holder.albumartist = tag_info.get('album_artist')
+                self.tag_holder.genre = tag_info.get('genre')
+                self.tag_holder.year = tag_info.get('date')
+                self.tag_holder.composer = tag_info.get('composer')
+                self.tag_holder.encoder = tag_info.get('encoded_by')
 
                 if 'track' in tag_info:
                     track_info = tag_info['track'].split('/')
@@ -100,33 +105,52 @@ class FFmpegTagHandler(TagHandler):
                         self.disc = disc_info[0]
                         self.disctotal = disc_info[len(disc_info) - 1]
 
-    def save(self):
+        # Non-taggable fields
+        if self.mediaHandler.audio:
+            self.tag_holder.length = float(self.mediaHandler.audio.get('duration', 0.0))
+            self.tag_holder.bitrate = int(self.mediaHandler.audio.get('bit_rate', 0))
+            self.tag_holder.samplerate = int(self.mediaHandler.audio.get('sample_rate', 0))
+            self.tag_holder.bitdepth = int(self.mediaHandler.audio.get('bits_per_sample', 0))
+            self.tag_holder.channels = int(self.mediaHandler.audio.get('channels', 0))
+
+            format = self.mediaHandler.audio.get('codec_name')
+            if format:
+                self.tag_holder.format = format.upper()
+
+        # Art
+        if self.mediaHandler.artwork:
+            self.tag_holder.deferred_art_method = self.artwork_reader
+
+    def _save(self):
         ''' saves tags
         '''
+        #print('saving via ff')
         with temp_dir() as tmp:
             tmp_fpath = os.path.join(tmp, os.path.basename(self.mediaHandler.path))
 
-            art_writer = self.can_write_artwork and self.art
+            art_writer = self._can_write_artwork and self.tag_holder.art
             if art_writer:
                 art_path = self.detauch_art(dir_path = tmp)
 
             track_tagger = disc_tagger = ''
-            if self.track:
-                if self.tracktotal:
-                    track_tagger = ' -metadata track="{0}/{1}"'.format(self.track, self.tracktotal)
+            if self.tag_holder.track:
+                if self.tag_holder.tracktotal:
+                    track_tagger = ' -metadata track="{0}/{1}"'.format(self.tag_holder.track,
+                                                                        self.tag_holder.tracktotal)
                 else:
-                    track_tagger = ' -metadata track="{}"'.format(self.track)
-            elif self.tracktotal:
-                    track_tagger = ' -metadata track="0/{}"'.format(self.tracktotal)
+                    track_tagger = ' -metadata track="{}"'.format(self.tag_holder.track)
+            elif self.tag_holder.tracktotal:
+                    track_tagger = ' -metadata track="0/{}"'.format(self.tag_holder.tracktotal)
             else:
                 track_tagger = ' -metadata track=""'
-            if self.disc:
-                if self.disctotal:
-                    disc_tagger = ' -metadata disc="{0}/{1}"'.format(self.disc, self.disctotal)
+            if self.tag_holder.disc:
+                if self.tag_holder.disctotal:
+                    disc_tagger = ' -metadata disc="{0}/{1}"'.format(self.tag_holder.disc,
+                                                                        self.tag_holder.disctotal)
                 else:
-                    disc_tagger = ' -metadata disc="{}"'.format(self.disc)
-            elif self.disctotal:
-                    disc_tagger = ' -metadata disc="0/{}"'.format(self.disctotal)
+                    disc_tagger = ' -metadata disc="{}"'.format(self.tag_holder.disc)
+            elif self.tag_holder.disctotal:
+                    disc_tagger = ' -metadata disc="0/{}"'.format(self.tag_holder.disctotal)
             else:
                 disc_tagger = ' -metadata disc=""'
 
@@ -138,13 +162,22 @@ class FFmpegTagHandler(TagHandler):
                             ' -map_metadata 0',
                             ' -map 0',
                             ' -map 1' if art_writer else '',
-                            ' -metadata title="{}"'.format(self.title if self.title else ''),
-                            ' -metadata album="{}"'.format(self.album if self.album else ''),
-                            ' -metadata artist="{}"'.format(self.artist if self.artist else ''),
-                            ' -metadata album_artist="{}"'.format(self.albumartist if self.albumartist else ''),
-                            ' -metadata genre="{}"'.format(self.genre if self.genre else ''),
-                            ' -metadata year="{}"'.format(self.year if self.year else ''),
-                            ' -metadata composer="{}"'.format(self.composer if self.composer else ''),
+                            ' -metadata title="{}"'.format(self.tag_holder.title
+                                                            if self.tag_holder.title else ''),
+                            ' -metadata album="{}"'.format(self.tag_holder.album
+                                                            if self.tag_holder.album else ''),
+                            ' -metadata artist="{}"'.format(self.tag_holder.artist
+                                                            if self.tag_holder.artist else ''),
+                            ' -metadata album_artist="{}"'.format(self.tag_holder.albumartist
+                                                            if self.tag_holder.albumartist else ''),
+                            ' -metadata genre="{}"'.format(self.tag_holder.genre
+                                                            if self.tag_holder.genre else ''),
+                            ' -metadata year="{}"'.format(self.tag_holder.year
+                                                            if self.tag_holder.year else ''),
+                            ' -metadata composer="{}"'.format(self.tag_holder.composer
+                                                            if self.tag_holder.composer else ''),
+                            ' -metadata encoded_by="{}"'.format(self.tag_holder.encoder
+                                                            if self.tag_holder.encoder else ''),
                             track_tagger,
                             disc_tagger,
                             ' "{}"'.format(tmp_fpath)))
@@ -152,8 +185,8 @@ class FFmpegTagHandler(TagHandler):
                 failed = False
                 output, _ = run_cmd(cmd)
             except CmdProcessingError as e:
-                if self.can_write_artwork:
-                    self.can_write_artwork = False
+                if self._can_write_artwork:
+                    self._can_write_artwork = False
                     self.save()
                     return
                 else:
@@ -167,13 +200,11 @@ class FFmpegTagHandler(TagHandler):
             if failed:
                 print ('FFMP: could not process {}'.format(self.mediaHandler.path))
             else:
-                if not self.can_write_artwork:
+                if not self._can_write_artwork:
                     print ('FFMP: skipped artwork for {}'.format(self.mediaHandler.path))
 
-    @ArtFieldDescriptor
-    def art(self):
-        ''' detauch cover art from a media file and store it
-            as an instance property via ArtFieldDescriptor
+    def artwork_reader(self):
+        ''' reads cover art from a media file
         '''
         artwork = None
         if self.has_artwork:
@@ -193,59 +224,3 @@ class FFmpegTagHandler(TagHandler):
                     with open(detached_img_path, 'rb') as img:
                         artwork = img.read()
         return artwork
-
-    @property
-    def has_artwork(self):
-        ''' deferred access to the art property
-        '''
-        return self.mediaHandler.artwork != None if self.mediaHandler else None
-
-    @property
-    def length(self):
-        audio = 0.0
-        if self.mediaHandler.audio:
-            audio = float(self.mediaHandler.audio.get('duration', 0.0))
-        return audio
-
-    @property
-    def bitrate(self):
-        bitrate = 0
-        if self.mediaHandler.audio:
-            if 'bit_rate' in self.mediaHandler.audio:
-                bitrate = int(self.mediaHandler.audio['bit_rate'])
-            elif self.mediaHandler.format:
-                bitrate = int(self.mediaHandler.format.get('bit_rate', 0))
-        return bitrate
-
-    @property
-    def bitdepth(self):
-        bitdepth = 0
-        if self.mediaHandler.audio:
-            if 'bits_per_sample' in self.mediaHandler.audio:
-                bitdepth = int(self.mediaHandler.audio.get('bits_per_sample', 0))
-        return bitdepth
-
-    @property
-    def samplerate(self):
-        samplerate = 0
-        if self.mediaHandler.audio:
-            samplerate = int(self.mediaHandler.audio.get('sample_rate', 0))
-        return samplerate
-
-    @property
-    def channels(self):
-        channels = 0
-        if self.mediaHandler.audio:
-            channels = self.mediaHandler.audio.get('channels')
-        return channels
-
-    @property
-    def format(self):
-        format = None
-        if self.mediaHandler.audio:
-            format = self.mediaHandler.audio['codec_name']
-            if format:
-                format = format.upper()
-        return format
-
-

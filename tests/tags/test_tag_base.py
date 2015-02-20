@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 import os
-from batchmp.tags.handlers.basehandler import TagHolder
+from batchmp.tags.handlers.tagsholder import TagHolder
 from ..base import test_base
 
 
@@ -27,6 +27,7 @@ class TagsTest(test_base.BMPTest):
 
 class TagTestsDataHolder(TagHolder):
     def __init__(self, src_dir):
+        super().__init__()
         self._png_art = None
         self._jpg_art = None
         self.src_dir = src_dir
@@ -45,6 +46,12 @@ class TagTestsDataHolder(TagHolder):
         self.encoder = 'Test Encoder'
         if not self.art:
             self.art = self.jpg_art
+
+        self.bpm = 6
+        self.comp = True
+        self.grouping = 'test group'
+        self.comments = 'test comments'
+        self.lyrics = 'test lyrics'
 
     def print_fields(self):
         print('Title: {}'.format(self.title))

@@ -16,69 +16,44 @@
 """ Tag Handlers responsibility chain
 """
 from batchmp.tags.extern.mediafile import MediaFile, UnreadableFileError
-from batchmp.tags.extern.mediafile import MutagenError, Image, ImageType
-from batchmp.tags.handlers.basehandler import (
-    TagHandler,
-    ArtFieldDescriptor)
+from batchmp.tags.extern.mediafile import MutagenError
+from batchmp.tags.handlers.basehandler import TagHandler
 
 class MutagenTagHandler(TagHandler):
     ''' Mutagen-Based Tag Handler
     '''
-    def can_handle(self, path):
+    def _can_handle(self, path):
         ''' Handles the formats supported by Mutagen
         '''
-        self._reset_fields()
+        self._reset_handler()
         try:
             self.mediaHandler = MediaFile(path)
         except UnreadableFileError as error:
             return False
         else:
             self._parse_tags()
+        #print('mutagen can handle')
         return True
 
     def _parse_tags(self):
         ''' copies relevant properties from MediaFile
         '''
-        for field in self.mediaHandler.fields():
-            if field in dir(self):
+        for field in self.mediaHandler.readable_fields():
+            if field in dir(self.tag_holder):
                 attr = getattr(self.mediaHandler, field)
                 if attr:
-                    setattr(self, field, attr)
+                    setattr(self.tag_holder, field, attr)
             #else:
             # dev test
             #    attr = getattr(self.mediaHandler, field)
             #    if attr:
             #        print('Ignoring: {0} with value: {1}'.format(field, attr))
 
-    # Read-only properties
-    @property
-    def length(self):
-        return self.mediaHandler.length
-    @property
-    def bitrate(self):
-        return self.mediaHandler.bitrate
-    @property
-    def bitdepth(self):
-        return self.mediaHandler.bitdepth
-    @property
-    def samplerate(self):
-        return self.mediaHandler.samplerate
-    @property
-    def channels(self):
-        return self.mediaHandler.channels
-    @property
-    def format(self):
-        return self.mediaHandler.format
-
-    def save(self):
-        for field in self.fields():
-            value = getattr(self, field)
+    def _save(self):
+        #print('saving via mutagen')
+        for field in self.tag_holder.taggable_fields():
+            value = getattr(self.tag_holder, field)
             setattr(self.mediaHandler, field, value)
 
         self.mediaHandler.save()
-
-
-
-
-
 

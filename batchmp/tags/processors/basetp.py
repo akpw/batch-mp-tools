@@ -16,29 +16,29 @@
 import sys
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
-from batchmp.tags.utils.thfactory import TagHandlerFactory
-from batchmp.tags.utils.formatters import TagOutputFormatter
+from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
+from batchmp.tags.handlers.mtghandler import MutagenTagHandler
+from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from functools import partial
 
 class BaseTagProcessor:
     def __init__(self):
-        self._handlers = TagHandlerFactory()
+        self._handler = MutagenTagHandler() + FFmpegTagHandler()
 
     @property
-    def handler_factory(self):
-        return self._handlers
+    def handler(self):
+        return self._handler
 
     def print_dir(self, src_dir, start_level = 0, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
-                            show_size = False, formatter = None, show_stats = False):
+                            show_size = False, format = None, show_stats = False):
 
-        if not formatter:
-            formatter = partial(TagOutputFormatter.tags_formatter,
-                                            format_type = TagOutputFormatter.COMPACT,
-                                            handler_factory = self.handler_factory,
-                                            show_stats = show_stats)
+        formatter = partial(TagOutputFormatter.tags_formatter,
+                                        format = format if format else OutputFormatType.COMPACT,
+                                        handler = self.handler,
+                                        show_stats = show_stats)
 
         DHandler.print_dir(src_dir = src_dir, start_level = start_level, end_level = end_level,
                             include = include, exclude = exclude, sort = sort,
@@ -65,16 +65,14 @@ class BaseTagProcessor:
             if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_DIR):
                 continue
 
-            handler = self.handler_factory.handler(entry.realpath)
-            if not handler:
+            if not self.handler.can_handle(entry.realpath):
                 continue
             else:
-                handler.copy_fields(tag_holder)
-                handler.save()
+                self.handler.copy_tags(tag_holder)
+                self.handler.save()
                 fcnt += 1
 
         # print summary
         if not quiet:
             print('Set tags in {0} entries'.format(fcnt))
-
 
