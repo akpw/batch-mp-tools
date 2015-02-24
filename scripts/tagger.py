@@ -21,7 +21,7 @@ from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
 from functools import partial
 
-""" Batch management of media files metadata
+""" Batch management of media files metadata (tags & artwork)
       . Supported formats:
             'MP3', 'MP4', 'M4A', 'AIFF', 'ASF', 'QuickTime / MOV',
             'FLAC', 'MonkeysAudio', 'Musepack',
