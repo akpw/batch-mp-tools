@@ -15,7 +15,7 @@
 import unittest, weakref, gc
 from batchmp.commons.descriptors import (
          PropertyDescriptor,
-         LazyClassPropertyDescriptor,
+         LazyTypedPropertyDescriptor,
          LazyFunctionPropertyDescriptor)
 
 class DescriptorTests(unittest.TestCase):
@@ -34,9 +34,9 @@ class DescriptorTests(unittest.TestCase):
         gc.collect()
         self.assertIsNone(r())
 
-    def test_LazyClassPropertyDescriptor(self):
+    def test_LazyTypedPropertyDescriptor(self):
         class AClass:
-            prop = LazyClassPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+            prop = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
         a, b = AClass(), AClass()
         test_value = 'A Test Artist'
         a.prop.artist = test_value

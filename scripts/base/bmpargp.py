@@ -46,6 +46,19 @@ class BMPArgParser:
             return path_arg
 
     @staticmethod
+    def is_boolean(parser, bool_arg):
+        """ Checks if bool_arg can be interpreted as a boolean value
+        """
+        if len(bool_arg) < 1:
+            raise ValueError ('Cannot parse empty string into boolean.')
+        bool_arg = bool_arg[0].lower()
+        if bool_arg == 't' or bool_arg == 'y' or bool_arg == '1':
+            return True
+        if bool_arg == 'f' or bool_arg == 'n' or bool_arg == '0':
+            return False
+        raise ValueError ('Cannot parse string into boolean.')
+
+    @staticmethod
     def parse_global_options(parser):
         # Global Options
         parser.add_argument("-d", "--dir", dest = "dir",

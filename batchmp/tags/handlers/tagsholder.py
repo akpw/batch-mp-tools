@@ -121,18 +121,24 @@ class TagHolder:
         for field in chain(cls.taggable_fields, cls.non_taggable_fields):
             yield field
 
-    def copy_tags(self, tag_holder, copy_empty_vals = False):
+    def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
             ''' copies tags from passed tag_holder object
             '''
-            for field in self.taggable_fields():
+            fields = self.fields if copy_non_taggable else self.taggable_fields
+            for field in fields():
                 if hasattr(tag_holder, field):
                     value = getattr(tag_holder, field)
                     if value != None or copy_empty_vals:
                         setattr(self, field, value)
 
-    def clear_tags(self):
+    def clear_tags(self, reset_art = False):
         ''' clears writable tags values
         '''
         for field in self.taggable_fields():
             setattr(self, field, None)
+            if reset_art and hasattr(self, 'art'):
+                del self.art
+
+    def reset_tags(self):
+        self.clear_tags(reset_art = True)
 

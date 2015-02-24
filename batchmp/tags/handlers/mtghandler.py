@@ -27,33 +27,32 @@ class MutagenTagHandler(TagHandler):
         '''
         self._reset_handler()
         try:
-            self.mediaHandler = MediaFile(path)
+            self._media_handler = MediaFile(path)
         except UnreadableFileError as error:
             return False
         else:
             self._parse_tags()
-        #print('mutagen can handle')
         return True
 
     def _parse_tags(self):
         ''' copies relevant properties from MediaFile
         '''
-        for field in self.mediaHandler.readable_fields():
+        for field in self._media_handler.readable_fields():
             if field in dir(self.tag_holder):
-                attr = getattr(self.mediaHandler, field)
+                attr = getattr(self._media_handler, field)
                 if attr:
                     setattr(self.tag_holder, field, attr)
             #else:
             # dev test
-            #    attr = getattr(self.mediaHandler, field)
+            #    attr = getattr(self._media_handler, field)
             #    if attr:
             #        print('Ignoring: {0} with value: {1}'.format(field, attr))
 
     def _save(self):
-        #print('saving via mutagen')
-        for field in self.tag_holder.taggable_fields():
-            value = getattr(self.tag_holder, field)
-            setattr(self.mediaHandler, field, value)
+        if self._media_handler:
+            for field in self.tag_holder.taggable_fields():
+                value = getattr(self.tag_holder, field)
+                setattr(self._media_handler, field, value)
 
-        self.mediaHandler.save()
+            self._media_handler.save()
 

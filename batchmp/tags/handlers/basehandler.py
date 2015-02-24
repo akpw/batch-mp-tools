@@ -17,10 +17,10 @@
 """
 import os
 from enum import Enum
+from batchmp.commons.chainedhandler import ChainedHandler
 from abc import ABCMeta, abstractmethod
 from batchmp.fstools.fsutils import UniqueDirNamesChecker
-from batchmp.commons.descriptors import LazyClassPropertyDescriptor, LazyFunctionPropertyDescriptor
-from weakref import ref, ReferenceType
+from batchmp.commons.descriptors import LazyTypedPropertyDescriptor
 
 class DetauchedArtType(Enum):
     ''' Detached art type specifier
@@ -33,108 +33,50 @@ class DetauchedArtType(Enum):
         else:
             return '.png'
 
-class TagHandler(metaclass = ABCMeta):
-    ''' Responsibilty Chain for Tag Handlers
-    '''
-    class THChainDispatcher:
-        ''' Internal dispatcher for chained handlers
-        '''
-        def __init__(self):
-            self._handlers_refs_chain = []
-            self._receiver_idx = -1
-
-        def add_handler(self, tag_handler):
-            if not isinstance(tag_handler, TagHandler):
-                raise TypeError('TagHandler.__add__() expects a TagHandler instance')
-            else:
-                if len(self._handlers_refs_chain) == 0:
-                    self._handlers_refs_chain.append(ref(tag_handler))
-                else:
-                    self._handlers_refs_chain.append(tag_handler)
-
-        def has_responder(self, mfname):
-            ''' Returns suitable handler for a media file
-            '''
-            for idx, handler in enumerate(self._handlers_refs_chain):
-                if type(handler) is ReferenceType:
-                    handler = handler()
-                if handler and handler._can_handle(mfname):
-                    self._receiver_idx = idx
-                    return True
-            return False
-
-        @property
-        def responder(self):
-            if self._receiver_idx >= 0:
-                handler = self._handlers_refs_chain[self._receiver_idx]
-                if type(handler) is ReferenceType:
-                    handler = handler()
-                return handler
-            else:
-                return None
-
-    tag_holder = LazyClassPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+class TagHandler(ChainedHandler):
+    tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
 
     def __init__(self):
-        self._mediaHandler = None
-        self._can_write_artwork = True
-
-    def _reset_handler(self):
-        self._mediaHandler = None
-        self._can_write_artwork = True
-        if 'tag_holder' in self.__dict__:
-            del self.__dict__['tag_holder']
-
-    @LazyFunctionPropertyDescriptor
-    def _handler_chain(self):
-        handler_chain = TagHandler.THChainDispatcher()
-        handler_chain.add_handler(self)
-        return handler_chain
+        self._media_handler = None
 
     def __add__(self, tag_handler):
-        ''' Adds a handler to hanlders chain
-        '''
-        if not isinstance(tag_handler, TagHandler):
-            raise TypeError('TagHandler.__add__() expects a TagHandler instance')
-        tag_handler._handler_chain = self._handler_chain
         tag_handler.tag_holder = self.tag_holder
-        self._handler_chain.add_handler(tag_handler)
+        return super().__add__(tag_handler)
 
-        return self
-
-    def can_handle(self, path):
-        return self._handler_chain.has_responder(path)
-
-    def save(self):
-        self._handler_chain.responder._save()
-
-    # Abstract methods
-    @abstractmethod
     def _can_handle(self, path):
-        ''' implement in specific handlers
-        '''
         return False
 
-    # Abstract methods
+    # Tag Handler operations
+    def save(self):
+        self.responder._save()
+
     @abstractmethod
     def _save(self):
-        ''' implement in specific handlers
+        ''' implement in specific tag handlers
         '''
-        return False
+        pass
 
-    # Helper methods
-    def copy_tags(self, tag_holder, copy_empty_vals = False):
-        self.tag_holder.copy_tags(tag_holder)
+    # Helpers
+    def _reset_handler(self):
+        self._media_handler = None
+        self.tag_holder.reset_tags()
+
+    def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
+        self.tag_holder.copy_tags(tag_holder = tag_holder,
+                                  copy_non_taggable = copy_non_taggable,
+                                  copy_empty_vals = copy_empty_vals)
 
     def clear_tags(self):
         self.tag_holder.clear_tags()
 
-    def detauch_art(self, dir_path = None, type = DetauchedArtType.PNG):
+    def detauch_art(self, dir_path = None, type = None):
+        if not type or (type not in DetauchedArtType):
+            type = DetauchedArtType.PNG
         fpath = None
         if self.tag_holder.art:
             if not dir_path:
-                dir_path = os.path.basename(self.mediaHandler.path)
-            fname = os.path.splitext(os.path.basename(self.mediaHandler.path))[0] + DetauchedArtType.art_ext(type)
+                dir_path = os.path.basename(self._media_handler.path)
+            fname = os.path.splitext(os.path.basename(self._media_handler.path))[0] + DetauchedArtType.art_ext(type)
             fname = UniqueDirNamesChecker(dir_path).unique_name(fname)
 
             fpath = os.path.join(dir_path, fname)

@@ -21,11 +21,13 @@ from enum import Enum
 class OutputFormatType(Enum):
     COMPACT = 0
     FULL = 1
+    TRACKS = 2
 
 class TagOutputFormatter:
     @staticmethod
     def tags_formatter(entry, *,
-                       format = None, handler = None, show_stats = True, tag_holder = None):
+                       format = None, handler = None, show_stats = True,
+                       tag_holder = None, tag_holder_gen = None, copy_empty_vals = False):
 
         # check inputs
         if entry.type == DWalker.ENTRY_TYPE_DIR or entry.type == DWalker.ENTRY_TYPE_ROOT:
@@ -37,14 +39,24 @@ class TagOutputFormatter:
         if not format or (format not in OutputFormatType):
             format = OutputFormatType.COMPACT
 
+        if tag_holder_gen:
+            try:
+                th = next(tag_holder_gen)
+            except StopIteration as e:
+                pass
+            else:
+                tag_holder = th
+
         if tag_holder:
-            handler.copy_fields(tag_holder, copy_empty_vals = False)
+            handler.tag_holder.copy_tags(tag_holder, copy_empty_vals = copy_empty_vals)
 
         # dispatch call to requested formatter
         if format == OutputFormatType.COMPACT:
             return TagOutputFormatter._compact_formatter(entry, handler, show_stats)
         elif format == OutputFormatType.FULL:
             return TagOutputFormatter._full_formatter(entry, handler, show_stats)
+        elif format == OutputFormatType.TRACKS:
+            return TagOutputFormatter._tracks_formatter(entry, handler)
         else:
             return None
 
@@ -94,6 +106,14 @@ class TagOutputFormatter:
         if show_stats:
             media_str = TagOutputFormatter._stats_str(handler, indent, media_str)
 
+        return media_str
+
+    @staticmethod
+    def _tracks_formatter(entry, handler):
+        indent = entry.indent[:-3] + '\t'
+        media_str = ''
+        if handler.tag_holder.track:
+            media_str = TagOutputFormatter._track_str(handler, indent, media_str)
         return '{0}{1}'.format(entry.basename, media_str)
 
     # Helpers
@@ -106,7 +126,7 @@ class TagOutputFormatter:
         return '{0}\n{1}Disk: {2}'.format(media_str, indent, disc_str)
 
     @staticmethod
-    def _track_str(handler, indent, media_str):
+    def _track_str(handler, indent, media_str, show_always = False):
         if handler.tag_holder.tracktotal:
             track_str = '{}/{}'.format(handler.tag_holder.track, handler.tag_holder.tracktotal)
         else:

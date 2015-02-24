@@ -13,21 +13,31 @@
 ## GNU General Public License for more details.
 
 
-import os, sys, datetime
+import os
 from argparse import ArgumentParser
 from scripts.base.bmpargp import BMPArgParser
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
-from batchmp.fstools.dirtools import DHandler
-from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
+from batchmp.tags.output.formatters import OutputFormatType
 from functools import partial
 
-
 """ Batch management of media files metadata
+      . Supported formats:
+            'MP3', 'MP4', 'M4A', 'AIFF', 'ASF', 'QuickTime / MOV',
+            'FLAC', 'MonkeysAudio', 'Musepack',
+            'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
+            'True Audio', 'WavPack', 'OptimFROG'
+
+            'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
+
+      . source directory / source file modes
+      . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
       . action commands:
           .. print metadata info
           .. set metadata tags
+          .. copy tags from a given media file
+          .. remove all tags
           .. index tracks
           .. extracts artwork
           .. add / remove characters in tags (title, artist, ...)
@@ -40,14 +50,17 @@ from functools import partial
         [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
         [-s SORT]                             Sorting for files / folders
         [-q QUIET]                            Do not visualise / show messages during processing
-      renamer -h for additional help on global options
+      tagger -h for additional help on global options
 
-      Commands (renamer {command} -h for additional help)
-      {print, set}
-        print     Print media directory
-        set       Set tags in media files
+      Commands (tagger {command} -h for additional help)
+      {print, set, copy, remove, index}
+        print   Print media directory
+        set     Set tags in media files
+        copy    Copies tags from a specified media file
+        remove  Remove all tags
+        index   Index Track / Track Total tags for selected media files
 
-      renamer Command -h for additional help
+      tagger {command} -h for additional help
 """
 
 class TaggerArgParser(BMPArgParser):
@@ -74,41 +87,75 @@ class TaggerArgParser(BMPArgParser):
         # Set Tags
         set_tags_parser = subparsers.add_parser('set', help = 'Sets specified tags in media files')
         set_tags_parser.add_argument('-ti', '--title', dest='title',
-                help = "Sets the title tag",
+                help = "Sets the Title tag",
                 type = str)
         set_tags_parser.add_argument('-al', '--album', dest='album',
-                help = "Sets the album tag",
+                help = "Sets the Album tag",
                 type = str)
         set_tags_parser.add_argument('-ar', '--artist', dest='artist',
-                help = "Sets the artist tag",
+                help = "Sets the Artist tag",
                 type = str)
         set_tags_parser.add_argument('-aa', '--albumArtist', dest='albumartist',
-                help = "Sets the album artist tag",
+                help = "Sets the Album Artist tag",
                 type = str)
         set_tags_parser.add_argument('-g', '--genre', dest='genre',
-                help = "Sets the genre tag",
+                help = "Sets the Genre tag",
                 type = str)
         set_tags_parser.add_argument('-c', '--composer', dest='composer',
-                help = "Sets the composer tag",
+                help = "Sets the Composer tag",
                 type = str)
         set_tags_parser.add_argument('-tr', '--track', dest='track',
-                help = "Sets the track tag",
+                help = "Sets the Track tag",
                 type = str)
         set_tags_parser.add_argument('-tt', '--tracktotal', dest='tracktotal',
-                help = "Sets the tracktotal tag",
+                help = 'Set the Track Total tag for selected media files',
                 type = str)
         set_tags_parser.add_argument('-d', '--disc', dest='disc',
-                help = "Sets the disc tag",
+                help = "Sets the Disc tag",
                 type = str)
         set_tags_parser.add_argument('-dt', '--disctotal', dest='disctotal',
-                help = "Sets the disctotal tag",
+                help = "Sets the Disctotal tag",
                 type = str)
         set_tags_parser.add_argument('-y', '--year', dest='year',
-                help = "Sets the year tag",
+                help = "Sets the Year tag",
                 type = str)
         set_tags_parser.add_argument('-at', '--art', dest='art',
-                help = "Sets artwork (/path to PNG or JPEG )",
+                help = "Sets Artwork: /Path_to_PNG_or_JPEG",
                 type = lambda f: BMPArgParser.is_valid_file_path(parser, f))
+
+        set_tags_parser.add_argument('-bm', '--bpm', dest='bpm',
+                help = "Sets the BPM tag",
+                type = str)
+        set_tags_parser.add_argument('-cmp', '--compilaton', dest='compilaton',
+                help = "Sets the Compilaton tag",
+                type = lambda f: BMPArgParser.is_boolean(parser, f))
+        set_tags_parser.add_argument('-grp', '--grouping', dest='grouping',
+                help = "Sets the Grouping tag",
+                type = str)
+        set_tags_parser.add_argument('-com', '--comments', dest='comments',
+                help = "Sets the Comments tag",
+                type = str)
+        set_tags_parser.add_argument('-lr', '--lyrics', dest='lyrics',
+                help = "Sets the Lyrics tag",
+                type = str)
+
+         # Copy Tags
+        copy_tags_parser = subparsers.add_parser('copy', help = 'Copies tags from a specified media file')
+        copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
+                help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
+                type = lambda f: BMPArgParser.is_valid_file_path(parser, f))
+
+         # Remove Tags
+        copy_tags_parser = subparsers.add_parser('remove', help = 'Removes all tags')
+
+        # Index
+        index_parser = subparsers.add_parser('index',
+                                            help = 'Index Tracks for selected media files')
+        print_parser.add_argument('-sf', '--startfrom', dest='start_from',
+                help = 'A number from which the indexing starts (1 by default)',
+                type = int,
+                default = 1)
+
 
     @staticmethod
     def check_args(args):
@@ -121,23 +168,19 @@ class TaggerArgParser(BMPArgParser):
             args['show_stats'] = False
             args['full_format'] = False
 
-        if args['sub_cmd'] == 'print':
-            if args['file']:
-                if args['start_level'] != 0:
-                    print ('START_LEVEL parameter requires a source directory --> ignoring')
-                    args['start_level'] = 0
 
 class TagsDispatcher:
     @staticmethod
     def print_dir(args):
         BaseTagProcessor().print_dir(src_dir = args['dir'],
                 sort = args['sort'],
-                start_level = args['start_level'], end_level = args['end_level'],
+                end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
                 flatten = False, ensure_uniq = False,
                 show_size = args['show_size'], show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
+
 
     @staticmethod
     def set_tags(args):
@@ -153,6 +196,11 @@ class TagsDispatcher:
         tag_holder.disc = args['disc']
         tag_holder.disctotal = args['disctotal']
         tag_holder.year = args['year']
+        tag_holder.bpm = args['bpm']
+        tag_holder.comp = args['compilaton']
+        tag_holder.grouping = args['grouping']
+        tag_holder.comments = args['comments']
+        tag_holder.lyrics = args['lyrics']
 
         art, art_path = None, args['art']
         if art_path:
@@ -161,34 +209,38 @@ class TagsDispatcher:
         if art:
             tag_holder.art = art
 
-        # visualise changes to tags and proceed if confirmed
-        tag_processor = BaseTagProcessor()
-        preformatter = partial(TagOutputFormatter.tags_formatter,
-                                        format_type = OutputFormatType.FULL,
-                                        handler = tag_processor.handler,
-                                        show_stats = False)
-
-        formatter = partial(TagOutputFormatter.tags_formatter,
-                                        format_type = OutputFormatType.FULL,
-                                        handler = tag_processor.handler,
-                                        show_stats = False,
-                                        tag_holder = tag_holder)
+        BaseTagProcessor().set_tags_visual(args['dir'],
+                sort = args['sort'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                tag_holder = tag_holder, quiet = args['quiet'])
 
 
-        proceed = True if args['quiet'] else DHandler.visualise_changes(src_dir = args['dir'],
-                    sort = args['sort'],
-                    orig_end_level = args['end_level'], target_end_level = args['end_level'],
-                    include = args['include'], exclude = args['exclude'],
-                    filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
-                    preformatter = preformatter,
-                    formatter = formatter)
+    @staticmethod
+    def copy_tags(args):
+        BaseTagProcessor().copy_tags(src_dir = args['dir'],
+                sort = args['sort'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                tag_holder_path = args['tagholder'], quiet = args['quiet'])
 
-        if proceed:
-            tag_processor.set_tags(args['dir'],
-                    start_level = 0, end_level = args['end_level'],
-                    include = args['include'], exclude = args['exclude'],
-                    filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
-                    tag_holder = tag_holder, quiet = args['quiet'])
+    @staticmethod
+    def remove_tags(args):
+        BaseTagProcessor().remove_tags(src_dir = args['dir'],
+                sort = args['sort'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
+                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'])
+
+    @staticmethod
+    def index(args):
+        BaseTagProcessor().index(src_dir = args['dir'],
+                sort = args['sort'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'])
 
     @staticmethod
     def dispatch():
@@ -197,6 +249,13 @@ class TagsDispatcher:
             TagsDispatcher.print_dir(args)
         elif args['sub_cmd'] == 'set':
             TagsDispatcher.set_tags(args)
+        elif args['sub_cmd'] == 'index':
+            TagsDispatcher.index(args)
+        elif args['sub_cmd'] == 'copy':
+            TagsDispatcher.copy_tags(args)
+        elif args['sub_cmd'] == 'remove':
+            TagsDispatcher.remove_tags(args)
+
 
 def main():
     TagsDispatcher.dispatch()
