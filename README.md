@@ -71,7 +71,7 @@ A weekend project under occasional development :)
         'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
         'True Audio', 'WavPack', 'OptimFROG'
 
-        'AVI', 'FLV', 'MKV', 'MKA' (support via [FFmpeg](http://ffmpeg.org))
+        'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
 
     . source directory / source file modes
     . include / exclude patterns, etc. (see list of Global Options for details)
