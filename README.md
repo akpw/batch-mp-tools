@@ -71,7 +71,7 @@ A weekend project under occasional development :)
         'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
         'True Audio', 'WavPack', 'OptimFROG'
 
-        'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
+        'AVI', 'FLV', 'MKV', 'MKA' (support via [FFmpeg](http://ffmpeg.org))
 
     . source directory / source file modes
     . include / exclude patterns, etc. (see list of Global Options for details)
@@ -93,6 +93,7 @@ A weekend project under occasional development :)
         [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
         [-s SORT]                             Sorting for files / folders
         [-q QUIET]                            Do not visualise / show messages during processing
+        
       tagger -h for additional help on global options
 
       Commands (tagger {command} -h for additional help)
