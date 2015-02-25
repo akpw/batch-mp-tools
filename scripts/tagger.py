@@ -39,9 +39,9 @@ from functools import partial
           .. copy tags from a given media file
           .. remove all tags
           .. index tracks
-          .. extracts artwork
-          .. add / remove characters in tags (title, artist, ...)
-          .. regexp-based replace in tags (title, artist, ...)
+          .. TBD: extracts artwork
+          .. TBD: add / remove characters in tags (title, artist, ...)
+          .. TBD: regexp-based replace in tags (title, artist, ...)
 
     Usage: tagger {-d DIR} [GLobal Options] {Commands}[Commands Options]
       Global Options (renamer -h for additional help)
@@ -95,7 +95,7 @@ class TaggerArgParser(BMPArgParser):
         set_tags_parser.add_argument('-ar', '--artist', dest='artist',
                 help = "Sets the Artist tag",
                 type = str)
-        set_tags_parser.add_argument('-aa', '--albumArtist', dest='albumartist',
+        set_tags_parser.add_argument('-aa', '--albumartist', dest='albumartist',
                 help = "Sets the Album Artist tag",
                 type = str)
         set_tags_parser.add_argument('-g', '--genre', dest='genre',
@@ -119,7 +119,7 @@ class TaggerArgParser(BMPArgParser):
         set_tags_parser.add_argument('-y', '--year', dest='year',
                 help = "Sets the Year tag",
                 type = str)
-        set_tags_parser.add_argument('-at', '--art', dest='art',
+        set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
                 type = lambda f: BMPArgParser.is_valid_file_path(parser, f))
 
@@ -202,7 +202,7 @@ class TagsDispatcher:
         tag_holder.comments = args['comments']
         tag_holder.lyrics = args['lyrics']
 
-        art, art_path = None, args['art']
+        art, art_path = None, args['artwork']
         if art_path:
             with open(os.path.realpath(art_path), 'rb') as f:
                 art = f.read()

@@ -94,15 +94,29 @@ class BaseTagProcessor:
         if quiet:
             proceed = True
         else:
+
+            # diff fields
+            diff_fields = []
+            for field in tag_holder.taggable_fields():
+                if field is 'art':
+                    if tag_holder.has_artwork is not self.handler.tag_holder.has_artwork:
+                        diff_fields.append(field)
+                else:
+                    current_val = getattr(self.handler.tag_holder, field)
+                    new_val = getattr(tag_holder, field)
+                    if not current_val is new_val:
+                        diff_fields.append(field)
+
             # visualise changes to tags and proceed if confirmed
             preformatter = partial(TagOutputFormatter.tags_formatter,
-                                            format = OutputFormatType.FULL,
+                                            format = OutputFormatType.DIFF,
                                             handler = self.handler,
+                                            diff_fields = diff_fields,
                                             show_stats = False)
 
             formatter = partial(TagOutputFormatter.tags_formatter,
-                                            format = OutputFormatType.FULL,
-                                            handler = self.handler,
+                                            format = OutputFormatType.DIFF,
+                                            handler = self.handler, diff_fields = diff_fields,
                                             show_stats = False,
                                             tag_holder = tag_holder, copy_empty_vals = copy_empty_vals)
 
