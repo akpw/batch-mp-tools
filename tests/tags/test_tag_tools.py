@@ -22,7 +22,7 @@ from .test_tag_base import TagsTest
 class TagsTests(TagsTest):
     def setUp(self):
         self.mfpathes = [os.path.join(self.src_dir, f) for f in os.listdir(self.src_dir)]
-        self.hname = lambda h: 'MutagenTagHandler' if isinstance(h, MutagenTagHandler) else 'FFmpegTagHandler'
+        self.hname = lambda handler: 'MutagenTagHandler' if isinstance(handler.responder, MutagenTagHandler) else 'FFmpegTagHandler'
 
     # Tests
     def test_mthandler_base(self):
@@ -63,18 +63,33 @@ class TagsTests(TagsTest):
     def test_ffhandler_fields(self):
         self._fields_check(FFmpegTagHandler())
 
-    def test_mthandler_set_tags(self):
-        self._set_tags_check(MutagenTagHandler(), compare = True)
+    def test_set_tags(self):
+        # test setting tags from test data
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+        for mfpath in self.mfpathes:
+            if handler.can_handle(mfpath):
+                handler.copy_tags(self.test_tags_holder)
+                handler.save()
 
-    def test_ffhandler_set_tags(self):
-        self._set_tags_check(FFmpegTagHandler(), compare = False)
+                compare = True if isinstance(handler.responder, MutagenTagHandler) else False
+                self._read_and_compare(mfpath, self.test_tags_holder, compare = compare)
 
-    def test_mthandler_remove_tags(self):
-        self._remove_tags_check(MutagenTagHandler())
+        #restore original state if needed
+        self.resetDataFromBackup(quiet=True)
 
-    def test_ffhandler_remove_tags(self):
-        self._remove_tags_check(FFmpegTagHandler())
+    def test_remove_tags(self):
+        # test removing tags
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+        tag_holder = TagHolder()
+        for mfpath in self.mfpathes:
+            if handler.can_handle(mfpath):
+                handler.clear_tags()
+                handler.save()
 
+                self._read_and_compare(mfpath, tag_holder)
+
+        #restore original state if needed
+        self.resetDataFromBackup(quiet=True)
 
     # Helper methods
     def _fields_check(self, handler):
@@ -90,43 +105,17 @@ class TagsTests(TagsTest):
                         msg = '\n{2}: the field "{0}" in <{1}> is not in non-taggable fields'.format
                                                 (field, os.path.basename(f), self.hname(handler)))
 
-    def _set_tags_check(self, handler, compare = True):
-        mfpathes = [os.path.join(self.src_dir, f) for f in os.listdir(self.src_dir)]
 
-        # set tags from test data
-        for f in self.mfpathes:
-            if handler.can_handle(f):
-                handler.copy_tags(self.test_tags_holder)
-                handler.save()
-
-        # read & compare tag values
-        self._read_and_compare_check(handler, self.test_tags_holder, compare = compare)
-
-        # restore original state if needed
-        self.resetDataFromBackup(quiet=True)
-
-    def _remove_tags_check(self, handler):
-        for f in self.mfpathes:
-            if handler.can_handle(f):
-                handler.clear_tags()
-                handler.save()
-
-        # read & compare tag values
-        self._read_and_compare_check(handler, TagHolder())
-
-        # restore original state if needed
-        self.resetDataFromBackup(quiet=True)
-
-    def _read_and_compare_check(self, handler, holder, compare = True):
+    def _read_and_compare(self, mfpath, holder, compare = True):
         # read tags and compare to test data
-        for f in self.mfpathes:
-            if handler.can_handle(f):
-                for field in handler.tag_holder.taggable_fields():
-                    tag_value = getattr(handler.tag_holder, field)
-                    test_data = getattr(holder, field)
-                    if compare:
-                        self.assertEqual(tag_value, test_data,
-                            msg = '\n{2}: the field "{0}" in <{1}> did not pass set & compare'.format
-                                                 (field, os.path.basename(f), self.hname(handler)))
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+        if handler.can_handle(mfpath):
+            for field in handler.tag_holder.taggable_fields():
+                tag_value = getattr(handler.tag_holder, field)
+                test_data = getattr(holder, field)
+                if compare:
+                    self.assertEqual(tag_value, test_data,
+                        msg = '\n{2}: the field "{0}" in <{1}> did not pass set & compare'.format
+                                             (field, os.path.basename(mfpath), self.hname(handler)))
 
 

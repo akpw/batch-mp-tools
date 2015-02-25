@@ -65,12 +65,20 @@ class TagTestsDataHolder(TagHolder):
         print('Disk: {}'.format(self.disc))
         print('Disktotal: {}'.format(self.disctotal))
         print('Year: {}'.format(self.year))
+        print('Encoder: {}'.format(self.encoder))
+
+        print('BPM: {}'.format(self.bpm))
+        print('Compilation: {}'.format(self.comp))
+        print('Grouping: {}'.format(self.grouping))
+        print('Comments: {}'.format(self.comments))
+        print('Lyrics: {}'.format(self.lyrics))
+
         print('Length: {}'.format(self.length))
         print('Bitrate: {}'.format(self.bitrate))
         print('Samplerate: {}'.format(self.samplerate))
         print('Channels: {}'.format(self.channels))
         print('Format: {}'.format(self.format))
-        print('Encoder: {}'.format(self.encoder))
+
         print ('Artwork exists' if self.has_artwork else 'No artwork')
         print('')
 

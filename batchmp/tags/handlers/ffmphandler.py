@@ -108,3 +108,11 @@ class FFmpegTagHandler(TagHandler):
                     print ('FFMP: skipped artwork for {}'.format(self._media_handler.path))
 
 
+
+
+
+
+
+
+
+
