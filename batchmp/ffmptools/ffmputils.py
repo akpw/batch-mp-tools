@@ -13,25 +13,16 @@
 """ Utility functions for use in ffmp module
 """
 
-import os, subprocess, shlex
-import copyreg, types, time, datetime
+import os, subprocess, shlex, sys
+import time, datetime, json
 from functools import wraps
+from collections import namedtuple
 import batchmp.fstools.fsutils as fsutils
 
 class FFmpegNotInstalled(Exception):
     pass
 class CmdProcessingError(Exception):
     pass
-class FFmpegArgsError(Exception):
-    pass
-
-# A subset of common media formats supported by FFmpeg
-# run <ffmpeg -formats> for full list
-SUPPORTED_MEDIA =  ('.aif', '.m4a', '.mp3',
-                    '.wma', '.avi', '.flv', '.m4v',
-                    '.mov', '.mp4', '.mpg', '.wmv', '.mkv')
-BACKUP_DIR_PREFIX = '_origs_'
-
 
 def timed(f):
     """ A simple timing decorator
@@ -45,100 +36,117 @@ def timed(f):
     return wrapper
 
 @timed
-def run_cmd(cmd):
+def run_cmd(cmd, shell = False):
     ''' Runs command in a separate process
     '''
-    proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if not shell:
+        cmd = shlex.split(cmd)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = shell)
     output = proc.communicate()[0].decode('utf-8')
     if proc.returncode != 0:
         raise CmdProcessingError(output)
     return output
 
-def run_cmd_shell(cmd):
-    ''' Runs command in a separate process
-    '''
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = True)
-    output = proc.communicate()[0].decode('utf-8')
-    if proc.returncode != 0:
-        raise CmdProcessingError(output)
-    return output
+class FFH:
+    BACKUP_DIR_PREFIX = '_backup_'
+    FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
 
-def ffmpeg_installed():
-    """ Checks if ffmpeg is installed
-        P.S.
-            Not likely to work well for Windows. Rather needs to use smth like
-            winreq module (https://docs.python.org/2/library/_winreg.html)
-            for checking the registry:
-                HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall
-            .. or smth along these lines :)
-    """
-    ffmpeg_app_name = 'ffmpeg' if os.name != 'nt' else 'ffmpeg.exe'
-    for path in os.environ['PATH'].split(os.pathsep):
-        app_path = os.path.join(path, ffmpeg_app_name)
-        if os.path.isfile(app_path) and os.access(app_path, os.X_OK):
-            return True
-    return False
+    @staticmethod
+    def ffmpeg_installed():
+        """ Checks if ffmpeg is installed
+            P.S. / TBD
+                Not likely to work well for Windows. Rather needs to use smth like
+                winreq module (https://docs.python.org/2/library/_winreg.html)
+                for checking the registry:
+                    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall
+                .. or smth along these lines
+        """
+        ffmpeg_app_name = 'ffmpeg' if os.name != 'nt' else 'ffmpeg.exe'
+        for path in os.environ['PATH'].split(os.pathsep):
+            app_path = os.path.join(path, ffmpeg_app_name)
+            if os.path.isfile(app_path) and os.access(app_path, os.X_OK):
+                return True
+        return False
 
-def get_media_files(src_dir=os.curdir, recursive = False):
-    """Gets all media files from source directory and (if recursive) its subdirectories
-    """
-    pass_filter = lambda f: os.path.splitext(f)[1] in SUPPORTED_MEDIA
-    return fsutils.FSH.get_files(src_dir = src_dir, recursive = recursive, pass_filter = pass_filter)
+    @staticmethod
+    def media_file_info(fpath):
+        if not FFH.ffmpeg_installed():
+            return None
 
-def setup_backup_dirs(files):
-    """ Given list of files pathes,
-        creates backup dirs in respective folder(s)
-    """
-    backup_dir = '{0}{1}'.format(BACKUP_DIR_PREFIX, datetime.datetime.now().strftime("%y%b%d_%H%M%S"))
-    backup_dirs = []
-    for file in files:
-        fdir, fname = os.path.split(file)
-        if os.access(fdir, os.X_OK):
-            backup_path = os.path.join(fdir, backup_dir)
-            if not os.path.exists(backup_path):
-                os.mkdir(backup_path)
-            backup_dirs.append(backup_path)
-    return backup_dirs
-
-def get_backup_dirs(src_dir, recursive = False):
-    """ Gets all backup directories from from source folder and (if recursive) its subdfolders
-    """
-    if recursive:
-        dir_names = [os.path.join(r,d) for r,dirs,files in os.walk(src_dir)
-                            for d in dirs if d.find(BACKUP_DIR_PREFIX) >= 0]
-    else:
-        dir_names = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
-                                                if fname.find(BACKUP_DIR_PREFIX) >= 0)
-        dir_names = [dir for dir in dir_names if os.path.isdir(dir)]
-
-    return dir_names
-
-"""
-    Python multiprocessing pickles stuff, and bound methods are not yet picklable
-    These methods serve as a workaround, more at:
-    http://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods#edit2155350
-"""
-def _pickle_method(method):
-    func_name = method.im_func.__name__
-    obj = method.im_self
-    cls = method.im_class
-
-    if func_name.startswith('__') and not func_name.endswith('__'):
-        cls_name = cls.__name__.lstrip('_')
-        if cls_name:
-            func_name = '_' + cls_name + func_name
-
-    return _unpickle_method, (func_name, obj, cls)
-
-def _unpickle_method(func_name, obj, cls):
-    for cls in cls.mro():
+        cmd = ''.join(('ffprobe ',
+                            ' -v quiet',
+                            ' -show_streams',
+                            #' -select_streams a',
+                            ' -show_format',
+                            ' -print_format json',
+                            ' "{}"'.format(fpath)))
         try:
-            func = cls.__dict__[func_name]
-        except KeyError:
-            pass
+            output, _ = run_cmd(cmd)
+        except CmdProcessingError as e:
+            return None
         else:
-            break
-    return func.__get__(obj, cls)
+            format = json.loads(output).get('format')
 
-copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
+            streams = json.loads(output)['streams']
+            audio_stream = {k:v for dict in streams
+                                    for k,v in dict.items()
+                                        if 'codec_type' in dict and
+                                            dict['codec_type'] == 'audio'}
+            if not audio_stream:
+                return None
+            artwork_stream = {k:v for dict in streams
+                                    for k,v in dict.items()
+                                        if 'codec_type' in dict and dict['codec_type'] == 'video'
+                                            and dict['codec_name'] in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg')}
+            return FFH.FFEntry(fpath, format, audio_stream, artwork_stream)
 
+    @staticmethod
+    def supported_media(fpath):
+        if not FFH.media_file_info(fpath):
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def media_files(src_dir,
+                    start_level = 0, end_level = sys.maxsize,
+                    include = '*', exclude = '', sort = 'n',
+                    filter_dirs = True, filter_files = True):
+        """ yields supported media files
+        """
+        pass_filter = lambda fpath: FFH.supported_media(fpath)
+        return fsutils.DWalker.file_entries(src_dir,
+                                            start_level = start_level, end_level = end_level,
+                                            include = include, exclude = exclude, sort = sort,
+                                            filter_dirs = True, filter_files = True,
+                                            pass_filter = pass_filter)
+
+    @staticmethod
+    def setup_backup_dirs(fpathes):
+        """ Given list of files pathes,
+            creates backup dirs in respective folder(s)
+        """
+        backup_dir = '{0}{1}'.format(FFH.BACKUP_DIR_PREFIX,
+                                        datetime.datetime.now().strftime("%y%b%d_%H%M%S"))
+        backup_dirs = []
+        for fpath in fpathes:
+            fdir = os.path.dirname(fpath)
+            if os.access(fdir, os.X_OK):
+                backup_path = os.path.join(fdir, backup_dir)
+                if not os.path.exists(backup_path):
+                    os.mkdir(backup_path)
+                backup_dirs.append(backup_path)
+        return backup_dirs
+
+    @staticmethod
+    def backup_dirs(src_dir, recursive = True):
+        """ list of  backup directories from from source folder and (if recursive) its subdfolders
+        """
+        if recursive:
+            dir_names = [os.path.join(r,d) for r,dirs,files in os.walk(src_dir)
+                                for d in dirs if d.find(FFH.BACKUP_DIR_PREFIX) >= 0]
+        else:
+            dir_names = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
+                                                    if fname.find(FFH.BACKUP_DIR_PREFIX) >= 0)
+            dir_names = [dir for dir in dir_names if os.path.isdir(dir)]
+        return dir_names

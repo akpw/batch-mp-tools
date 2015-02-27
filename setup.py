@@ -32,7 +32,7 @@ setup(
     test_suite = "tests.batch_mp_test_suite",
 
     entry_points={'console_scripts': [
-        'denoiser = scripts.denoiser:main',
+        'bmp = scripts.bmp:main',
         'renamer = scripts.renamer:main',
         'tagger = scripts.tagger:main',
     ]},

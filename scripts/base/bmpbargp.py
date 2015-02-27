@@ -12,7 +12,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os
+import os, sys
 from argparse import ArgumentParser
 
 """ Global options parsing for scripts:
@@ -24,7 +24,7 @@ from argparse import ArgumentParser
       . display sorting:
         .. by size/date, ascending/descending
 """
-class BMPArgParser:
+class BMPBaseArgParser:
     @staticmethod
     def is_valid_dir_path(parser, path_arg):
         """ Checks if path_arg is a valid dir path
@@ -61,37 +61,47 @@ class BMPArgParser:
     @staticmethod
     def parse_global_options(parser):
         # Global Options
-        parser.add_argument("-d", "--dir", dest = "dir",
-                    type = lambda d: BMPArgParser.is_valid_dir_path(parser, d),
+        source_mode_group = parser.add_argument_group('Input source mode')
+        source_mode_group.add_argument("-d", "--dir", dest = "dir",
+                    type = lambda d: BMPBaseArgParser.is_valid_dir_path(parser, d),
                     help = "Source directory (default is current directory)",
                     default = os.curdir)
-        parser.add_argument("-f", "--file", dest = "file",
-                    type = lambda f: BMPArgParser.is_valid_file_path(parser, f),
+        source_mode_group.add_argument("-f", "--file", dest = "file",
+                    type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f),
                     help = "File to process")
-        parser.add_argument("-el", "--endlevel", dest = "end_level",
+
+        recursive_mode_group = parser.add_argument_group('Recursion mode')
+        recursive_mode_group.add_argument("-r", "--recursive", dest = "recursive",
+                    help = "Recurse into nested folders",
+                    action = 'store_true')
+        recursive_mode_group.add_argument("-el", "--endlevel", dest = "end_level",
                     help = "End level for recursion into nested folders",
                     type = int,
-                    default = 1)
-        parser.add_argument("-in", "--include",
+                    default = 0)
+
+        include_mode_group = parser.add_argument_group('Filter files or folders')
+        include_mode_group.add_argument("-in", "--include",
                     help = "Include names pattern",
                     type = str,
                     default = '*')
-        parser.add_argument("-ex", "--exclude",
+        include_mode_group.add_argument("-ex", "--exclude",
                     help = "Exclude names pattern",
                     type = str,
                     default = '')
-        parser.add_argument("-fd", "--filterdirs", dest = "filter_dirs",
+        include_mode_group.add_argument("-fd", "--filterdirs", dest = "filter_dirs",
                     help = "Do not apply Include/Exclude patterns on directories",
                     action = 'store_true')
-        parser.add_argument("-ff", "--filterfiles", dest = "filter_files",
+        include_mode_group.add_argument("-ff", "--filterfiles", dest = "filter_files",
                     help = "Do not apply Include/Exclude patterns on files",
                     action = 'store_true')
-        parser.add_argument('-s', '--sort', dest = 'sort',
+
+        misc_group = parser.add_argument_group('Miscellaneous')
+        misc_group.add_argument('-s', '--sort', dest = 'sort',
                     help = "Sorting for files ('na', i.e. by name ascending by default)",
                     type=str,
                     choices = ['na', 'nd', 'sa', 'sd'],
                     default = 'na')
-        parser.add_argument("-q", "--quiet", dest = 'quiet',
+        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
                     help = "Do not visualise / show messages during processing",
                     action = 'store_true')
 
@@ -109,6 +119,10 @@ class BMPArgParser:
             args['end_level'] = 0
             args['filter_files'] = False
             args['filter_dirs'] = False
+
+        # check recursion
+        if not args['end_level'] and args['recursive']:
+            args['end_level'] = sys.maxsize
 
     @classmethod
     def parse_options(cls, script_name = 'batchmp tools', description = 'Global Options'):

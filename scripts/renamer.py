@@ -14,7 +14,7 @@
 
 import sys
 from argparse import ArgumentParser
-from scripts.base.bmpargp import BMPArgParser
+from scripts.base.bmpbargp import BMPBaseArgParser
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
 
@@ -62,7 +62,7 @@ from batchmp.fstools.rename import Renamer
       renamer Command -h for additional help
 """
 
-class RenameArgParser(BMPArgParser):
+class RenameArgParser(BMPBaseArgParser):
     @staticmethod
     def parse_commands(parser):
         # Commands
@@ -199,7 +199,7 @@ class RenameArgParser(BMPArgParser):
 
     @staticmethod
     def check_args(args):
-        BMPArgParser.check_args(args)
+        BMPBaseArgParser.check_args(args)
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
@@ -224,7 +224,7 @@ class RenameDispatcher:
                 include = args['include'], exclude = args['exclude'], sort = args['sort'],
                 filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
                 flatten = False, ensure_uniq = False,
-                show_size = args['show_size'], formatter = None)
+                show_size = args['show_size'])
 
     @staticmethod
     def flatten(args):

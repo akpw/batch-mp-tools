@@ -13,7 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" Tag Handlers responsibility chain
+""" Mutagen-based handler
 """
 from batchmp.tags.extern.mediafile import MediaFile, UnreadableFileError
 from batchmp.tags.extern.mediafile import MutagenError

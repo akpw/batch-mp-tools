@@ -107,15 +107,17 @@ class FSH:
         return md5.hexdigest() if hex else md5.digest()
 
     @staticmethod
-    def get_files(src_dir=os.curdir, recursive = False, pass_filter = lambda f: True):
-        """ gets all files from source directory and (if recursive) its subdirectories
+    def files(src_dir, *, recursive = False, pass_filter = None):
+        """ list of files passing specified filter
         """
+        if not pass_filter:
+            pass_filter = lambda f: True
         if recursive:
             fpathes = [os.path.join(r,f) for r,d,files in os.walk(src_dir)
                                                 for f in files if pass_filter(f)]
         else:
             fpathes = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
-                                                if pass_filter(fname))
+                                                                    if pass_filter(fname))
             fpathes = [f for f in fpathes if os.path.isfile(f)]
 
         return fpathes
@@ -139,10 +141,11 @@ class FSH:
                 sys.exit(1)
         return succeeded
 
+
 class UniqueDirNamesChecker:
-    def __init__(self, src_dir, unique_fnames = FSH.unique_fnames):
+    def __init__(self, src_dir, *, unique_fnames = None):
         self._src_dir = src_dir
-        self._uname_gen = unique_fnames()
+        self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
 
         fnames = (os.path.realpath(f) for f in os.listdir(self._src_dir) if os.path.isfile(f))
         # init the generator function with existing file names from the dir
@@ -154,9 +157,10 @@ class UniqueDirNamesChecker:
         next(self._uname_gen)
         return self._uname_gen.send(fname)
 
+
 class DWalker(object):
     """ Walks content of a directory, generating
-        a sequence of structured directory elements (FSEntry)
+        a sequence of structured elements (FSEntry)
     """
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
@@ -165,7 +169,7 @@ class DWalker(object):
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
     @staticmethod
-    def entries(src_dir,
+    def entries(src_dir, *,
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True,
@@ -283,3 +287,27 @@ class DWalker(object):
                     sort_key = lambda entry: os.path.basename(entry.realpath)
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
+
+
+    @staticmethod
+    def file_entries(src_dir, *,
+                    start_level = 0, end_level = sys.maxsize,
+                    include = '*', exclude = '', sort = 'n',
+                    filter_dirs = True, filter_files = True,
+                    pass_filter = None):
+
+        if not pass_filter:
+            pass_filter = lambda f: True
+
+        for entry in DWalker.entries(src_dir,
+                                        end_level = end_level,
+                                        include = include, exclude = exclude,
+                                        filter_dirs = filter_dirs, filter_files = filter_files):
+
+            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_DIR):
+                continue
+
+            if not pass_filter(entry.realpath):
+                continue
+            else:
+                yield entry.realpath

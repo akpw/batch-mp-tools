@@ -15,7 +15,7 @@
 
 import os
 from argparse import ArgumentParser
-from scripts.base.bmpargp import BMPArgParser
+from scripts.base.bmpbargp import BMPBaseArgParser
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
@@ -63,7 +63,7 @@ from functools import partial
       tagger {command} -h for additional help
 """
 
-class TaggerArgParser(BMPArgParser):
+class TaggerArgParser(BMPBaseArgParser):
     @staticmethod
     def parse_commands(parser):
         subparsers = parser.add_subparsers(help = 'Tagger commands',
@@ -121,14 +121,14 @@ class TaggerArgParser(BMPArgParser):
                 type = str)
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
-                type = lambda f: BMPArgParser.is_valid_file_path(parser, f))
+                type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
 
         set_tags_parser.add_argument('-bm', '--bpm', dest='bpm',
                 help = "Sets the BPM tag",
                 type = str)
         set_tags_parser.add_argument('-cmp', '--compilaton', dest='compilaton',
                 help = "Sets the Compilaton tag",
-                type = lambda f: BMPArgParser.is_boolean(parser, f))
+                type = lambda f: BMPBaseArgParser.is_boolean(parser, f))
         set_tags_parser.add_argument('-grp', '--grouping', dest='grouping',
                 help = "Sets the Grouping tag",
                 type = str)
@@ -143,7 +143,7 @@ class TaggerArgParser(BMPArgParser):
         copy_tags_parser = subparsers.add_parser('copy', help = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
-                type = lambda f: BMPArgParser.is_valid_file_path(parser, f))
+                type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
 
          # Remove Tags
         copy_tags_parser = subparsers.add_parser('remove', help = 'Removes all tags')
@@ -159,7 +159,7 @@ class TaggerArgParser(BMPArgParser):
 
     @staticmethod
     def check_args(args):
-        BMPArgParser.check_args(args)
+        BMPBaseArgParser.check_args(args)
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'

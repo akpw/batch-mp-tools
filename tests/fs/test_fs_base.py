@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 import os, re
-from batchmp.ffmptools import ffmputils
+from batchmp.ffmptools.ffmputils import run_cmd
 from ..base import test_base
 
 class FSTest(test_base.BMPTest):
@@ -22,7 +22,7 @@ class FSTest(test_base.BMPTest):
         super(FSTest, cls).setUpClass()
 
     def get_last_digit_from_shell_cmd(self, cmd):
-        cmd_output = ffmputils.run_cmd_shell(cmd)
+        cmd_output, _ = run_cmd(cmd, shell = True)
 
         p = re.compile('(\d+)(?!.*\d)')
         match = p.search(cmd_output)

@@ -13,63 +13,31 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" Tag Handlers responsibility chain
+""" FFmpeg-based Handler
 """
 
-import os, json, shutil
-from collections import namedtuple
-from batchmp.ffmptools.ffmputils import (
-    ffmpeg_installed,
-    run_cmd,
-    CmdProcessingError
-)
+import os, shutil
 from batchmp.fstools.fsutils import temp_dir
 from batchmp.tags.handlers.basehandler import TagHandler
 from batchmp.tags.handlers.ffmphandlers.base import FFBaseFormatHandler
+from batchmp.ffmptools.ffmputils import (
+    FFH,
+    run_cmd,
+    CmdProcessingError
+)
 
 class FFmpegTagHandler(TagHandler):
     ''' FFmpeg-Based Tag Handler
     '''
-    FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
-
     def _can_handle(self, path):
         self._reset_handler()
-        if not ffmpeg_installed():
-            return False
-        cmd = ''.join(('ffprobe ',
-                            ' -v quiet',
-                            ' -show_streams',
-                            #' -select_streams a',
-                            ' -show_format',
-                            ' -print_format json',
-                            ' "{}"'.format(path)))
-        try:
-            output, _ = run_cmd(cmd)
-        except CmdProcessingError as e:
-            return False
-        else:
-            format = json.loads(output).get('format')
-
-            streams = json.loads(output)['streams']
-            audio_stream = {k:v for dict in streams
-                                    for k,v in dict.items()
-                                        if 'codec_type' in dict and
-                                            dict['codec_type'] == 'audio'}
-            if not audio_stream:
-                return False
-
-            artwork_stream = {k:v for dict in streams
-                                    for k,v in dict.items()
-                                        if 'codec_type' in dict and dict['codec_type'] == 'video'
-                                            and dict['codec_name'] in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg')}
-
-            media_entry = self.FFEntry(path, format, audio_stream, artwork_stream)
+        media_entry = FFH.media_file_info(path)
+        if media_entry:
             self._media_handler = FFBaseFormatHandler(self.tag_holder) #... + FFSpecificFormatHandler() + ...
             if self._media_handler.can_handle(media_entry):
                 self._media_handler.parse()
                 return True
-            else:
-                return False
+        return False
 
     def _save(self, write_artwork = True):
         ''' saves tags

@@ -20,11 +20,12 @@ from batchmp.fstools.fsutils import DWalker, FSH
 
 class DHandler:
     @staticmethod
-    def print_dir(src_dir, start_level = 0, end_level = sys.maxsize,
-                            include = '*', exclude = '', sort = 'n',
-                            filter_dirs = True, filter_files = True,
-                            flatten = False, ensure_uniq = False,
-                            show_size = False, formatter = None):
+    def print_dir(src_dir, *,
+                        start_level = 0, end_level = sys.maxsize,
+                        include = '*', exclude = '', sort = 'n',
+                        filter_dirs = True, filter_files = True,
+                        flatten = False, ensure_uniq = False,
+                        show_size = False, formatter = None):
         """ Prints content of given directory
             supports recursion to end_level
             supports flattening folders beyond end_level
@@ -69,7 +70,8 @@ class DHandler:
             print('Total size: {}'.format(FSH.file_size(total_size)))
 
     @staticmethod
-    def dir_stats(src_dir, start_level = 0, end_level = sys.maxsize, flatten = False,
+    def dir_stats(src_dir, *,
+                        start_level = 0, end_level = sys.maxsize, flatten = False,
                         include = '*', exclude = '',
                         filter_dirs = True, filter_files = True,
                         include_size = True):
@@ -97,7 +99,8 @@ class DHandler:
         return fcnt, dcnt, total_size
 
     @staticmethod
-    def rename_entries(src_dir, start_level = 0, end_level = sys.maxsize,
+    def rename_entries(src_dir, *,
+                            start_level = 0, end_level = sys.maxsize,
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True, check_unique = True,
                             formatter = None, quiet = False):
@@ -159,38 +162,40 @@ class DHandler:
         return answer
 
     @staticmethod
-    def visualise_changes(src_dir, before_msg = 'Current source directory:',
-                                    after_msg = '\nTargeted after processing:',
-                                    orig_end_level = sys.maxsize, target_end_level = 0,
-                                    include = '*', exclude = '', sort = 'n',
-                                    filter_dirs = True, filter_files = True,
-                                    include_dirs = False, include_files = True,
-                                    flatten = False, ensure_uniq = False,
-                                    preformatter = None, formatter = None):
+    def visualise_changes(src_dir, *,
+                                before_msg = 'Current source directory:',
+                                after_msg = '\nTargeted after processing:',
+                                orig_end_level = sys.maxsize, target_end_level = 0,
+                                include = '*', exclude = '', sort = 'n',
+                                filter_dirs = True, filter_files = True,
+                                include_dirs = False, include_files = True,
+                                flatten = False, ensure_uniq = False,
+                                preformatter = None, formatter = None):
 
         print(before_msg)
         DHandler.print_dir(src_dir = src_dir,
-                                    end_level = orig_end_level, sort = sort,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = preformatter)
+                                end_level = orig_end_level, sort = sort,
+                                include = include, exclude = exclude,
+                                filter_dirs = filter_dirs, filter_files = filter_files,
+                                formatter = preformatter)
 
         print(after_msg)
         DHandler.print_dir(src_dir = src_dir,
-                                    end_level = target_end_level, sort = sort,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    flatten = flatten, ensure_uniq = ensure_uniq,
-                                    formatter = formatter)
+                                end_level = target_end_level, sort = sort,
+                                include = include, exclude = exclude,
+                                filter_dirs = filter_dirs, filter_files = filter_files,
+                                flatten = flatten, ensure_uniq = ensure_uniq,
+                                formatter = formatter)
 
         return DHandler.get_user_input()
 
     @staticmethod
-    def flatten_folders(src_dir, target_level = sys.maxsize, end_level = sys.maxsize,
-                                    include = '*', exclude = '',
-                                    filter_dirs = True, filter_files = True,
-                                    remove_folders = True, remove_non_empty_folders = False,
-                                    quiet = False):
+    def flatten_folders(src_dir, *,
+                                target_level = sys.maxsize, end_level = sys.maxsize,
+                                include = '*', exclude = '',
+                                filter_dirs = True, filter_files = True,
+                                remove_folders = True, remove_non_empty_folders = False,
+                                quiet = False):
 
         if end_level < target_level:
             end_level = target_level

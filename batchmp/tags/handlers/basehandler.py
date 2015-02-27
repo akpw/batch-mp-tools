@@ -18,7 +18,7 @@
 import os
 from enum import Enum
 from batchmp.commons.chainedhandler import ChainedHandler
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from batchmp.fstools.fsutils import UniqueDirNamesChecker
 from batchmp.commons.descriptors import LazyTypedPropertyDescriptor
 

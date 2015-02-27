@@ -13,7 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" Tag Handlers responsibility chain
+""" FFmpeg generic formats handler
 """
 
 import os
@@ -165,7 +165,7 @@ class FFBaseFormatHandler(ChainedHandler):
             disc_tagger = ' -metadata disc=""'
 
         cmd = ''.join(('ffmpeg ',
-                        #' -v quiet',
+                        ' -v quiet',
                         ' -i "{}"'.format(self.media_entry.path),
                         ' -i "{}"'.format(art_path) if art_path else '',
                         ' -c copy',

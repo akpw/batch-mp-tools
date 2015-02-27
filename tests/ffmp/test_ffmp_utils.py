@@ -20,20 +20,20 @@ import batchmp.ffmptools.ffmputils as ffmputils
 class FFMPUtilsTests(FFMPTest):
     def setUp(self):
         super(FFMPUtilsTests, self).setUp()
-        self.bkp_dirs_ptrn = ['{0}data{0}mp3{0}{1}'.format(os.path.sep, ffmputils.BACKUP_DIR_PREFIX),
-                              '{0}data{0}mp4{0}{1}'.format(os.path.sep, ffmputils.BACKUP_DIR_PREFIX)]
+        self.bkp_dirs_ptrn = ['{0}data{0}mp3{0}{1}'.format(os.path.sep, ffmputils.FFH.BACKUP_DIR_PREFIX),
+                              '{0}data{0}mp4{0}{1}'.format(os.path.sep, ffmputils.FFH.BACKUP_DIR_PREFIX)]
 
     def test_ffmpeg_installed(self):
-        self.assertTrue(ffmputils.ffmpeg_installed())
+        self.assertTrue(ffmputils.FFH.ffmpeg_installed())
 
-    def test_get_media_files(self):
+    def test_media_files(self):
         media_files = [os.path.basename(fpath)
-            for fpath in ffmputils.get_media_files(self.src_dir, recursive = True)]
+            for fpath in ffmputils.FFH.media_files(self.src_dir)]
         self.assertTrue(set(media_files) == set(self.media_info.keys()))
 
     def test_setup_backup_dirs(self):
-        media_files = ffmputils.get_media_files(self.src_dir, recursive = True)
-        backup_dirs = ffmputils.setup_backup_dirs(media_files)
+        media_files = [f for f in ffmputils.FFH.media_files(self.src_dir)]
+        backup_dirs = ffmputils.FFH.setup_backup_dirs(media_files)
 
         # should return a backup dir for every file
         self.assertTrue(len(backup_dirs) == len(media_files))
@@ -50,11 +50,11 @@ class FFMPUtilsTests(FFMPTest):
             if os.path.exists(b_d):
                 os.rmdir(b_d)
 
-    def test_get_backup_dirs(self):
-        media_files = ffmputils.get_media_files(self.src_dir, recursive = True)
-        backup_dirs = ffmputils.setup_backup_dirs(media_files)
+    def test_backup_dirs(self):
+        media_files = ffmputils.FFH.media_files(self.src_dir)
+        backup_dirs = ffmputils.FFH.setup_backup_dirs(media_files)
 
-        backup_dirs_list = ffmputils.get_backup_dirs(self.src_dir, recursive = True)
+        backup_dirs_list = ffmputils.FFH.backup_dirs(self.src_dir)
         self.assertEqual(set(backup_dirs), set(backup_dirs_list))
 
         for b_d in backup_dirs_list:
