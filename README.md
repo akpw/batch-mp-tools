@@ -1,6 +1,6 @@
 
 #Description
-Python package for batch processing of media files
+Python CLI tools for batch processing of media files
 
 
 **Status:**
@@ -28,7 +28,7 @@ A weekend project under occasional development :)
 **Running Tests**
 - Run via: ```python setup.py test```
 
-##Scripts
+##CLI Commands
 ###renamer
     Batch renaming of files and directories
     . visualises original / targeted folders structure before actual rename action
@@ -82,9 +82,9 @@ A weekend project under occasional development :)
         .. copy tags from a given media file
         .. remove all tags
         .. index tracks
-        .. extracts artwork
-        .. add / remove characters in tags (title, artist, ...)
-        .. regexp-based replace in tags (title, artist, ...)
+        .. TBD: extracts artwork
+        .. TBD: add / remove characters in tags (title, artist, ...)
+        .. TBD: regexp-based replace in tags (title, artist, ...)
 
     Usage: tagger {-d DIR} [GLobal Options] {Commands}[Commands Options]
       Global Options (renamer -h for additional help)
@@ -107,16 +107,41 @@ A weekend project under occasional development :)
       tagger {command} -h for additional help
         
         
-###denoiser (requires [FFmpeg](http://ffmpeg.org))
-    . Reduces background audio noise in media files via filtering out highpass / low-pass frequencies
-    . Uses Python multiprocessing to leverage available CPU cores
-    . Supports recursive processing of media files in subfolders
-    . Supports multi-passes processing, e.g. 3 times for each media file in a source dir
-    . Supports backing up original media in their respective folders
-    . Displays continuos progress
-    . Usage: denoiser -d DIR [-r] [-n NUM_PASSES] [-hp HIGH_PASS] [-lp LOW_PASS] [-nb] [-q] [-h]
-        ('denoiser.py -h' for help)        
+###bmp
+    Batch processing of media files
+    . Uses multiprocessing to utilize available CPU cores
+    . source directory / source file modes
+    . recursion to specified end_level
+    . include / exclude patterns, etc. (see list of Global Options for details)
+    . action commands:
+        .. denoise
+        .. split
+        .. speed up
+        .. slow down
+        .. adjust volume
+        .. convert
 
+    Usage: bmp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Global Options (bmp -h for additional help)
+        [-e END_LEVEL]                        End level for recursion into nested folders
+        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
+        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
+        [-s SORT]                             Sorting for files / folders
+        [-q QUIET]                            Do not visualise / show messages during processing
+    
+      bmp -h for additional help on global options
+    
+      Commands: (bmp {command} -h for additional help)
+      {denoise, split, speedup, slowdown, volume, convert}
+        denoise   Reduces background audio noise in media files
+                      via filtering out highpass / low-pass frequencies
+        split     TDB: Splits media files
+        speedup   TDB: Uses Time Stretching to increase audio / video speed
+        slowdown  TDB: Uses Time Stretching to decrease audio / video speed
+        volume    TDB: Adjust audiot volume
+        convert   TDB: Convert media to specified format
+
+      bmp {Command} -h for additional help
 
 
 
