@@ -11,20 +11,20 @@
 ## GNU General Public License for more details.
 
 
-""" A Python module for running batch FFmpeg commands
-    Supports recursive processing of media files in all subdirectoris
-    Supports multi-passes processing, e.g. 3 times for each media file in source dir
-    Uses Python multiprocessing to leverage available CPU cores
+""" Batch Reduce of background audio noise in media files,
+    via filtering out highpass / low-pass frequencies
+
+    Uses batchmp.ffmptools.taskpp.TasksProcessor to leverage available CPU cores
+
+    Supports multi-passes processing, e.g. 3 times for each media file
     Supports backing up original media in their respective folders
-    Displays continuos progress
 """
 
-import shutil, sys, os, multiprocessing
-import datetime, math
+import shutil, sys, os, datetime, math
 from batchmp.fstools.fsutils import temp_dir
-from batchmp.ffmptools.ffmpcmd import FFMPCommandRunner
+from batchmp.ffmptools.ffrunner import FFMPRunner
 from batchmp.ffmptools.taskpp import Task, TasksProcessor
-from batchmp.ffmptools.ffmputils import (
+from batchmp.ffmptools.ffutils import (
     timed,
     run_cmd,
     CmdProcessingError,
@@ -32,7 +32,11 @@ from batchmp.ffmptools.ffmputils import (
 )
 
 class DenoiserTask(Task):
+    ''' A specific TasksProcessor task
+    '''
     def __init__(self, fpath, backup_path, highpass, lowpass, num_passes):
+        ''' inits the task parameters
+        '''
         self.fpath = fpath
         self.backup_path = backup_path
         self.highpass = highpass
@@ -40,6 +44,8 @@ class DenoiserTask(Task):
         self.num_passes = num_passes
 
     def execute(self):
+        ''' builds and runs FFmpeg command in a subprocess
+        '''
         fname = os.path.basename(self.fpath)
 
         # media file's extension
@@ -60,11 +66,11 @@ class DenoiserTask(Task):
                 fpath_output = os.path.join(tmp_dir, fpath_output)
 
                 # build ffmpeg cmd string
-                if self.highpass and self.lowpass != 0:
+                if self.highpass and self.lowpass:
                     af_str = 'highpass=f={0}, lowpass=f={1}'.format(self.highpass, self.lowpass)
-                elif self.lowpass != 0:
+                elif self.lowpass:
                     af_str = 'lowpass=f={}'.format(self.lowpass)
-                elif self.highpass != 0:
+                elif self.highpass:
                     af_str = 'highpass=f={}'.format(self.highpass)
                 else:
                     output.append('A problem while processing media file:\n\t{0}'
@@ -77,7 +83,7 @@ class DenoiserTask(Task):
                                 ' -loglevel "error" -n',
                                 ' "{0}"'.format(fpath_output)))
 
-                # run ffmpeg as (@utils.timed) a subprocess
+                # run ffmpeg command as a subprocess
                 try:
                     _, pass_elapsed = run_cmd(p_in)
                 except CmdProcessingError as e:
@@ -89,16 +95,15 @@ class DenoiserTask(Task):
                 else:
                     task_elapsed += pass_elapsed
 
-                # for the last pass, do some house cleaning
                 if pass_cnt == self.num_passes - 1:
-                    # if applicable, backup the original file
+                    # for the last pass,
+                    # backup the original file if applicable
                     if self.backup_path != None:
                         shutil.move(self.fpath, self.backup_path)
-
-                    # move resulting output to its original name / dest
+                    # ... and replace it with the resulting output
                     shutil.move(fpath_output, self.fpath)
                 else:
-                    # for the next pass, make the output new input
+                    # for the next pass, make the intermediary output new input
                     fpath_input = fpath_output
 
         # log report
@@ -108,7 +113,7 @@ class DenoiserTask(Task):
                                 self.num_passes, 'passes' if self.num_passes > 1 else 'pass'))
         return output, task_elapsed
 
-class Denoiser(FFMPCommandRunner):
+class Denoiser(FFMPRunner):
     def apply_af_filters(self, src_dir,
                             end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,

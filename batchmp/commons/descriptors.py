@@ -16,7 +16,7 @@ from weakref import WeakKeyDictionary
 from importlib import import_module
 
 class PropertyDescriptor:
-    ''' Base simple Property Descriptor
+    ''' Base Property Descriptor
     '''
     def __init__(self):
         self.data = WeakKeyDictionary()
@@ -33,7 +33,7 @@ class PropertyDescriptor:
 
 class LazyTypedPropertyDescriptor(PropertyDescriptor):
     ''' Dynamically instantiates property of a given type
-        Example usage:
+        Example:
           tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
     '''
     def __init__(self, property_type_classpath):
@@ -47,7 +47,7 @@ class LazyTypedPropertyDescriptor(PropertyDescriptor):
             self.data[instance] = value
         return value
 
-    # Helper method
+    # Helpers
     def __load_lazy_property_class(self):
         split_path = self._pt_cpath.split('.')
         module_path = '.'.join(split_path[:-1])

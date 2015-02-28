@@ -11,25 +11,28 @@
 ## GNU General Public License for more details.
 
 import datetime, math
-from batchmp.ffmptools.ffmputils import FFH, timed
+from batchmp.ffmptools.ffutils import FFH, timed
+from abc import ABCMeta, abstractmethod
 
-""" Base FFMPCommandBuilder
-"""
-
-class FFMPCommandRunner:
+class FFMPRunner(metaclass = ABCMeta):
+    ''' Base FFMPRunner
+    '''
     def __init__(self):
         if not FFH.ffmpeg_installed():
             raise utils.FFmpegNotInstalled('\n\tLooks like ffmpeg is not installed'
                                            '\n\tCheck it out here:'
                                            ' http://www.ffmpeg.org/download.html\n')
-    @timed
+    @abstractmethod
     def run(self, *args, **kwargs):
         pass
 
     def run_report(self, cpu_core_time, total_elapsed):
+        ''' Info summary on executed FFMP commands
+        '''
         ttd = datetime.timedelta(seconds = math.ceil(total_elapsed))
         ctd = datetime.timedelta(seconds = math.ceil(cpu_core_time))
+
         print('Total running time: {}'.format(str(ttd)))
-        print('Cumulative CPU Cores time: {}'.format(str(ctd)))
+        print('Cumulative FFmpeg CPU Cores time: {}'.format(str(ctd)))
 
 

@@ -13,14 +13,11 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" FFmpeg-based Handler
-"""
-
 import os, shutil
 from batchmp.fstools.fsutils import temp_dir
 from batchmp.tags.handlers.basehandler import TagHandler
 from batchmp.tags.handlers.ffmphandlers.base import FFBaseFormatHandler
-from batchmp.ffmptools.ffmputils import (
+from batchmp.ffmptools.ffutils import (
     FFH,
     run_cmd,
     CmdProcessingError

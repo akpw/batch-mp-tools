@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 import os, re
-from batchmp.ffmptools.ffmputils import run_cmd
+from batchmp.ffmptools.ffutils import run_cmd
 from ..base import test_base
 
 class FSTest(test_base.BMPTest):

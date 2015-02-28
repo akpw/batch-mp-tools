@@ -10,24 +10,29 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-""" Run tasks in a pool of processes
-"""
-
 import copyreg, types
 import multiprocessing
 from batchmp.commons.progressbar import progress_bar
 from abc import ABCMeta, abstractmethod
 
 class Task(metaclass = ABCMeta):
+    ''' Represents an abstract TasksProcessor task
+    '''
     def __init__(self, task_args):
         self.task_args = task_args
+
     def __call__():
         execute()
+
     @abstractmethod
     def execute(self):
         pass
 
+
 class TasksProcessor:
+    ''' Run tasks in a pool of processes
+        Displays progress / tasks done
+    '''
     def _process_task(self, task):
         result = task.execute()
         return result

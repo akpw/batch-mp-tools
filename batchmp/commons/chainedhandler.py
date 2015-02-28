@@ -36,6 +36,8 @@ class ChainedHandler(metaclass = ABCMeta):
             self._responder_idx = -1
 
         def add_handler(self, handler):
+            ''' Adds a handler to the chain
+            '''
             if len(self._handlers_chain) == 0:
                 # the first handler owns the chain,
                 # hence it needs to be added as a weakref
@@ -44,7 +46,7 @@ class ChainedHandler(metaclass = ABCMeta):
                 self._handlers_chain.append(handler)
 
         def has_responder(self, request):
-            ''' Returns suitable handler for a media file
+            ''' Evaluates the handler chain and select a suitable responder
             '''
             for idx, handler in enumerate(self._handlers_chain):
                 if type(handler) is ReferenceType:
@@ -56,6 +58,8 @@ class ChainedHandler(metaclass = ABCMeta):
 
         @property
         def responder(self):
+            ''' Returns the curent responder
+            '''
             if self._responder_idx >= 0:
                 handler = self._handlers_chain[self._responder_idx]
                 if type(handler) is ReferenceType:
@@ -66,7 +70,7 @@ class ChainedHandler(metaclass = ABCMeta):
 
     @LazyFunctionPropertyDescriptor
     def _handler_chain(self):
-        ''' creates chain dispatcher and
+        ''' lazily creates the chain dispatcher and
             stores is as an internal property
             via @LazyFunctionPropertyDescriptor
         '''
@@ -76,6 +80,8 @@ class ChainedHandler(metaclass = ABCMeta):
 
     @property
     def responder(self):
+        ''' Returns active responder
+        '''
         return self._handler_chain.responder
 
     def __add__(self, handler):

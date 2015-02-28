@@ -13,9 +13,6 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" Tags Holder
-"""
-
 from weakref import WeakMethod
 from types import MethodType
 from itertools import chain

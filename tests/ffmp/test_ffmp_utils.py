@@ -15,25 +15,26 @@
 
 import unittest, os, sys
 from .test_ffmp_base import FFMPTest
-import batchmp.ffmptools.ffmputils as ffmputils
+from batchmp.ffmptools.ffutils import FFH, CmdProcessingError, run_cmd
+
 
 class FFMPUtilsTests(FFMPTest):
     def setUp(self):
         super(FFMPUtilsTests, self).setUp()
-        self.bkp_dirs_ptrn = ['{0}data{0}mp3{0}{1}'.format(os.path.sep, ffmputils.FFH.BACKUP_DIR_PREFIX),
-                              '{0}data{0}mp4{0}{1}'.format(os.path.sep, ffmputils.FFH.BACKUP_DIR_PREFIX)]
+        self.bkp_dirs_ptrn = ['{0}data{0}mp3{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX),
+                              '{0}data{0}mp4{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX)]
 
     def test_ffmpeg_installed(self):
-        self.assertTrue(ffmputils.FFH.ffmpeg_installed())
+        self.assertTrue(FFH.ffmpeg_installed())
 
     def test_media_files(self):
         media_files = [os.path.basename(fpath)
-            for fpath in ffmputils.FFH.media_files(self.src_dir)]
+            for fpath in FFH.media_files(self.src_dir)]
         self.assertTrue(set(media_files) == set(self.media_info.keys()))
 
     def test_setup_backup_dirs(self):
-        media_files = [f for f in ffmputils.FFH.media_files(self.src_dir)]
-        backup_dirs = ffmputils.FFH.setup_backup_dirs(media_files)
+        media_files = [f for f in FFH.media_files(self.src_dir)]
+        backup_dirs = FFH.setup_backup_dirs(media_files)
 
         # should return a backup dir for every file
         self.assertTrue(len(backup_dirs) == len(media_files))
@@ -51,10 +52,10 @@ class FFMPUtilsTests(FFMPTest):
                 os.rmdir(b_d)
 
     def test_backup_dirs(self):
-        media_files = ffmputils.FFH.media_files(self.src_dir)
-        backup_dirs = ffmputils.FFH.setup_backup_dirs(media_files)
+        media_files = FFH.media_files(self.src_dir)
+        backup_dirs = FFH.setup_backup_dirs(media_files)
 
-        backup_dirs_list = ffmputils.FFH.backup_dirs(self.src_dir)
+        backup_dirs_list = FFH.backup_dirs(self.src_dir)
         self.assertEqual(set(backup_dirs), set(backup_dirs_list))
 
         for b_d in backup_dirs_list:
@@ -65,9 +66,9 @@ class FFMPUtilsTests(FFMPTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_run_shell(self):
         cmd = "ls"
-        ffmputils.run_cmd(cmd)
+        run_cmd(cmd)
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_run_shell_raise(self):
         cmd = "which"
-        self.assertRaises(ffmputils.CmdProcessingError, ffmputils.run_cmd, cmd)
+        self.assertRaises(CmdProcessingError, run_cmd, cmd)

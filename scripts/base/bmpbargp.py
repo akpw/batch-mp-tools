@@ -16,13 +16,12 @@ import os, sys
 from argparse import ArgumentParser
 
 """ Global options parsing for scripts:
-      . source dir / file
+      . source dir / file modes
       . recursion to specified end_level
-      . directory slicing, from start_level to end_level
       . include / exclude names patterns (Unix style)
       . enable or disable include / exclude for directories / folders
       . display sorting:
-        .. by size/date, ascending/descending
+        .. by size / date, ascending / descending
 """
 class BMPBaseArgParser:
     @staticmethod

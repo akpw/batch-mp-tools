@@ -12,7 +12,6 @@
 
 import unittest, os, sys
 import shutil, hashlib
-import batchmp.ffmptools.ffmputils as utils
 from batchmp.fstools.fsutils import FSH
 
 class BMPTest(unittest.TestCase):

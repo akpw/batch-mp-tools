@@ -10,9 +10,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-
 import os, sys
-import mutagen
 from collections import namedtuple
 from distutils.util import strtobool
 from batchmp.fstools.fsutils import DWalker, FSH

@@ -17,8 +17,8 @@ from contextlib import contextmanager
 
 @contextmanager
 def temp_dir():
-    """ Temp dir context manager
-    """
+    ''' Temp dir context manager
+    '''
     tmp_dir = tempfile.mkdtemp()
     try:
         yield tmp_dir
@@ -27,19 +27,19 @@ def temp_dir():
         shutil.rmtree(tmp_dir)
 
 class FSH:
-    """ FS helper
-    """
+    ''' FS helper
+    '''
     @staticmethod
     def level_from_root(root, nested_path):
-        """ determines the level from root folder
-        """
+        ''' determines the level from root folder
+        '''
         return os.path.realpath(nested_path).count(os.path.sep) - \
                             os.path.realpath(root).count(os.path.sep)
 
     @staticmethod
     def folders_at_level(src_dir, target_level):
-        """ generates a sequence of folders at given level from src_dir
-        """
+        ''' generates a sequence of folders at given level from src_dir
+        '''
         root_depth = os.path.realpath(src_dir).count(os.sep)
         for r,d,f in os.walk(src_dir):
            if FSH.level_from_root(src_dir, r) == target_level:
@@ -47,8 +47,8 @@ class FSH:
 
     @staticmethod
     def remove_folders_below_target_level(src_dir, target_level=sys.maxsize, empty_only=True):
-        """ removes folders below target level
-        """
+        ''' removes folders below target level
+        '''
         folders_removed = 0
         for tpath in FSH.folders_at_level(src_dir, target_level):
             for r,d,f in os.walk(tpath, topdown = False):
@@ -61,8 +61,8 @@ class FSH:
 
     @staticmethod
     def unique_fnames():
-        """ generates unique file names
-        """
+        ''' generates unique file names
+        '''
         unique_names = {}
         while True:
             fname = yield
@@ -78,8 +78,8 @@ class FSH:
 
     @staticmethod
     def file_size(size, kb_1024=False):
-        """ human readable file size
-        """
+        ''' human readable file size
+        '''
         if size < 0:
             raise ValueError('File size can not be negative')
         unit_sfx = {1000: ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
@@ -96,8 +96,8 @@ class FSH:
 
     @staticmethod
     def file_md5(fpath, block_size=0, hex=False):
-        """ Calculates MD5 hash for a file at fpath
-        """
+        ''' Calculates MD5 hash for a file at fpath
+        '''
         md5 = hashlib.md5()
         if block_size == 0:
             block_size = 128 * md5.block_size
@@ -108,8 +108,8 @@ class FSH:
 
     @staticmethod
     def files(src_dir, *, recursive = False, pass_filter = None):
-        """ list of files passing specified filter
-        """
+        ''' list of files passing specified filter
+        '''
         if not pass_filter:
             pass_filter = lambda f: True
         if recursive:
@@ -143,6 +143,8 @@ class FSH:
 
 
 class UniqueDirNamesChecker:
+    ''' Produces a unique name for file in a directory
+    '''
     def __init__(self, src_dir, *, unique_fnames = None):
         self._src_dir = src_dir
         self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
@@ -159,9 +161,9 @@ class UniqueDirNamesChecker:
 
 
 class DWalker(object):
-    """ Walks content of a directory, generating
+    ''' Walks content of a directory, generating
         a sequence of structured elements (FSEntry)
-    """
+    '''
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
     ENTRY_TYPE_FILE = 'F'
@@ -174,7 +176,7 @@ class DWalker(object):
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True,
                     flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
-        """ generates a sequence of FSEntries elements
+        ''' generates a sequence of FSEntries elements
             supports recursion to end_level
             supports slicing directory by folder levels
             supports flattening beyond end_level, with optional checking for unique file names
@@ -182,7 +184,7 @@ class DWalker(object):
             sorting:
                 'na' / 'nd': by name / by name descending
                 'sa' / 'sd': by size / by size descending
-        """
+        '''
 
         # sorting
         reversed = True if sort.endswith('d') else False

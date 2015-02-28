@@ -135,7 +135,7 @@ if __name__ == '__main__':
     with progress_bar(start_from) as p_bar:
         while True:
             if p_bar.progress == msg_target:
-                p_bar.info_msg = 'At {}%, and still doing well'.format(msg_target)
+                p_bar.info_msg = 'At {}%, and doing well'.format(msg_target)
             if p_bar.progress == progress_target:
                 p_bar.info_msg = 'At {}%, and feel like finishing early'.format(progress_target)
                 break

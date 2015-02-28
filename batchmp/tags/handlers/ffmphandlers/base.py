@@ -13,7 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" FFmpeg generic formats handler
+""" FFmpeg generic handler (no format-related specifics)
 """
 
 import os

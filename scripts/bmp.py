@@ -41,17 +41,13 @@ from scripts.base.bmpbargp import BMPBaseArgParser
       {denoise, split, speedup, slowdown, volume, convert}
         denoise   Reduces background audio noise in media files
                       via filtering out highpass / low-pass frequencies
-        split     Flatten all folders below target level, moving the files
-                                        up the target level. By default, all empty
-                                        flattened folders will be deleted
-        speedup   Add index to files and directories
-        slowdown  Add date to files and directories
-        volume    Add text to files and directories
-        remove    Remove n characters from files and directories
-        convert   RegExp-based replace in files and directories
+        split     TDB: Splits media files
+        speedup   TDB: Uses Time Stretching to increase audio / video speed
+        slowdown  TDB: Uses Time Stretching to decrease audio / video speed
+        volume    TDB: Adjust audiot volume
+        convert   TDB: Convert media to specified format
 
       bmp {Command} -h for additional help
-
 """
 
 class BMPArgParser(BMPBaseArgParser):

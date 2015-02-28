@@ -58,29 +58,36 @@ class TagHandler(ChainedHandler):
 
     # Helpers
     def _reset_handler(self):
+        ''' resets the handler
+        '''
         self._media_handler = None
         self.tag_holder.reset_tags()
 
     def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
+        ''' copies tags from a tag_holder
+        '''
         self.tag_holder.copy_tags(tag_holder = tag_holder,
                                   copy_non_taggable = copy_non_taggable,
                                   copy_empty_vals = copy_empty_vals)
 
     def clear_tags(self):
+        ''' clear tags values
+        '''
         self.tag_holder.clear_tags()
 
     def detauch_art(self, dir_path = None, type = None):
+        ''' detauches art, returning art file path
+        '''
         if not type or (type not in DetauchedArtType):
             type = DetauchedArtType.PNG
-        fpath = None
+        art_path = None
         if self.tag_holder.art:
             if not dir_path:
                 dir_path = os.path.basename(self._media_handler.path)
             fname = os.path.splitext(os.path.basename(self._media_handler.path))[0] + DetauchedArtType.art_ext(type)
             fname = UniqueDirNamesChecker(dir_path).unique_name(fname)
 
-            fpath = os.path.join(dir_path, fname)
-            with open(fpath, 'wb') as f:
+            art_path = os.path.join(dir_path, fname)
+            with open(art_path, 'wb') as f:
                 f.write(self.tag_holder.art)
-
-        return fpath
+        return art_path

@@ -22,7 +22,10 @@ from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
 from functools import partial
 
+
 class BaseTagProcessor:
+    ''' Base Tag Processing
+    '''
     def __init__(self):
         self._handler = MutagenTagHandler() + FFmpegTagHandler()
 
@@ -35,7 +38,8 @@ class BaseTagProcessor:
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
                             show_size = False, format = None, show_stats = False):
-
+        ''' Prints tags in selected media files
+        '''
         formatter = partial(TagOutputFormatter.tags_formatter,
                                         format = format if format else OutputFormatType.COMPACT,
                                         handler = self.handler,
@@ -52,34 +56,29 @@ class BaseTagProcessor:
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
                             tag_holder = None, tag_holder_gen = None, copy_empty_vals = False):
-        """ Set tags from tag_holder attributes
-        """
+        ''' Set tags from tag_holder attributes
+        '''
         if not tag_holder and not tag_holder_gen:
             return
 
         fcnt = 0
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files):
+        pass_filter = lambda fpath: self.handler.can_handle(fpath)
+        for entry in fsutils.DWalker.file_entries(src_dir,
+                                            end_level = end_level,
+                                            include = include, exclude = exclude, sort = sort,
+                                            filter_dirs = True, filter_files = True,
+                                            pass_filter = pass_filter):
+            if tag_holder_gen:
+                try:
+                    th = next(tag_holder_gen)
+                except StopIteration as e:
+                    pass
+                else:
+                    tag_holder = th
 
-            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_DIR):
-                continue
-
-            if not self.handler.can_handle(entry.realpath):
-                continue
-            else:
-                if tag_holder_gen:
-                    try:
-                        th = next(tag_holder_gen)
-                    except StopIteration as e:
-                        pass
-                    else:
-                        tag_holder = th
-
-                self.handler.copy_tags(tag_holder, copy_empty_vals = copy_empty_vals)
-                self.handler.save()
-                fcnt += 1
+            self.handler.copy_tags(tag_holder, copy_empty_vals = copy_empty_vals)
+            self.handler.save()
+            fcnt += 1
 
         # print summary
         if not quiet:
@@ -90,11 +89,12 @@ class BaseTagProcessor:
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
                             tag_holder = None, copy_empty_vals = False):
-
+        ''' Set tags from tag_holder attributes
+            Visualises changes before proceeding
+        '''
         if quiet:
             proceed = True
         else:
-
             # diff fields
             diff_fields = []
             for field in tag_holder.taggable_fields():
@@ -140,7 +140,9 @@ class BaseTagProcessor:
     def remove_tags(self, src_dir, *, end_level = sys.maxsize,
                         include = '*', exclude = '', sort = 'n',
                         filter_dirs = True, filter_files = True, quiet = False):
-
+        ''' Removes all metadata info (including artwork) from selected media files
+            Visualises changes before proceeding
+        '''
         self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude, sort = sort,
                         filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
@@ -151,7 +153,10 @@ class BaseTagProcessor:
                         include = '*', exclude = '', sort = 'n',
                         filter_dirs = True, filter_files = True, quiet = False,
                         tag_holder_path):
-
+        ''' Copies metadata (including artwork) from a tag_holder file
+            then applies it to all selected media files
+            Visualises changes before proceeding
+        '''
         handler_rpath = os.path.join(src_dir, tag_holder_path)
         if self.handler.can_handle(handler_rpath):
             tag_holder = TagHolder()
@@ -164,20 +169,18 @@ class BaseTagProcessor:
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False):
-
+        ''' Indexes the tracks / tracktotal tags
+            Visualises changes before proceeding
+        '''
         # Get the number of affected media files
         tracks_total = 0
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    end_level = end_level,
-                                    include = include, exclude = exclude, sort = sort,
-                                    filter_dirs = filter_dirs, filter_files = filter_files):
-
-            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_DIR):
-                continue
-            if not self.handler.can_handle(entry.realpath):
-                continue
-            else:
-                tracks_total += 1
+        pass_filter = lambda fpath: self.handler.can_handle(fpath)
+        for entry in fsutils.DWalker.file_entries(src_dir,
+                                            end_level = end_level,
+                                            include = include, exclude = exclude, sort = sort,
+                                            filter_dirs = True, filter_files = True,
+                                            pass_filter = pass_filter):
+            tracks_total += 1
 
         def tag_holder_gen():
             for track_idx in range(1, tracks_total + 1):

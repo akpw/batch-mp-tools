@@ -13,8 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" Mutagen-based handler
-"""
+
 from batchmp.tags.extern.mediafile import MediaFile, UnreadableFileError
 from batchmp.tags.extern.mediafile import MutagenError
 from batchmp.tags.handlers.basehandler import TagHandler
@@ -35,7 +34,7 @@ class MutagenTagHandler(TagHandler):
         return True
 
     def _parse_tags(self):
-        ''' copies relevant properties from MediaFile
+        ''' copies relevant properties from Mutagen MediaFile
         '''
         for field in self._media_handler.readable_fields():
             if field in dir(self.tag_holder):

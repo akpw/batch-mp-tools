@@ -10,8 +10,8 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-""" Utility functions for use in ffmp module
-"""
+''' FFmpeg-related utilities
+'''
 
 import os, subprocess, shlex, sys
 import time, datetime, json
@@ -19,33 +19,12 @@ from functools import wraps
 from collections import namedtuple
 import batchmp.fstools.fsutils as fsutils
 
+
 class FFmpegNotInstalled(Exception):
     pass
 class CmdProcessingError(Exception):
     pass
 
-def timed(f):
-    """ A simple timing decorator
-    """
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        start = time.time()
-        result = f(*args, **kwds)
-        elapsed = time.time() - start
-        return (result, elapsed)
-    return wrapper
-
-@timed
-def run_cmd(cmd, shell = False):
-    ''' Runs command in a separate process
-    '''
-    if not shell:
-        cmd = shlex.split(cmd)
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = shell)
-    output = proc.communicate()[0].decode('utf-8')
-    if proc.returncode != 0:
-        raise CmdProcessingError(output)
-    return output
 
 class FFH:
     BACKUP_DIR_PREFIX = '_backup_'
@@ -112,7 +91,7 @@ class FFH:
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True):
-        """ yields supported media files
+        """ yields media files supported by FFmpeg
         """
         pass_filter = lambda fpath: FFH.supported_media(fpath)
         return fsutils.DWalker.file_entries(src_dir,
@@ -150,3 +129,29 @@ class FFH:
                                                     if fname.find(FFH.BACKUP_DIR_PREFIX) >= 0)
             dir_names = [dir for dir in dir_names if os.path.isdir(dir)]
         return dir_names
+
+
+# general-level utility functions
+def timed(f):
+    """ A timing decorator
+    """
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        start = time.time()
+        result = f(*args, **kwds)
+        elapsed = time.time() - start
+        return (result, elapsed)
+    return wrapper
+
+@timed
+def run_cmd(cmd, shell = False):
+    ''' Runs shell command in a separate process
+    '''
+    if not shell:
+        cmd = shlex.split(cmd)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = shell)
+    output = proc.communicate()[0].decode('utf-8')
+    if proc.returncode != 0:
+        raise CmdProcessingError(output)
+    return output
+

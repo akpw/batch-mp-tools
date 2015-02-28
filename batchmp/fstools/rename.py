@@ -10,8 +10,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os, sys, fnmatch, re, shutil
-import datetime, copy
+import os, re, datetime
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import FSH, DWalker
@@ -53,8 +52,8 @@ class DirsIndexInfo:
 
 
 class Renamer(object):
-    """ Renames FS entries
-    """
+    ''' Renames FS entries
+    '''
     @staticmethod
     def add_index(src_dir, as_prefix = False, join_str = '_',
                             start_from = 1, min_digits = 1,
@@ -62,9 +61,9 @@ class Renamer(object):
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
                             include_dirs = False, include_files = True, quiet = False):
-        """ adds indexing
+        ''' adds indexing
             automatically figures out right number of min_digits
-        """
+        '''
         try:
             start_from = int(start_from)
         except ValueError:
@@ -132,8 +131,8 @@ class Renamer(object):
                                 include = '*', exclude = '',
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = False):
-        """ adds current date
-        """
+        ''' adds current date
+        '''
         addition = datetime.datetime.now().strftime(format)
         join_str = str(join_str)
 
@@ -171,8 +170,8 @@ class Renamer(object):
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True, quiet = False):
-        """ adds text
-        """
+        ''' adds text
+        '''
         addition = text
         join_str = str(join_str)
 
@@ -208,8 +207,8 @@ class Renamer(object):
                             end_level = 0, include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
                             include_dirs = False, include_files = True, quiet = False):
-        """ removes n first characters
-        """
+        ''' removes n first characters
+        '''
         num_chars = abs(num_chars)
 
         def remove_n_chars_transform(entry):
@@ -246,8 +245,8 @@ class Renamer(object):
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True, quiet = False):
-        """ replaces text
-        """
+        ''' replaces text
+        '''
         flags = re.UNICODE
         if case_insensitive:
             flags = flags | re.IGNORECASE

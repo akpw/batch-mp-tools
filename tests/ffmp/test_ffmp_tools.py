@@ -15,7 +15,7 @@
 
 import unittest, os, inspect, sys, math
 import shutil, datetime
-import batchmp.ffmptools.ffmputils as ffutils
+import batchmp.ffmptools.ffutils as ffutils
 from batchmp.fstools.fsutils import FSH
 
 from .test_ffmp_base import FFMPTest

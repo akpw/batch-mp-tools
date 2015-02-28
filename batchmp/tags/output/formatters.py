@@ -26,6 +26,8 @@ class OutputFormatType(Enum):
 
 
 class TagOutputFormatter:
+    ''' Generates output for printing tags
+    '''
     COMPACT_FIELDS = ['title', 'album', 'artist', 'albumartist', 'genre', 'composer', 'year']
     EXTENDED_FIELDS = ['encoder', 'bpm', 'comp', 'grouping', 'comments', 'lyrics']
 
