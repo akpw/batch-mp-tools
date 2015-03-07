@@ -29,11 +29,11 @@ class FFMPUtilsTests(FFMPTest):
 
     def test_media_files(self):
         media_files = [os.path.basename(fpath)
-            for fpath in FFH.media_files(self.src_dir)]
+            for fpath in FFH.media_files(self.src_dir, exclude = 'convert')]
         self.assertTrue(set(media_files) == set(self.media_info.keys()))
 
     def test_setup_backup_dirs(self):
-        media_files = [f for f in FFH.media_files(self.src_dir)]
+        media_files = [f for f in FFH.media_files(self.src_dir, exclude = 'convert')]
         backup_dirs = FFH.setup_backup_dirs(media_files)
 
         # should return a backup dir for every file

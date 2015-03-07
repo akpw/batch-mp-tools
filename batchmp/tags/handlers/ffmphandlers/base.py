@@ -19,8 +19,15 @@
 import os
 from batchmp.commons.chainedhandler import ChainedHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
+from batchmp.fstools.fsutils import temp_dir
+from batchmp.ffmptools.ffutils import (
+    run_cmd,
+    CmdProcessingError
+)
 
 class FFBaseFormatHandler(ChainedHandler):
+    ARTWORK_WRITER_SUPPORTED_FORMATS = ['MP3']
+
     ''' Base FFmpeg tags parse
     '''
     def __init__(self, tag_holder):
@@ -47,9 +54,13 @@ class FFBaseFormatHandler(ChainedHandler):
         if self.media_entry and self.media_entry.format:
             format = self.media_entry.format.get('format_name')
             if format:
+                format = format.split(',')[0]
                 return format.upper()
-            else:
-                return None
+        return None
+
+    @property
+    def artwork_writer_supported_format(self):
+        return self.type in self.ARTWORK_WRITER_SUPPORTED_FORMATS
 
    # tag handler operations
     def parse(self):
@@ -69,9 +80,9 @@ class FFBaseFormatHandler(ChainedHandler):
     def _parse_tags(self):
         # Tags
         if self.media_entry.format:
-            self.tag_holder.bitrate = int(self.media_entry.format.get('bit_rate', 0))
-
-            tag_info = self.media_entry.format['tags'] if 'tags' in self.media_entry.format else None
+            tag_info = self.media_entry.format.get('tags')
+            if not tag_info:
+                tag_info = self.media_entry.audio.get('tags')
             if tag_info:
                 tag_info = {k.lower():v for k,v in tag_info.items()}
 
@@ -119,6 +130,9 @@ class FFBaseFormatHandler(ChainedHandler):
             self.tag_holder.channels = int(self.media_entry.audio.get('channels', 0))
 
         if self.media_entry.format:
+            if self.tag_holder.bitrate == 0:
+                self.tag_holder.bitrate = int(self.media_entry.format.get('bit_rate', 0))
+
             format = self.media_entry.format.get('format_name')
             if format:
                 format = format.upper()
@@ -210,15 +224,17 @@ class FFBaseFormatHandler(ChainedHandler):
         ''' reads cover art from a media file
         '''
         artwork = None
-        if self.has_artwork:
+        if self.media_entry.artwork:
+            artwork_stream_idx = self.media_entry.artwork.get('index')
             with temp_dir() as tmp:
                 detached_img_path = os.path.join(tmp, 'detached.png')
-                cmd = ' '.join(('ffmpeg ',
-                                    '-v quiet',
-                                    '-i "{}"'.format(self._media_handler.path),
-                                    '-an',
-                                    '-vcodec copy',
-                                    '{}'.format(detached_img_path)))
+                cmd = ' '.join(('ffmpeg',
+                                    ' -v quiet',
+                                    ' -i "{}"'.format(self.media_entry.path),
+                                    ' -map 0:{}'.format(artwork_stream_idx),
+                                    ' -an',
+                                    ' -vcodec copy',
+                                    ' {}'.format(detached_img_path)))
                 try:
                     output, _ = run_cmd(cmd)
                 except CmdProcessingError as e:

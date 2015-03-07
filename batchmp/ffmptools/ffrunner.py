@@ -20,7 +20,7 @@ class FFMPRunner(metaclass = ABCMeta):
     def __init__(self):
         if not FFH.ffmpeg_installed():
             raise utils.FFmpegNotInstalled('\n\tLooks like ffmpeg is not installed'
-                                           '\n\tCheck it out here:'
+                                           '\n\You can download it here:'
                                            ' http://www.ffmpeg.org/download.html\n')
     @abstractmethod
     def run(self, *args, **kwargs):

@@ -17,6 +17,8 @@ from batchmp.tags.handlers.basehandler import TagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
+from batchmp.tags.processors.basetp import BaseTagProcessor
+
 from .test_tag_base import TagsTest
 
 class TagsTests(TagsTest):
@@ -47,10 +49,10 @@ class TagsTests(TagsTest):
 
     def test_tag_handlers_chain(self):
         handler = MutagenTagHandler()
-        self.assertFalse(handler.can_handle(os.path.join(self.src_dir, 'background noise.flv')))
+        self.assertFalse(handler.can_handle(os.path.join(self.src_dir, '04 background noise.flv')))
 
         handler = MutagenTagHandler() + FFmpegTagHandler()
-        self.assertTrue(handler.can_handle(os.path.join(self.src_dir, 'background noise.flv')))
+        self.assertTrue(handler.can_handle(os.path.join(self.src_dir, '04 background noise.flv')))
 
         r = weakref.ref(handler)
         del handler
@@ -65,12 +67,13 @@ class TagsTests(TagsTest):
 
     def test_set_tags(self):
         # test setting tags from test data
+        BaseTagProcessor().set_tags_visual(self.src_dir,
+                                            tag_holder = self.test_tags_holder,
+                                            quiet = True)
+
         handler = MutagenTagHandler() + FFmpegTagHandler()
         for mfpath in self.mfpathes:
             if handler.can_handle(mfpath):
-                handler.copy_tags(self.test_tags_holder)
-                handler.save()
-
                 compare = True if isinstance(handler.responder, MutagenTagHandler) else False
                 self._read_and_compare(mfpath, self.test_tags_holder, compare = compare)
 
@@ -79,13 +82,15 @@ class TagsTests(TagsTest):
 
     def test_remove_tags(self):
         # test removing tags
+        BaseTagProcessor().set_tags_visual(self.src_dir,
+                                            tag_holder = self.test_tags_holder,
+                                            quiet = True)
+        BaseTagProcessor().remove_tags(self.src_dir, quiet = True)
+
         handler = MutagenTagHandler() + FFmpegTagHandler()
-        tag_holder = TagHolder()
+        tag_holder =  TagHolder()
         for mfpath in self.mfpathes:
             if handler.can_handle(mfpath):
-                handler.clear_tags()
-                handler.save()
-
                 self._read_and_compare(mfpath, tag_holder)
 
         #restore original state if needed

@@ -45,12 +45,13 @@ class FFmpegTagHandler(TagHandler):
         with temp_dir() as tmp:
             tmp_fpath = os.path.join(tmp, os.path.basename(self._media_handler.path))
 
-            artwork_writer = write_artwork and self.tag_holder.art
+            artwork_writer = write_artwork and \
+                             self._media_handler.artwork_writer_supported_format and \
+                             self.tag_holder.art
             art_path = self.detauch_art(dir_path = tmp) if artwork_writer else None
 
             save_cmd = self._media_handler.build_save_cmd(art_path = art_path)
             save_cmd = ''.join((save_cmd, ' "{}"'.format(tmp_fpath)))
-
             try:
                 failed = False
                 output, _ = run_cmd(save_cmd)
@@ -71,13 +72,6 @@ class FFmpegTagHandler(TagHandler):
             else:
                 if not write_artwork:
                     print ('FFMP: skipped artwork for {}'.format(self._media_handler.path))
-
-
-
-
-
-
-
 
 
 

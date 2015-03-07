@@ -26,7 +26,37 @@ class Task(metaclass = ABCMeta):
 
     @abstractmethod
     def execute(self):
-        pass
+        return TaskResult()
+
+
+class TaskResult:
+    ''' Represents a  TasksProcessor task result
+    '''
+    def __init__(self):
+        self._task_steps_info_msgs = []
+        self._task_steps_durations = []
+
+    def add_task_step_info_msg(self, step_info_msg):
+        self._task_steps_info_msgs.append(step_info_msg)
+
+    def add_task_step_duration(self, step_duration):
+        self._task_steps_durations.append(step_duration)
+
+    @property
+    def task_output(self):
+        task_output = None
+        for info_msg in self._task_steps_info_msgs:
+            task_output = '{0}{1}{2}'.format(task_output if task_output else '',
+                                                '\n' if task_output else '',
+                                                info_msg)
+        return task_output
+
+    @property
+    def task_duration(self):
+        task_duration = 0.0
+        for step_duration in self._task_steps_durations:
+            task_duration += step_duration
+        return task_duration
 
 
 class TasksProcessor:
@@ -37,23 +67,40 @@ class TasksProcessor:
         result = task.execute()
         return result
 
-    def process_tasks(self, tasks_queue, num_workers = None, quiet = False):
-        tasks_done, num_tasks = 0, len(tasks_queue)
+    def process_tasks(self, tasks_queue, serial_exec = False, num_workers = None, quiet = False):
         cpu_core_time = 0.0
+        num_tasks = len(tasks_queue)
         if num_tasks > 0:
-            if not num_workers:
-                num_workers = multiprocessing.cpu_count()
-            print('Processing {0} tasks with pool of {1} worker processes'.format(num_tasks, num_workers))
+            tasks_done = 0
+
+            # Pre-processing msgs
+            if serial_exec:
+                print('Processing {0} tasks sequentially'.format(num_tasks))
+            else:
+                if not num_workers:
+                    num_workers = multiprocessing.cpu_count()
+                print('Processing {0} tasks with pool of {1} worker processes'.format(num_tasks, num_workers))
+
             # start showing progress
             with progress_bar() as p_bar:
-                # init the pool and kick it off
-                with multiprocessing.Pool(num_workers) as pool:
-                    for res in pool.imap_unordered(self._process_task, tasks_queue):
-                        if not quiet:
-                            p_bar.info_msg = res[0][0]
-                        cpu_core_time += res[1]
-                        tasks_done += 1
-                        p_bar.progress = tasks_done / num_tasks * 100
+                def _show_progress():
+                    nonlocal cpu_core_time, tasks_done
+                    if not quiet:
+                        p_bar.info_msg = result.task_output
+                    cpu_core_time += result.task_duration
+                    tasks_done += 1
+                    p_bar.progress = tasks_done / num_tasks * 100
+
+                if serial_exec:
+                    # just loop through the queue of tasks
+                    for task in tasks_queue:
+                        result = self._process_task(task)
+                        _show_progress()
+                else:
+                    # init the pool and kick it off
+                    with multiprocessing.Pool(num_workers) as pool:
+                        for result in pool.imap_unordered(self._process_task, tasks_queue):
+                            _show_progress()
 
         # return overall time spent by the cpu cores
         return cpu_core_time

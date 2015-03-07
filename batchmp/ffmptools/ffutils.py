@@ -64,19 +64,25 @@ class FFH:
         except CmdProcessingError as e:
             return None
         else:
-            format = json.loads(output).get('format')
+            out = json.loads(output)
+            if not out:
+                return None
 
-            streams = json.loads(output)['streams']
+            streams = out.get('streams')
             audio_stream = {k:v for dict in streams
                                     for k,v in dict.items()
                                         if 'codec_type' in dict and
                                             dict['codec_type'] == 'audio'}
             if not audio_stream:
                 return None
+
+            format = out.get('format')
+
             artwork_stream = {k:v for dict in streams
                                     for k,v in dict.items()
                                         if 'codec_type' in dict and dict['codec_type'] == 'video'
-                                            and dict['codec_name'] in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg')}
+                                            and dict['codec_name'] in ('jpeg', 'png', 'gif', 'tiff', 'bmp')}
+
             return FFH.FFEntry(fpath, format, audio_stream, artwork_stream)
 
     @staticmethod
@@ -90,10 +96,12 @@ class FFH:
     def media_files(src_dir,
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
-                    filter_dirs = True, filter_files = True):
+                    filter_dirs = True, filter_files = True, pass_filter = None):
         """ yields media files supported by FFmpeg
         """
-        pass_filter = lambda fpath: FFH.supported_media(fpath)
+        if not pass_filter:
+            pass_filter = lambda fpath: FFH.supported_media(fpath)
+
         return fsutils.DWalker.file_entries(src_dir,
                                             start_level = start_level, end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,

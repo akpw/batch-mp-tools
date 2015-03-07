@@ -20,20 +20,23 @@ from batchmp.fstools.fsutils import FSH
 
 from .test_ffmp_base import FFMPTest
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
+from batchmp.ffmptools.ffcommands.convert import Convertor
 
 class FFMPTests(FFMPTest):
     def setUp(self):
         super(FFMPTests, self).setUp()
 
     def test_apply_af_filters(self):
+        #return
         print('Now testing applying filters, might take a while...')
-        media_files = [f for f in ffutils.FFH.media_files(src_dir = self.src_dir)]
+        media_files = [f for f in ffutils.FFH.media_files(src_dir = self.src_dir, exclude = 'convert')]
 
         # get the original media files md5 hashes
         orig_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
 
         hpass, lpass, num_passes = 200, 0, 4
-        Denoiser().apply_af_filters(self.src_dir, highpass=hpass, lowpass=lpass, num_passes=num_passes)
+        Denoiser().apply_af_filters(self.src_dir, exclude = 'convert',
+                                    highpass=hpass, lowpass=lpass, num_passes=num_passes)
 
         # check that the original files were replaced with their denoised versions
         denoised_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
@@ -42,5 +45,8 @@ class FFMPTests(FFMPTest):
 
         # cleanup
         self.resetDataFromBackup(quiet=True)
+
+    def test_convert(self):
+        pass
 
 

@@ -30,17 +30,25 @@ class FSH:
     ''' FS helper
     '''
     @staticmethod
-    def level_from_root(root, nested_path):
-        ''' determines the level from root folder
+    def is_subdir(subdir_path, parent_path):
+        subdir_path = os.path.realpath(subdir_path)
+        parent_path = os.path.realpath(parent_path)
+
+        relative = os.path.relpath(subdir_path, start=parent_path)
+
+        return not relative.startswith(os.pardir)
+
+    @staticmethod
+    def level_from_root(root_path, nested_path):
+        ''' determines the level from root_path folder
         '''
         return os.path.realpath(nested_path).count(os.path.sep) - \
-                            os.path.realpath(root).count(os.path.sep)
+                            os.path.realpath(root_path).count(os.path.sep)
 
     @staticmethod
     def folders_at_level(src_dir, target_level):
         ''' generates a sequence of folders at given level from src_dir
         '''
-        root_depth = os.path.realpath(src_dir).count(os.sep)
         for r,d,f in os.walk(src_dir):
            if FSH.level_from_root(src_dir, r) == target_level:
                 yield os.path.realpath(r)
@@ -146,14 +154,14 @@ class UniqueDirNamesChecker:
     ''' Produces a unique name for file in a directory
     '''
     def __init__(self, src_dir, *, unique_fnames = None):
-        self._src_dir = src_dir
         self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
 
-        fnames = (os.path.realpath(f) for f in os.listdir(self._src_dir) if os.path.isfile(f))
+        fpathes = [os.path.join(src_dir, fname) for fname in os.listdir(src_dir)]
+        fnames = [os.path.basename(fpath) for fpath in fpathes if os.path.isfile(fpath)]
         # init the generator function with existing file names from the dir
-        for f in fnames:
+        for fpath in fnames:
             next(self._uname_gen)
-            self._uname_gen.send(f)
+            self._uname_gen.send(fpath)
 
     def unique_name(self, fname):
         next(self._uname_gen)

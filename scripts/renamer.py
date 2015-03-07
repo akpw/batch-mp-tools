@@ -29,37 +29,31 @@ from batchmp.fstools.rename import Renamer
       . display sorting:
           .. by size/date, ascending/descending
       . action commands:
-          .. print source directory
-          .. regexp-based replace
-          .. add index
-          .. add date
-          .. add text
-          .. remove n characters
-          .. flatten all folders below target level, moving the files
-             up the target level. By default, all empty
-             flattened folders will be deleted
+          .. print      Prints source directory
+          .. flatten    Flatten all folders below target level, moving the files up
+                            at the target level. By default, deletes all empty flattened folders
+          .. index      Adds index to files and directories
+          .. date       Adds date to files and directories
+          .. text       Adds text to files and directories
+             remove     Removes n characters from files and directories
+             replace    RegExp-based replace in files and directories
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+        [-d, --dir]                 Source directory (default is the current directory)
+        [-f, --file]                File to process
+
       Global Options (renamer -h for additional help)
-        [-e END_LEVEL]                        End level for recursion into nested folders
-        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
-        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
-        [-s SORT]                             Sorting for files / folders
-        [-q QUIET]                            Do not visualise / show messages during processing
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (renamer {command} -h for additional help)
-      {print, flatten, index, date, text, remove,replace}
-        print     Print source directory
-        flatten   Flatten all folders below target level, moving the files
-                                        up the target level. By default, all empty
-                                        flattened folders will be deleted
-        index     Add index to files and directories
-        date      Add date to files and directories
-        text      Add text to files and directories
-        remove    Remove n characters from files and directories
-        replace   RegExp-based replace in files and directories
-
-      renamer Command -h for additional help
+        {print, flatten, index, date, text, remove,replace}
 """
 
 class RenameArgParser(BMPBaseArgParser):
@@ -198,8 +192,8 @@ class RenameArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
     @staticmethod
-    def check_args(args):
-        BMPBaseArgParser.check_args(args)
+    def check_args(args, parser):
+        BMPBaseArgParser.check_args(args, parser)
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
@@ -222,7 +216,7 @@ class RenameDispatcher:
         DHandler.print_dir(src_dir = args['dir'],
                 start_level = args['start_level'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'], sort = args['sort'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 flatten = False, ensure_uniq = False,
                 show_size = args['show_size'])
 
@@ -240,7 +234,7 @@ class RenameDispatcher:
                 end_level = end_level,
                 target_level = target_level,
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 remove_folders = remove_folders, remove_non_empty_folders = remove_all_folders,
                 quiet = args['quiet'])
 
@@ -251,7 +245,7 @@ class RenameDispatcher:
                 start_from = args['start_from'], min_digits = args['min_digits'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 quiet = args['quiet'])
 
@@ -262,7 +256,7 @@ class RenameDispatcher:
                 format = args['format'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 quiet = args['quiet'])
 
@@ -273,7 +267,7 @@ class RenameDispatcher:
                 as_prefix = args['as_prefix'], join_str = args['join_str'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 quiet = args['quiet'])
 
@@ -283,7 +277,7 @@ class RenameDispatcher:
                 num_chars = args['num_chars'], from_head = not args['from_tail'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 quiet = args['quiet'])
 
@@ -295,7 +289,7 @@ class RenameDispatcher:
                 case_insensitive = args['ignore_case'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 quiet = args['quiet'])
 

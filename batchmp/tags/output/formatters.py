@@ -21,8 +21,7 @@ from enum import Enum
 class OutputFormatType(Enum):
     COMPACT = 0
     FULL = 1
-    TRACKS = 2
-    DIFF = 3
+    DIFF = 2
 
 
 class TagOutputFormatter:
@@ -64,8 +63,6 @@ class TagOutputFormatter:
         elif format == OutputFormatType.FULL:
             return TagOutputFormatter._formatter(entry, handler,
                                                       show_extended = True, show_stats = show_stats)
-        elif format == OutputFormatType.TRACKS:
-            return TagOutputFormatter._tracks_formatter(entry, handler)
         elif format == OutputFormatType.DIFF:
             return TagOutputFormatter._diff_formatter(entry, handler, diff_fields)
         else:
@@ -114,12 +111,14 @@ class TagOutputFormatter:
         for field in diff_fields:
             if field is 'art' and handler.tag_holder.has_artwork:
                 media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
-            elif field in ('disc', 'disctotal') and not disc_set:
-                disc_set = True
-                media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
-            elif field in ('track', 'tracktotal') and not track_set:
-                track_set = True
-                media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
+            elif field in ('disc', 'disctotal'):
+                if not disc_set:
+                    disc_set = True
+                    media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
+            elif field in ('track', 'tracktotal'):
+                if not track_set:
+                    track_set = True
+                    media_str = TagOutputFormatter._track_str(handler, indent, media_str)
             else:
                 field_val = getattr(handler.tag_holder, field)
                 if field_val:
@@ -127,15 +126,6 @@ class TagOutputFormatter:
                                                           TagOutputFormatter._tag_display_name(field),
                                                           field_val)
         return '{0}{1}'.format(entry.basename, media_str)
-
-    @staticmethod
-    def _tracks_formatter(entry, handler):
-        indent = entry.indent[:-3] + '\t'
-        media_str = ''
-        if handler.tag_holder.track:
-            media_str = TagOutputFormatter._track_str(handler, indent, media_str)
-        return '{0}{1}'.format(entry.basename, media_str)
-
 
     # Helpers
     @staticmethod
@@ -150,10 +140,8 @@ class TagOutputFormatter:
     @staticmethod
     def _track_str(handler, indent, media_str, show_always = False):
         track = handler.tag_holder.track if handler.tag_holder.track else '_'
-        if handler.tag_holder.tracktotal:
-            track_str = '{}/{}'.format(track, handler.tag_holder.tracktotal)
-        else:
-            track_str = handler.tag_holder.track
+        track_total = handler.tag_holder.tracktotal if handler.tag_holder.tracktotal else '_'
+        track_str = '{}/{}'.format(track, track_total)
         return '{0}\n{1}Track: {2}'.format(media_str, indent, track_str)
 
     @staticmethod

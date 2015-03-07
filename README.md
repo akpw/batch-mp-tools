@@ -4,9 +4,9 @@ Python CLI tools for batch processing of media files
 
 
 **Status:**
-A weekend project under occasional development :)
+A rainy-weekends project under occasional development :)
 
-    
+
 ##Blogs
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
@@ -28,120 +28,125 @@ A weekend project under occasional development :)
 **Running Tests**
 - Run via: ```python setup.py test```
 
+
 ##CLI Commands
 ###renamer
     Batch renaming of files and directories
-    . visualises original / targeted folders structure before actual rename action
-    . supports recursion to specified end level
-    . supports flattening folders beyond end level
-    . directory print 'slicing', from a given start level to specified end_level
-    . allows for include / exclude patterns (Unix style)
-    . display sorting:
-        .. by size/date, ascending/descending
-    . action commands:
-        .. print source directory
-        .. flatten folders below target level (moves the files up the target level)
-        .. regexp-based replace
-        .. add index
-        .. add date
-        .. add text 
-        .. remove n characters
+      . supports source directory / source file modes
+      . visualises original / targeted folders structure before actual rename action
+      . supports recursion to specified end_level
+      . supports flattening folders beyond end_level
+      . can print directory from given a start_level to specified end_level
+      . allows for include / exclude patterns (Unix style)
+      . allows global include/exclude of directories and folders
+      . display sorting:
+          .. by size/date, ascending/descending
+      . action commands:
+          .. print      Prints source directory
+          .. flatten    Flatten all folders below target level, moving the files up
+                            at the target level. By default, deletes all empty flattened folders
+          .. index      Adds index to files and directories
+          .. date       Adds date to files and directories
+          .. text       Adds text to files and directories
+             remove     Removes n characters from files and directories
+             replace    RegExp-based replace in files and directories
 
-    Usage: renamer -d DIR [GLobal Options] {Commands}[Commands Options]
-    
+    Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+        [-d, --dir]                 Source directory (default is the current directory)
+        [-f, --file]                File to process
+
       Global Options (renamer -h for additional help)
-        [-e END_LEVEL]                        End level for recursion into nested folders
-        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
-        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
-        [-s SORT]                             Sorting for files / folders
-        [-q QUIET]                            Do not visualise / show messages during processing
-        
-      Commands: 
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
+
+      Commands (renamer {command} -h for additional help)
         {print, flatten, index, date, text, remove,replace}
-        
-    More Info:  
-        "renamer -h" for additional help on global options
-        "renamer <command> -h" for additional help on specific commands        
 
 ###tagger
     Batch management of media files metadata (tags & artwork)
-    . Supported formats:
-        'MP3', 'MP4', 'M4A', 'AIFF', 'ASF', 'QuickTime / MOV',
-        'FLAC', 'MonkeysAudio', 'Musepack',
-        'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
-        'True Audio', 'WavPack', 'OptimFROG'
+      . Supported formats:
+            'MP3', 'MP4', 'M4A', M4V', 'AIFF', 'ASF', 'QuickTime / MOV',
+            'FLAC', 'MonkeysAudio', 'Musepack',
+            'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
+            'True Audio', 'WavPack', 'OptimFROG'
 
-        'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
+            'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
+      . source directory / source file modes
+      . include / exclude patterns, etc. (see list of Global Options for details)
+      . visualises original / targeted files metadata structure
+      . action commands:
+          .. print      print media info
+          .. set        Set tags in media files,
+                        Supports expandable templates:
+                          e.g.  <tagger set --title 'The Title, part $track of $tracktotal'>
+                          to specify a template value, use the long tag name preceded by $:
+                                <tagger set --album 'The Album, ($format)'>, ...
+          .. copy       Copies tags from a specified media file
+          .. remove     Remove all tags
+          .. index      Index Track / Track Total tags
+          .. add        TBD: add characters in tags (title, artist, ...)
+          .. remove     TBD: remove characters in tags (title, artist, ...)
+          .. replace    TBD: regexp-based replace in tags (title, artist, ...)
+          .. extract    TBD: extracts artwork
 
-    . source directory / source file modes
-    . include / exclude patterns, etc. (see list of Global Options for details)
-    . visualises original / targeted files metadata structure
-    . action commands:
-        .. print metadata info
-        .. set metadata tags
-        .. copy tags from a given media file
-        .. remove all tags
-        .. index tracks
-        .. TBD: extracts artwork
-        .. TBD: add / remove characters in tags (title, artist, ...)
-        .. TBD: regexp-based replace in tags (title, artist, ...)
+    Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+        [-d, --dir]                 Source directory (default is the current directory)
+        [-f, --file]                File to process
 
-    Usage: tagger {-d DIR} [GLobal Options] {Commands}[Commands Options]
-      Global Options (renamer -h for additional help)
-        [-e END_LEVEL]                        End level for recursion into nested folders
-        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
-        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
-        [-s SORT]                             Sorting for files / folders
-        [-q QUIET]                            Do not visualise / show messages during processing
-        
-      tagger -h for additional help on global options
+      Global Options (tagger -h for additional help)
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
-      {print, set, copy, remove, index}
-        print   Print media directory
-        set     Set tags in media files
-        copy    Copies tags from a specified media file
-        remove  Remove all tags
-        index   Index Track / Track Total tags for selected media files
+        {print, set, copy, remove, index, ...}
 
-      tagger {command} -h for additional help
-        
-        
-###bmp
+###bmfp
     Batch processing of media files
-    . Uses multiprocessing to utilize available CPU cores
-    . source directory / source file modes
-    . recursion to specified end_level
-    . include / exclude patterns, etc. (see list of Global Options for details)
-    . action commands:
-        .. denoise
-        .. split
-        .. speed up
-        .. slow down
-        .. adjust volume
-        .. convert
+      . Uses multiprocessing to utilize available CPU cores
+      . supports source directory / source file modes
+      . supports recursion to specified end_level
+      . allows for include / exclude patterns (Unix style)
+      . action commands:
+          .. convert        Converts media to specified format
+          .. segment        Splits media files into segments
+          .. fragment       Extract a media file fragment
+          .. denoise        Reduces background audio noise in media files
+          .. speed up       TDB: Uses Time Stretching to increase audio / video speed
+          .. slow down      TDB: Uses Time Stretching to increase audio / video speed
+          .. adjust volume  TDB: Adjust audio volume
+          .. detauch        TDB: Detauch streams from original media
 
-    Usage: bmp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
-      Global Options (bmp -h for additional help)
-        [-e END_LEVEL]                        End level for recursion into nested folders
-        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
-        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
-        [-s SORT]                             Sorting for files / folders
-        [-q QUIET]                            Do not visualise / show messages during processing
-    
-      bmp -h for additional help on global options
-    
-      Commands: (bmp {command} -h for additional help)
-      {denoise, split, speedup, slowdown, volume, convert}
-        denoise   Reduces background audio noise in media files
-                      via filtering out highpass / low-pass frequencies
-        split     TDB: Splits media files
-        speedup   TDB: Uses Time Stretching to increase audio / video speed
-        slowdown  TDB: Uses Time Stretching to decrease audio / video speed
-        volume    TDB: Adjust audiot volume
-        convert   TDB: Convert media to specified format
+    Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+        [-d, --dir]                 Source directory (default is the current directory)
+        [-f, --file]                File to process
 
-      bmp {Command} -h for additional help
+      Global Options (bmfp -h for additional help)
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
+
+        [-se, --serial-exec]        Run all task's commands in a single process
+        [-nb, --no-backup]          Do not backup the original file
+
+      Commands: (bmfp {command} -h for additional help)
+        {convert, segment, fragment, denoise, ...}
 
 
 

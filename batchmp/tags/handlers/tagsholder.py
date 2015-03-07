@@ -16,11 +16,18 @@
 from weakref import WeakMethod
 from types import MethodType
 from itertools import chain
+from string import Template
 from batchmp.commons.descriptors import PropertyDescriptor, LazyFunctionPropertyDescriptor
 
 # Tag Field Descriptors
 class TaggableMediaFieldDescriptor(PropertyDescriptor):
     pass
+
+class ExpandableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
+    def __set__(self, instance, value):
+        if value:
+            value = instance._expand_templates(value)
+        self.data[instance] = value
 
 class NonTaggableMediaFieldDescriptor(PropertyDescriptor):
     pass
@@ -33,24 +40,24 @@ class TagHolder:
     ''' Abstract Tag Handler
         Defines supported tags & the protocol
     '''
-    title = TaggableMediaFieldDescriptor()
-    album = TaggableMediaFieldDescriptor()
-    artist = TaggableMediaFieldDescriptor()
-    albumartist = TaggableMediaFieldDescriptor()
-    genre = TaggableMediaFieldDescriptor()
-    composer = TaggableMediaFieldDescriptor()
+    title = ExpandableMediaFieldDescriptor()
+    album = ExpandableMediaFieldDescriptor()
+    artist = ExpandableMediaFieldDescriptor()
+    albumartist = ExpandableMediaFieldDescriptor()
+    genre = ExpandableMediaFieldDescriptor()
+    composer = ExpandableMediaFieldDescriptor()
     track = TaggableMediaFieldDescriptor()
     tracktotal = TaggableMediaFieldDescriptor()
     disc = TaggableMediaFieldDescriptor()
     disctotal = TaggableMediaFieldDescriptor()
     year = TaggableMediaFieldDescriptor()
-    encoder = TaggableMediaFieldDescriptor()
+    encoder = ExpandableMediaFieldDescriptor()
 
     bpm = TaggableMediaFieldDescriptor()
     comp = TaggableMediaFieldDescriptor()
-    grouping = TaggableMediaFieldDescriptor()
-    comments = TaggableMediaFieldDescriptor()
-    lyrics = TaggableMediaFieldDescriptor()
+    grouping = ExpandableMediaFieldDescriptor()
+    comments = ExpandableMediaFieldDescriptor()
+    lyrics = ExpandableMediaFieldDescriptor()
 
     # non-taggable fields
     length = NonTaggableMediaFieldDescriptor()
@@ -79,7 +86,7 @@ class TagHolder:
 
     @property
     def has_artwork(self):
-        ''' when art retrieval is deffered,
+        ''' when art retrieval is deferred,
             provides info on art presence whithout loading into memory
         '''
         if self.deferred_art_method:
@@ -93,7 +100,10 @@ class TagHolder:
         ''' provides access on the class level
             when art is set on the instance level, should be ignored
         '''
-        return self.deferred_art_method
+        if self.deferred_art_method:
+            return self.deferred_art_method()
+        else:
+            return None
 
     @classmethod
     def taggable_fields(cls):
@@ -121,6 +131,8 @@ class TagHolder:
     def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
             ''' copies tags from passed tag_holder object
             '''
+            if not tag_holder:
+                return
             fields = self.fields if copy_non_taggable else self.taggable_fields
             for field in fields():
                 if hasattr(tag_holder, field):
@@ -138,4 +150,61 @@ class TagHolder:
 
     def reset_tags(self):
         self.clear_tags(reset_art = True)
+
+
+    # Internal Helpers
+    def _expand_templates(self, value):
+        template = Template(value)
+        return template.safe_substitute(self._substitute_dictionary)
+
+    @property
+    def _substitute_dictionary(self):
+        sd = {}
+        if self.title:
+            sd['title'] = self.title
+        if self.album:
+            sd['album'] = self.album
+        if self.artist:
+            sd['artist'] = self.artist
+        if self.albumartist:
+            sd['albumartist'] = self.albumartist
+        if self.genre:
+            sd['genre'] = self.genre
+        if self.composer:
+            sd['composer'] = self.composer
+        if self.track:
+            sd['track'] = self.track
+        if self.tracktotal:
+            sd['tracktotal'] = self.tracktotal
+        if self.disc:
+            sd['disc'] = self.disc
+        if self.disctotal:
+            sd['disctotal'] = self.disctotal
+        if self.year:
+            sd['year'] = self.year
+        if self.encoder:
+            sd['encoder'] = self.encoder
+        if self.bpm:
+            sd['bpm'] = self.bpm
+        if self.comp:
+            sd['compilaton'] = self.comp
+        if self.grouping:
+            sd['grouping'] = self.grouping
+        if self.comments:
+            sd['comments'] = self.comments
+        if self.lyrics:
+            sd['lyrics'] = self.lyrics
+        if self.length:
+            sd['length'] = self.length
+        if self.bitrate:
+            sd['bitrate'] = self.bitrate
+        if self.samplerate:
+            sd['samplerate'] = self.samplerate
+        if self.channels:
+            sd['channels'] = self.channels
+        if self.bitdepth:
+            sd['bitdepth'] = self.bitdepth
+        if self.format:
+            sd['format'] = self.format
+        return sd
 

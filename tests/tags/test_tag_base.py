@@ -21,9 +21,10 @@ class TagsTest(test_base.BMPTest):
         cls.src_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), 'data'))
         cls.bckp_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '.data'))
 
+        super(TagsTest, cls).setUpClass()
+
         cls.test_tags_holder = TagTestsDataHolder(cls.src_dir)
 
-        super(TagsTest, cls).setUpClass()
 
 class TagTestsDataHolder(TagHolder):
     def __init__(self, src_dir):
@@ -44,8 +45,7 @@ class TagTestsDataHolder(TagHolder):
         self.disctotal = 2
         self.year = 2015
         self.encoder = 'Test Encoder'
-        if not self.art:
-            self.art = self.jpg_art
+        self.art = self.jpg_art
 
         self.bpm = 6
         self.comp = True
@@ -85,13 +85,13 @@ class TagTestsDataHolder(TagHolder):
     @property
     def png_art(self):
         if not self._png_art:
-            with open(os.path.join(self.src_dir, 'art.png'), 'rb') as f:
+            with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
                 self._png_art = f.read()
         return self._png_art
 
     @property
     def jpg_art(self):
         if not self._jpg_art:
-            with open(os.path.join(self.src_dir, 'art.jpg'), 'rb') as f:
+            with open(os.path.join(self.src_dir, '00 art.jpg'), 'rb') as f:
                 self._jpg_art = f.read()
         return self._jpg_art

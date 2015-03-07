@@ -63,7 +63,7 @@ class BaseTagProcessor:
 
         fcnt = 0
         pass_filter = lambda fpath: self.handler.can_handle(fpath)
-        for entry in fsutils.DWalker.file_entries(src_dir,
+        for entry in DWalker.file_entries(src_dir,
                                             end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,
                                             filter_dirs = True, filter_files = True,
@@ -92,20 +92,14 @@ class BaseTagProcessor:
         ''' Set tags from tag_holder attributes
             Visualises changes before proceeding
         '''
+        if not tag_holder:
+            return
+
         if quiet:
             proceed = True
         else:
             # diff fields
-            diff_fields = []
-            for field in tag_holder.taggable_fields():
-                if field is 'art':
-                    if tag_holder.has_artwork is not self.handler.tag_holder.has_artwork:
-                        diff_fields.append(field)
-                else:
-                    current_val = getattr(self.handler.tag_holder, field)
-                    new_val = getattr(tag_holder, field)
-                    if not current_val is new_val:
-                        diff_fields.append(field)
+            diff_fields = self._diff_fields(tag_holder)
 
             # visualise changes to tags and proceed if confirmed
             preformatter = partial(TagOutputFormatter.tags_formatter,
@@ -157,8 +151,8 @@ class BaseTagProcessor:
             then applies it to all selected media files
             Visualises changes before proceeding
         '''
-        handler_rpath = os.path.join(src_dir, tag_holder_path)
-        if self.handler.can_handle(handler_rpath):
+        tag_holder_rpath = os.path.realpath(os.path.join(src_dir, tag_holder_path))
+        if self.handler.can_handle(tag_holder_rpath):
             tag_holder = TagHolder()
             tag_holder.copy_tags(self.handler.tag_holder)
             self.set_tags_visual(src_dir, end_level = end_level,
@@ -175,10 +169,10 @@ class BaseTagProcessor:
         # Get the number of affected media files
         tracks_total = 0
         pass_filter = lambda fpath: self.handler.can_handle(fpath)
-        for entry in fsutils.DWalker.file_entries(src_dir,
+        for entry in DWalker.file_entries(src_dir,
                                             end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,
-                                            filter_dirs = True, filter_files = True,
+                                            filter_dirs = filter_dirs, filter_files = filter_files,
                                             pass_filter = pass_filter):
             tracks_total += 1
 
@@ -189,14 +183,15 @@ class BaseTagProcessor:
                 tag_holder.tracktotal = tracks_total
                 yield tag_holder
 
+        diff_fields = ['track', 'tracktotal']
         preformatter = partial(TagOutputFormatter.tags_formatter,
-                                        format = OutputFormatType.TRACKS,
-                                        handler = self.handler,
+                                        format = OutputFormatType.DIFF,
+                                        handler = self.handler, diff_fields = diff_fields,
                                         show_stats = False)
 
         formatter = partial(TagOutputFormatter.tags_formatter,
-                                        format = OutputFormatType.TRACKS,
-                                        handler = self.handler,
+                                        format = OutputFormatType.DIFF,
+                                        handler = self.handler, diff_fields = diff_fields,
                                         show_stats = False,
                                         tag_holder_gen = tag_holder_gen())
 
@@ -214,4 +209,102 @@ class BaseTagProcessor:
                     include = include, exclude = exclude,
                     filter_dirs = filter_dirs, filter_files = filter_files,
                     tag_holder_gen = tag_holder_gen(), quiet = quiet)
+
+    # Helper methods
+    def _diff_fields(self, tag_holder):
+        diff_fields = []
+        for field in tag_holder.taggable_fields():
+            if field is 'art':
+                if tag_holder.has_artwork is not self.handler.tag_holder.has_artwork:
+                    diff_fields.append(field)
+            else:
+                current_val = getattr(self.handler.tag_holder, field)
+                new_val = getattr(tag_holder, field)
+                if current_val is not new_val:
+                    diff_fields.append(field)
+        return diff_fields
+
+
+
+class TagTestsDataHolder(TagHolder):
+    def __init__(self, src_dir):
+        super().__init__()
+        self._png_art = None
+        self._jpg_art = None
+        self.src_dir = src_dir
+
+        self.title = 'Test Title'
+        self.album = 'Test Album'
+        self.artist = 'Test Artist'
+        self.albumartist = 'Test Album Artist'
+        self.genre = 'Test Genre'
+        self.composer  = 'Test Composer'
+        self.track = 1
+        self.tracktotal = 50
+        self.disc = 1
+        self.disctotal = 2
+        self.year = 2015
+        self.encoder = 'Test Encoder'
+        self.art = self.jpg_art
+
+        self.bpm = 6
+        self.comp = True
+        self.grouping = 'test group'
+        self.comments = 'test comments'
+        self.lyrics = 'test lyrics'
+
+    def print_fields(self):
+        print('Title: {}'.format(self.title))
+        print('Album: {}'.format(self.album))
+        print('Artist: {}'.format(self.artist))
+        print('Album Artist: {}'.format(self.albumartist))
+        print('Genre: {}'.format(self.genre))
+        print('Composer: {}'.format(self.composer))
+        print('Track: {}'.format(self.track))
+        print('tracktotal: {}'.format(self.tracktotal))
+        print('Disk: {}'.format(self.disc))
+        print('Disktotal: {}'.format(self.disctotal))
+        print('Year: {}'.format(self.year))
+        print('Encoder: {}'.format(self.encoder))
+
+        print('BPM: {}'.format(self.bpm))
+        print('Compilation: {}'.format(self.comp))
+        print('Grouping: {}'.format(self.grouping))
+        print('Comments: {}'.format(self.comments))
+        print('Lyrics: {}'.format(self.lyrics))
+
+        print('Length: {}'.format(self.length))
+        print('Bitrate: {}'.format(self.bitrate))
+        print('Samplerate: {}'.format(self.samplerate))
+        print('Channels: {}'.format(self.channels))
+        print('Format: {}'.format(self.format))
+
+        print ('Artwork exists' if self.has_artwork else 'No artwork')
+        print('')
+
+    @property
+    def png_art(self):
+        if not self._png_art:
+            with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
+                self._png_art = f.read()
+        return self._png_art
+
+    @property
+    def jpg_art(self):
+        if not self._jpg_art:
+            with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
+                self._jpg_art = f.read()
+        return self._jpg_art
+
+if __name__ == '__main__':
+    handler = FFmpegTagHandler()
+    tag_holder = TagTestsDataHolder('/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data')
+
+    if handler.can_handle('/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data/13 background noise.wma'):
+        handler.detauch_art(dir_path = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data')
+
+
+
+
+
 

@@ -23,44 +23,46 @@ from functools import partial
 
 """ Batch management of media files metadata (tags & artwork)
       . Supported formats:
-            'MP3', 'MP4', 'M4A', 'AIFF', 'ASF', 'QuickTime / MOV',
+            'MP3', 'MP4', 'M4A', M4V', 'AIFF', 'ASF', 'QuickTime / MOV',
             'FLAC', 'MonkeysAudio', 'Musepack',
             'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
             'True Audio', 'WavPack', 'OptimFROG'
 
             'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
-
       . source directory / source file modes
       . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
       . action commands:
-          .. print metadata info
-          .. set metadata tags
-          .. copy tags from a given media file
-          .. remove all tags
-          .. index tracks
-          .. TBD: extracts artwork
-          .. TBD: add / remove characters in tags (title, artist, ...)
-          .. TBD: regexp-based replace in tags (title, artist, ...)
+          .. print      print media info
+          .. set        Set tags in media files,
+                        Supports expandable templates:
+                          e.g.  <tagger set --title 'The Title, part $track of $tracktotal'>
+                          to specify a template value, use the long tag name preceded by $:
+                                <tagger set --album 'The Album, ($format)'>, ...
+          .. copy       Copies tags from a specified media file
+          .. remove     Remove all tags
+          .. index      Index Track / Track Total tags
+          .. add        TBD: add characters in tags (title, artist, ...)
+          .. remove     TBD: remove characters in tags (title, artist, ...)
+          .. replace    TBD: regexp-based replace in tags (title, artist, ...)
+          .. extract    TBD: extracts artwork
 
-    Usage: tagger {-d DIR} [GLobal Options] {Commands}[Commands Options]
-      Global Options (renamer -h for additional help)
-        [-e END_LEVEL]                        End level for recursion into nested folders
-        [-i INCLUDE] [-e EXCLUDE]             Include names pattern
-        [-fd FILTER_DIRS] [-ff FILTER_FILES]  Use Include/Exclude patterns on dirs / files
-        [-s SORT]                             Sorting for files / folders
-        [-q QUIET]                            Do not visualise / show messages during processing
-      tagger -h for additional help on global options
+    Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+        [-d, --dir]                 Source directory (default is the current directory)
+        [-f, --file]                File to process
+
+      Global Options (tagger -h for additional help)
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
-      {print, set, copy, remove, index}
-        print   Print media directory
-        set     Set tags in media files
-        copy    Copies tags from a specified media file
-        remove  Remove all tags
-        index   Index Track / Track Total tags for selected media files
-
-      tagger {command} -h for additional help
+        {print, set, copy, remove, index, ...}
 """
 
 class TaggerArgParser(BMPBaseArgParser):
@@ -158,8 +160,8 @@ class TaggerArgParser(BMPBaseArgParser):
 
 
     @staticmethod
-    def check_args(args):
-        BMPBaseArgParser.check_args(args)
+    def check_args(args, parser):
+        BMPBaseArgParser.check_args(args, parser)
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
@@ -176,7 +178,7 @@ class TagsDispatcher:
                 sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 flatten = False, ensure_uniq = False,
                 show_size = args['show_size'], show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
@@ -213,7 +215,7 @@ class TagsDispatcher:
                 sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 tag_holder = tag_holder, quiet = args['quiet'])
 
 
@@ -223,7 +225,7 @@ class TagsDispatcher:
                 sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 tag_holder_path = args['tagholder'], quiet = args['quiet'])
 
     @staticmethod
@@ -232,7 +234,7 @@ class TagsDispatcher:
                 sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'])
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
 
     @staticmethod
     def index(args):
@@ -240,7 +242,7 @@ class TagsDispatcher:
                 sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['filter_dirs'], filter_files = not args['filter_files'])
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
 
     @staticmethod
     def dispatch():

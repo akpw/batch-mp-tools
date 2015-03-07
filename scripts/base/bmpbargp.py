@@ -12,16 +12,18 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os, sys
+import os, sys, datetime
 from argparse import ArgumentParser
 
 """ Global options parsing for scripts:
-      . source dir / file modes
-      . recursion to specified end_level
-      . include / exclude names patterns (Unix style)
-      . enable or disable include / exclude for directories / folders
-      . display sorting:
-        .. by size / date, ascending / descending
+        [-r, --recursive]           Recurse into nested folders
+        [-el, --endlevel]           End level for recursion into nested folders
+        [-in, --include]            Include names pattern (Unix style)
+        [-ex, --exclude]            Exclude names pattern (Unix style)
+        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 """
 class BMPBaseArgParser:
     @staticmethod
@@ -49,13 +51,33 @@ class BMPBaseArgParser:
         """ Checks if bool_arg can be interpreted as a boolean value
         """
         if len(bool_arg) < 1:
-            raise ValueError ('Cannot parse empty string into boolean.')
+            parser.error('Please enter a boolean value')
         bool_arg = bool_arg[0].lower()
         if bool_arg == 't' or bool_arg == 'y' or bool_arg == '1':
             return True
-        if bool_arg == 'f' or bool_arg == 'n' or bool_arg == '0':
+        elif bool_arg == 'f' or bool_arg == 'n' or bool_arg == '0':
             return False
-        raise ValueError ('Cannot parse string into boolean.')
+        else:
+            parser.error('Please enter a boolean value')
+
+    @staticmethod
+    def is_timedelta(parser, td_arg):
+        hrs = mins = secs = None
+        td = td_arg.split(':')
+        for i in range(len(td)):
+            tdd = td.pop(-1)
+            if not secs:
+                secs = float(tdd)
+            elif not mins:
+                mins = int(tdd)
+            elif not hrs:
+                hrs = int(tdd)
+            else:
+                break
+        return  datetime.timedelta(hours = hrs if hrs else 0,
+                                      minutes = mins if mins else 0,
+                                      seconds = secs if secs else 0)
+
 
     @staticmethod
     def parse_global_options(parser):
@@ -87,11 +109,11 @@ class BMPBaseArgParser:
                     help = "Exclude names pattern",
                     type = str,
                     default = '')
-        include_mode_group.add_argument("-fd", "--filterdirs", dest = "filter_dirs",
-                    help = "Do not apply Include/Exclude patterns on directories",
+        include_mode_group.add_argument("-fd", "--alldirs", dest = "all_dirs",
+                    help = "Disable Include/Exclude patterns on directories",
                     action = 'store_true')
-        include_mode_group.add_argument("-ff", "--filterfiles", dest = "filter_files",
-                    help = "Do not apply Include/Exclude patterns on files",
+        include_mode_group.add_argument("-af", "--allfiles", dest = "all_files",
+                    help = "Disable Include/Exclude patterns on files",
                     action = 'store_true')
 
         misc_group = parser.add_argument_group('Miscellaneous')
@@ -101,7 +123,7 @@ class BMPBaseArgParser:
                     choices = ['na', 'nd', 'sa', 'sd'],
                     default = 'na')
         misc_group.add_argument("-q", "--quiet", dest = 'quiet',
-                    help = "Do not visualise / show messages during processing",
+                    help = "Disable visualising changes & displaying info messages during processing",
                     action = 'store_true')
 
     @staticmethod
@@ -109,18 +131,18 @@ class BMPBaseArgParser:
         pass
 
     @staticmethod
-    def check_args(args):
+    def check_args(args, parser):
         # if input source is a file, need to adjust
         if args['file']:
             args['dir'] = os.path.dirname(args['file'])
             args['include'] = os.path.basename(args['file'])
             args['exclude'] = ''
             args['end_level'] = 0
-            args['filter_files'] = False
-            args['filter_dirs'] = False
+            args['all_files'] = False
+            args['all_dirs'] = False
 
         # check recursion
-        if not args['end_level'] and args['recursive']:
+        if args['recursive'] and args['end_level'] == 0:
             args['end_level'] = sys.maxsize
 
     @classmethod
@@ -133,7 +155,7 @@ class BMPBaseArgParser:
 
         args = vars(parser.parse_args())
 
-        cls.check_args(args)
+        cls.check_args(args, parser)
 
         return args
 
