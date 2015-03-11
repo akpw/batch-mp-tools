@@ -30,6 +30,7 @@ class MutagenTagHandler(TagHandler):
         except UnreadableFileError as error:
             return False
         else:
+            self.tag_holder.filepath = path
             self._parse_tags()
         return True
 

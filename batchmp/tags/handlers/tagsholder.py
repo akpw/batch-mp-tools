@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+import os
 from weakref import WeakMethod
 from types import MethodType
 from itertools import chain
@@ -66,6 +67,8 @@ class TagHolder:
     channels = NonTaggableMediaFieldDescriptor()
     bitdepth = NonTaggableMediaFieldDescriptor()
     format = NonTaggableMediaFieldDescriptor()
+
+    filepath = PropertyDescriptor()
 
     def __init__(self):
         self._deferred_art_method_wref = None
@@ -206,5 +209,7 @@ class TagHolder:
             sd['bitdepth'] = self.bitdepth
         if self.format:
             sd['format'] = self.format
+        if self.filepath:
+            sd['filename'] = os.path.splitext(os.path.basename(self.filepath))[0]
         return sd
 

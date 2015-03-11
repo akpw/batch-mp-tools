@@ -32,6 +32,7 @@ class FFmpegTagHandler(TagHandler):
         if media_entry:
             self._media_handler = FFBaseFormatHandler(self.tag_holder) #... + FFSpecificFormatHandler() + ...
             if self._media_handler.can_handle(media_entry):
+                self.tag_holder.filepath = path
                 self._media_handler.parse()
                 return True
         return False
