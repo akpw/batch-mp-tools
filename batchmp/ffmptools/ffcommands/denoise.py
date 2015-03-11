@@ -34,11 +34,11 @@ from batchmp.ffmptools.ffutils import (
 class DenoiserTask(Task):
     ''' A specific TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, highpass, lowpass, num_passes):
-        ''' inits the task parameters
-        '''
-        self.fpath = fpath
-        self.backup_path = backup_path
+    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
+                                                        highpass, lowpass, num_passes):
+
+        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+
         self.highpass = highpass
         self.lowpass = lowpass
         self.num_passes = num_passes
@@ -59,6 +59,9 @@ class DenoiserTask(Task):
 
         # ffmpeg initial input path
         fpath_input = self.fpath
+
+        # store tags if needed
+        self._store_tags()
         task_result = TaskResult()
 
         with temp_dir() as tmp_dir:
@@ -74,6 +77,7 @@ class DenoiserTask(Task):
                 p_in = ''.join(('ffmpeg',
                             ' -v error',
                             ' -i "{}"'.format(fpath_input),
+                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
                             ' -af "{}"'.format(af_str),
                             ' "{}"'.format(fpath_output)))
 
@@ -81,7 +85,7 @@ class DenoiserTask(Task):
                 try:
                     _, pass_elapsed = run_cmd(p_in)
                 except CmdProcessingError as e:
-                    task_result.add_task_step_info_msg('A problem while processing media file:\n\t{0}'
+                    task_result.add_task_step_info_msg('\nA problem while processing media file:\n\t{0}'
                                   '\nSkipping further processing at pass {1} ...'
                                   '\nOriginal error message:\n\t{2}'
                                   .format(fpath_input, pass_cnt + 1, e.args[0]))
@@ -90,35 +94,38 @@ class DenoiserTask(Task):
                     task_result.add_task_step_duration(pass_elapsed)
 
                 if pass_cnt == self.num_passes - 1:
-                    # for the last pass,
+                    # the last pass, rounding up
+
+                    # restore tags if needed
+                    self._restore_tags(fpath_output)
+
                     # backup the original file if applicable
                     if self.backup_path:
                         shutil.move(self.fpath, self.backup_path)
+
                     # ... and replace it with the resulting output
                     shutil.move(fpath_output, self.fpath)
                 else:
-                    # for the next pass, make the intermediary output new input
+                    # for the next pass, just make the intermediary output new input
                     fpath_input = fpath_output
 
-        # log report
-        td = datetime.timedelta(seconds = math.ceil(task_result.task_duration))
-        task_result.add_task_step_info_msg('Done processing:\n {0}\n {2} {3} in {1}'.format(
-                                self.fpath, str(td),
-                                self.num_passes, 'passes' if self.num_passes > 1 else 'pass'))
+        task_result.add_report_msg(self.fpath)
         return task_result
 
 class Denoiser(FFMPRunner):
     def apply_af_filters(self, src_dir,
                             end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                            num_passes = 1, highpass = None, lowpass = None, backup=True):
+                            num_passes = 1, highpass = None, lowpass = None, backup=True,
+                            ffmpeg_options = None, preserve_metadata = False):
 
         cpu_core_time, total_elapsed = self.run(src_dir,
                                         end_level = end_level, sort = sort,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         quiet = quiet, num_passes = num_passes, serial_exec = serial_exec,
-                                        highpass = highpass, lowpass = lowpass, backup=backup)
+                                        highpass = highpass, lowpass = lowpass, backup=backup,
+                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -127,7 +134,8 @@ class Denoiser(FFMPRunner):
     def run(self, src_dir,
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                num_passes = 1, highpass = None, lowpass = None, backup=True):
+                num_passes = 1, highpass = None, lowpass = None, backup=True,
+                ffmpeg_options = None, preserve_metadata = False):
 
         ''' Applies low-pass / highpass filters
         '''
@@ -137,29 +145,25 @@ class Denoiser(FFMPRunner):
         if not highpass and not lowpass:
             return cpu_core_time
 
-        media_files = [f for f in FFH.media_files(src_dir,
+        media_files, backup_dirs = self._prepare_files(src_dir,
                                         end_level = end_level, sort = sort,
                                         include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files)]
-        if len(media_files) > 0:
-            # if backup is required, prepare the backup dirs
-            if backup:
-                backup_dirs = FFH.setup_backup_dirs(media_files)
-            else:
-                backup_dirs = [None for bd in media_files]
+                                        filter_dirs = filter_dirs, filter_files = filter_files)
 
+        if len(media_files) > 0:
             print('{0} media files to process, ({1} {2} each)'.format(
                                                     len(media_files), num_passes,
                                                    'passes' if num_passes > 1 else 'pass'))
             # build tasks
-            tasks_params = ((media_file, backup_dir, highpass, lowpass, num_passes)
+            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+                                highpass, lowpass, num_passes)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []
             for task_param in tasks_params:
                 task = DenoiserTask(*task_param)
                 tasks.append(task)
 
-            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec)
+            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
         else:
             print('No media files to process')
 

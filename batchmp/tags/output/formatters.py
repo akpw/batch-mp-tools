@@ -109,16 +109,18 @@ class TagOutputFormatter:
         media_str = ''
         track_set = disc_set = False
         for field in diff_fields:
-            if field is 'art' and handler.tag_holder.has_artwork:
+            if field == 'art' and handler.tag_holder.has_artwork:
                 media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
             elif field in ('disc', 'disctotal'):
                 if not disc_set:
                     disc_set = True
-                    media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
+                    if handler.tag_holder.disc or handler.tag_holder.disctotal:
+                        media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
             elif field in ('track', 'tracktotal'):
                 if not track_set:
                     track_set = True
-                    media_str = TagOutputFormatter._track_str(handler, indent, media_str)
+                    if handler.tag_holder.track or handler.tag_holder.tracktotal:
+                        media_str = TagOutputFormatter._track_str(handler, indent, media_str)
             else:
                 field_val = getattr(handler.tag_holder, field)
                 if field_val:
@@ -140,8 +142,10 @@ class TagOutputFormatter:
     @staticmethod
     def _track_str(handler, indent, media_str, show_always = False):
         track = handler.tag_holder.track if handler.tag_holder.track else '_'
-        track_total = handler.tag_holder.tracktotal if handler.tag_holder.tracktotal else '_'
-        track_str = '{}/{}'.format(track, track_total)
+        if handler.tag_holder.tracktotal:
+            track_str = '{}/{}'.format(track, handler.tag_holder.tracktotal)
+        else:
+            track_str = handler.tag_holder.track
         return '{0}\n{1}Track: {2}'.format(media_str, indent, track_str)
 
     @staticmethod
@@ -166,39 +170,39 @@ class TagOutputFormatter:
 
     @staticmethod
     def _tag_display_name(field):
-        if field is 'title':
+        if field == 'title':
             return 'Title'
-        elif field is 'album':
+        elif field == 'album':
             return 'Album'
-        elif field is 'artist':
+        elif field == 'artist':
             return 'Artist'
-        elif field is 'albumartist':
+        elif field == 'albumartist':
             return 'Album Artist'
-        elif field is 'genre':
+        elif field == 'genre':
             return 'Genre'
-        elif field is 'composer':
+        elif field == 'composer':
             return 'Composer'
-        elif field is 'track':
+        elif field == 'track':
             return 'Track'
-        elif field is 'tracktotal':
+        elif field == 'tracktotal':
             return 'Track Total'
-        elif field is 'disc':
+        elif field == 'disc':
             return 'Disc'
-        elif field is 'disctotal':
+        elif field == 'disctotal':
             return 'Disc Total'
-        elif field is 'year':
+        elif field == 'year':
             return 'Year'
-        elif field is 'encoder':
+        elif field == 'encoder':
             return 'Encoder'
-        elif field is 'bpm':
+        elif field == 'bpm':
             return 'BPM'
-        elif field is 'comp':
+        elif field == 'comp':
             return 'Compilation'
-        elif field is 'grouping':
+        elif field == 'grouping':
             return 'Grouping'
-        elif field is 'comments':
+        elif field == 'comments':
             return 'Comments'
-        elif field is 'lyrics':
+        elif field == 'lyrics':
             return 'Lyrics'
 
         return None

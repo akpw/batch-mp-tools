@@ -137,7 +137,7 @@ class TagHolder:
             for field in fields():
                 if hasattr(tag_holder, field):
                     value = getattr(tag_holder, field)
-                    if value != None or copy_empty_vals:
+                    if value or copy_empty_vals:
                         setattr(self, field, value)
 
     def clear_tags(self, reset_art = False):

@@ -19,21 +19,21 @@ from batchmp.ffmptools.ffutils import FFH, CmdProcessingError, run_cmd
 
 
 class FFMPUtilsTests(FFMPTest):
-    def setUp(self):
-        super(FFMPUtilsTests, self).setUp()
-        self.bkp_dirs_ptrn = ['{0}data{0}mp3{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX),
-                              '{0}data{0}mp4{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX)]
 
     def test_ffmpeg_installed(self):
         self.assertTrue(FFH.ffmpeg_installed())
 
     def test_media_files(self):
+        media_info = {'00 Background noise.mp3': 6,
+                           '01 Background noise.mp4': 116,
+                           '02 Background noise.mp4': 175}
         media_files = [os.path.basename(fpath)
-            for fpath in FFH.media_files(self.src_dir, exclude = 'convert')]
-        self.assertTrue(set(media_files) == set(self.media_info.keys()))
+            for fpath in FFH.media_files(self.src_dir, exclude = 'bmfp*')]
+
+        self.assertTrue(set(media_files) == set(media_info.keys()))
 
     def test_setup_backup_dirs(self):
-        media_files = [f for f in FFH.media_files(self.src_dir, exclude = 'convert')]
+        media_files = [f for f in FFH.media_files(self.src_dir, exclude = 'bmfp*')]
         backup_dirs = FFH.setup_backup_dirs(media_files)
 
         # should return a backup dir for every file
@@ -42,9 +42,11 @@ class FFMPUtilsTests(FFMPTest):
         # some of the test files are into same backup dirs
         self.assertTrue(len(set(backup_dirs)) < len(media_files))
 
+        bkp_dirs_ptrn = ['{0}data{0}denoise_a{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX),
+                              '{0}data{0}denoise_v{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX)]
         for b_d in backup_dirs:
             # test the naming pattern
-            found = b_d.find(self.bkp_dirs_ptrn[0]) + b_d.find(self.bkp_dirs_ptrn[1])
+            found = b_d.find(bkp_dirs_ptrn[0]) + b_d.find(bkp_dirs_ptrn[1])
             self.assertTrue(found > 0)
 
             # cleanup

@@ -29,6 +29,7 @@ class CmdProcessingError(Exception):
 class FFH:
     BACKUP_DIR_PREFIX = '_backup_'
     FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
+    FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams', 'video_streams'])
 
     @staticmethod
     def ffmpeg_installed():
@@ -49,6 +50,28 @@ class FFH:
 
     @staticmethod
     def media_file_info(fpath):
+        full_entry = FFH.media_file_info_full(fpath)
+        if full_entry:
+            audio_stream = artwork_stream = None
+            if full_entry.audio_streams and len(full_entry.audio_streams) > 0:
+                # if there are multiple audio streams, take the first
+                audio_stream = full_entry.audio_streams[0]
+            else:
+                return None
+
+            artwork_streams = [stream for stream in full_entry.video_streams
+                                        if 'codec_type' in stream and stream['codec_type'] == 'video'
+                                            and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
+            if artwork_streams:
+                # in case there are multiple art images, take the first
+                artwork_stream = artwork_streams[0]
+
+            return FFH.FFEntry(fpath, full_entry.format, audio_stream, artwork_stream)
+        else:
+            return None
+
+    @staticmethod
+    def media_file_info_full(fpath):
         if not FFH.ffmpeg_installed():
             return None
 
@@ -69,21 +92,18 @@ class FFH:
                 return None
 
             streams = out.get('streams')
-            audio_stream = {k:v for dict in streams
-                                    for k,v in dict.items()
-                                        if 'codec_type' in dict and
-                                            dict['codec_type'] == 'audio'}
-            if not audio_stream:
-                return None
-
+            audio_streams = video_streams = None
+            if streams:
+                audio_streams = [dict for dict in streams
+                                                if 'codec_type' in dict and
+                                                    dict['codec_type'] == 'audio']
+                video_streams = [dict for dict in streams
+                                            if 'codec_type' in dict and
+                                                    dict['codec_type'] == 'video']
             format = out.get('format')
 
-            artwork_stream = {k:v for dict in streams
-                                    for k,v in dict.items()
-                                        if 'codec_type' in dict and dict['codec_type'] == 'video'
-                                            and dict['codec_name'] in ('jpeg', 'png', 'gif', 'tiff', 'bmp')}
+            return FFH.FFFullEntry(fpath, format, audio_streams, video_streams)
 
-            return FFH.FFEntry(fpath, format, audio_stream, artwork_stream)
 
     @staticmethod
     def supported_media(fpath):
@@ -102,11 +122,12 @@ class FFH:
         if not pass_filter:
             pass_filter = lambda fpath: FFH.supported_media(fpath)
 
-        return fsutils.DWalker.file_entries(src_dir,
-                                            start_level = start_level, end_level = end_level,
-                                            include = include, exclude = exclude, sort = sort,
-                                            filter_dirs = True, filter_files = True,
-                                            pass_filter = pass_filter)
+        media_files = (entry.realpath for entry in fsutils.DWalker.file_entries(src_dir,
+                                                        start_level = start_level, end_level = end_level,
+                                                        include = include, exclude = exclude, sort = sort,
+                                                        filter_dirs = filter_dirs, filter_files = filter_files,
+                                                        pass_filter = pass_filter))
+        return media_files
 
     @staticmethod
     def setup_backup_dirs(fpathes):

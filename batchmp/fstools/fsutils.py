@@ -156,12 +156,13 @@ class UniqueDirNamesChecker:
     def __init__(self, src_dir, *, unique_fnames = None):
         self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
 
-        fpathes = [os.path.join(src_dir, fname) for fname in os.listdir(src_dir)]
-        fnames = [os.path.basename(fpath) for fpath in fpathes if os.path.isfile(fpath)]
+        fnames = [fname for fname in os.listdir(src_dir)
+                                            if os.path.isfile(os.path.join(src_dir, fname))]
+
         # init the generator function with existing file names from the dir
-        for fpath in fnames:
+        for fname in fnames:
             next(self._uname_gen)
-            self._uname_gen.send(fpath)
+            self._uname_gen.send(fname)
 
     def unique_name(self, fname):
         next(self._uname_gen)
@@ -320,4 +321,4 @@ class DWalker(object):
             if not pass_filter(entry.realpath):
                 continue
             else:
-                yield entry.realpath
+                yield entry

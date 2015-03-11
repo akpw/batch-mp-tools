@@ -66,7 +66,7 @@ class BaseTagProcessor:
         for entry in DWalker.file_entries(src_dir,
                                             end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,
-                                            filter_dirs = True, filter_files = True,
+                                            filter_dirs = filter_dirs, filter_files = filter_files,
                                             pass_filter = pass_filter):
             if tag_holder_gen:
                 try:
@@ -214,94 +214,116 @@ class BaseTagProcessor:
     def _diff_fields(self, tag_holder):
         diff_fields = []
         for field in tag_holder.taggable_fields():
-            if field is 'art':
-                if tag_holder.has_artwork is not self.handler.tag_holder.has_artwork:
+            if field == 'art':
+                if tag_holder.has_artwork != self.handler.tag_holder.has_artwork:
                     diff_fields.append(field)
             else:
                 current_val = getattr(self.handler.tag_holder, field)
                 new_val = getattr(tag_holder, field)
-                if current_val is not new_val:
+                if current_val != new_val:
                     diff_fields.append(field)
         return diff_fields
 
 
 
-class TagTestsDataHolder(TagHolder):
-    def __init__(self, src_dir):
-        super().__init__()
-        self._png_art = None
-        self._jpg_art = None
-        self.src_dir = src_dir
-
-        self.title = 'Test Title'
-        self.album = 'Test Album'
-        self.artist = 'Test Artist'
-        self.albumartist = 'Test Album Artist'
-        self.genre = 'Test Genre'
-        self.composer  = 'Test Composer'
-        self.track = 1
-        self.tracktotal = 50
-        self.disc = 1
-        self.disctotal = 2
-        self.year = 2015
-        self.encoder = 'Test Encoder'
-        self.art = self.jpg_art
-
-        self.bpm = 6
-        self.comp = True
-        self.grouping = 'test group'
-        self.comments = 'test comments'
-        self.lyrics = 'test lyrics'
-
-    def print_fields(self):
-        print('Title: {}'.format(self.title))
-        print('Album: {}'.format(self.album))
-        print('Artist: {}'.format(self.artist))
-        print('Album Artist: {}'.format(self.albumartist))
-        print('Genre: {}'.format(self.genre))
-        print('Composer: {}'.format(self.composer))
-        print('Track: {}'.format(self.track))
-        print('tracktotal: {}'.format(self.tracktotal))
-        print('Disk: {}'.format(self.disc))
-        print('Disktotal: {}'.format(self.disctotal))
-        print('Year: {}'.format(self.year))
-        print('Encoder: {}'.format(self.encoder))
-
-        print('BPM: {}'.format(self.bpm))
-        print('Compilation: {}'.format(self.comp))
-        print('Grouping: {}'.format(self.grouping))
-        print('Comments: {}'.format(self.comments))
-        print('Lyrics: {}'.format(self.lyrics))
-
-        print('Length: {}'.format(self.length))
-        print('Bitrate: {}'.format(self.bitrate))
-        print('Samplerate: {}'.format(self.samplerate))
-        print('Channels: {}'.format(self.channels))
-        print('Format: {}'.format(self.format))
-
-        print ('Artwork exists' if self.has_artwork else 'No artwork')
-        print('')
-
-    @property
-    def png_art(self):
-        if not self._png_art:
-            with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
-                self._png_art = f.read()
-        return self._png_art
-
-    @property
-    def jpg_art(self):
-        if not self._jpg_art:
-            with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
-                self._jpg_art = f.read()
-        return self._jpg_art
 
 if __name__ == '__main__':
-    handler = FFmpegTagHandler()
+    class TagTestsDataHolder(TagHolder):
+        def __init__(self, src_dir):
+            super().__init__()
+            self._png_art = None
+            self._jpg_art = None
+            self.src_dir = src_dir
+
+            self.title = 'Test Title'
+            self.album = 'Test Album'
+            self.artist = 'Test Artist'
+            self.albumartist = 'Test Album Artist'
+            self.genre = 'Test Genre'
+            self.composer  = 'Test Composer'
+            self.track = 1
+            self.tracktotal = 50
+            self.disc = 1
+            self.disctotal = 2
+            self.year = 2015
+            self.encoder = 'Test Encoder'
+            self.art = self.jpg_art
+
+            self.bpm = 6
+            self.comp = True
+            self.grouping = 'test group'
+            self.comments = 'test comments'
+            self.lyrics = 'test lyrics'
+
+        def print_fields(self):
+            print('Title: {}'.format(self.title))
+            print('Album: {}'.format(self.album))
+            print('Artist: {}'.format(self.artist))
+            print('Album Artist: {}'.format(self.albumartist))
+            print('Genre: {}'.format(self.genre))
+            print('Composer: {}'.format(self.composer))
+            print('Track: {}'.format(self.track))
+            print('Tracktotal: {}'.format(self.tracktotal))
+            print('Disk: {}'.format(self.disc))
+            print('Disktotal: {}'.format(self.disctotal))
+            print('Year: {}'.format(self.year))
+            print('Encoder: {}'.format(self.encoder))
+
+            print('BPM: {}'.format(self.bpm))
+            print('Compilation: {}'.format(self.comp))
+            print('Grouping: {}'.format(self.grouping))
+            print('Comments: {}'.format(self.comments))
+            print('Lyrics: {}'.format(self.lyrics))
+
+            print('Length: {}'.format(self.length))
+            print('Bitrate: {}'.format(self.bitrate))
+            print('Samplerate: {}'.format(self.samplerate))
+            print('Channels: {}'.format(self.channels))
+            print('Format: {}'.format(self.format))
+
+            print ('Artwork exists' if self.has_artwork else 'No artwork')
+            print('')
+
+        @property
+        def png_art(self):
+            if not self._png_art:
+                with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
+                    self._png_art = f.read()
+            return self._png_art
+
+        @property
+        def jpg_art(self):
+            if not self._jpg_art:
+                with open(os.path.join(self.src_dir, '00 art.png'), 'rb') as f:
+                    self._jpg_art = f.read()
+            return self._jpg_art
+
+    src_dir = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/ffmp/.data/bfmp'
     tag_holder = TagTestsDataHolder('/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data')
 
-    if handler.can_handle('/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data/13 background noise.wma'):
-        handler.detauch_art(dir_path = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data')
+    #BaseTagProcessor().set_tags_visual(src_dir, tag_holder = tag_holder)
+
+    handler = MutagenTagHandler()
+    target_handler = MutagenTagHandler()
+    tag_holder = TagHolder()
+
+    if handler.can_handle('/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/ffmp/data/bmfp_v/14 background noise combined.wma'):
+        tag_holder.copy_tags(handler.tag_holder)
+        #handler.clear_tags()
+        #handler.save()
+
+        print(tag_holder.art)
+
+
+
+        #if target_handler.can_handle('/Users/AKPower/Desktop/06 background noise.mp4'):
+            #print(handler.tag_holder.art)
+            #target_handler.copy_tags(handler.tag_holder)
+            #print(target_handler.tag_holder.art)
+        #handler.detauch_art(dir_path = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/tags/data')
+        #handler.copy_tags(tag_holder)
+        #print(handler.tag_holder.art)
+        #handler.save()
 
 
 

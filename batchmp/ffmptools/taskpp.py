@@ -1,4 +1,4 @@
-## Copyright (c) 2014 Arseniy Kuznetsov
+    ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License
@@ -10,23 +10,40 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import copyreg, types
-import multiprocessing
-from batchmp.commons.progressbar import progress_bar
+import copyreg, types, datetime, math, multiprocessing
 from abc import ABCMeta, abstractmethod
+from batchmp.commons.progressbar import progress_bar
+from batchmp.tags.handlers.mtghandler import MutagenTagHandler
+from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
+from batchmp.tags.handlers.tagsholder import TagHolder
+
 
 class Task(metaclass = ABCMeta):
     ''' Represents an abstract TasksProcessor task
     '''
-    def __init__(self, task_args):
-        self.task_args = task_args
-
-    def __call__():
-        execute()
+    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata):
+        self.fpath = fpath
+        self.backup_path = backup_path
+        self.ffmpeg_options = ffmpeg_options
+        self.tag_holder = TagHolder() if preserve_metadata else None
 
     @abstractmethod
     def execute(self):
         return TaskResult()
+
+    #Helpers
+    def _store_tags(self):
+        if self.tag_holder:
+            handler = MutagenTagHandler() + FFmpegTagHandler()
+            if handler.can_handle(self.fpath):
+                self.tag_holder.copy_tags(handler.tag_holder)
+
+    def _restore_tags(self, fpath):
+        if self.tag_holder:
+            handler = MutagenTagHandler() + FFmpegTagHandler()
+            if handler.can_handle(fpath):
+                handler.tag_holder.copy_tags(self.tag_holder)
+                handler.save()
 
 
 class TaskResult:
@@ -36,12 +53,16 @@ class TaskResult:
         self._task_steps_info_msgs = []
         self._task_steps_durations = []
 
-    def add_task_step_info_msg(self, step_info_msg):
-        self._task_steps_info_msgs.append(step_info_msg)
-
     def add_task_step_duration(self, step_duration):
         self._task_steps_durations.append(step_duration)
 
+    def add_task_step_info_msg(self, step_info_msg):
+        self._task_steps_info_msgs.append(step_info_msg)
+
+    def add_report_msg(self, processed_fpath):
+        td = datetime.timedelta(seconds = math.ceil(self.task_duration * 100)/100)
+        self.add_task_step_info_msg('Done processing\n {0}\n in {1}'.format(
+                                                        processed_fpath, str(td).rstrip('0')))
     @property
     def task_output(self):
         task_output = None
@@ -70,12 +91,14 @@ class TasksProcessor:
     def process_tasks(self, tasks_queue, serial_exec = False, num_workers = None, quiet = False):
         cpu_core_time = 0.0
         num_tasks = len(tasks_queue)
+        serial_exec = serial_exec or num_tasks == 1
         if num_tasks > 0:
             tasks_done = 0
 
             # Pre-processing msgs
             if serial_exec:
-                print('Processing {0} tasks sequentially'.format(num_tasks))
+                print('Processing {0} {1}'.format(num_tasks,
+                                                        'task' if num_tasks == 1 else 'tasks sequentially'))
             else:
                 if not num_workers:
                     num_workers = multiprocessing.cpu_count()

@@ -14,7 +14,7 @@
 """ Batch Fragmentation of media files
 """
 
-import shutil, sys, os, datetime, math, fnmatch
+import shutil, sys, os
 from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
 from batchmp.ffmptools.ffrunner import FFMPRunner
 from batchmp.ffmptools.taskpp import Task, TasksProcessor, TaskResult
@@ -28,18 +28,22 @@ from batchmp.ffmptools.ffutils import (
 class ConvertorTask(Task):
     ''' A specific TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, target_format, convert_options):
-        ''' inits the task parameters
-        '''
-        self.fpath = fpath
-        self.backup_path = backup_path
+    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
+                                                        target_format, convert_options):
+
+        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+
         self.target_format = target_format
         self.convert_options = convert_options
 
     def execute(self):
         ''' builds and runs FFmpeg command in a subprocess
         '''
+        # store tags if needed
+        self._store_tags()
+
         task_result = TaskResult()
+
         with temp_dir() as tmp_dir:
             # prepare the tmp output path
             cv_name = ''.join((os.path.splitext(os.path.basename(self.fpath))[0], self.target_format))
@@ -49,7 +53,8 @@ class ConvertorTask(Task):
             p_in = ''.join(('ffmpeg',
                             ' -v error',
                             ' -i "{}"'.format(self.fpath),
-                            ' {}'.format(self.convert_options),
+                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
+                            ' {}'.format(self.convert_options) if self.convert_options else '',
                             ' "{}"'.format(cv_path)))
 
             # run ffmpeg command as a subprocess
@@ -61,8 +66,11 @@ class ConvertorTask(Task):
                                                 '\nOriginal error message:\n\t{1}'
                                                         .format(self.fpath, e.args[0]))
             else:
+                # restore tags if needed
+                self._restore_tags(cv_path)
+
                 # backup the original file if applicable
-                if self.backup_path != None:
+                if self.backup_path:
                     shutil.move(self.fpath, self.backup_path)
 
                 # move media fragment to destination
@@ -71,25 +79,26 @@ class ConvertorTask(Task):
                 dst_fpath = os.path.join(os.path.dirname(self.fpath), dst_fname)
                 shutil.move(cv_path, dst_fpath)
 
-        # log report
-        td = datetime.timedelta(seconds = math.ceil(task_result.task_duration))
-        task_result.add_task_step_info_msg('Done processing\n {0}\n in {1}'.format(self.fpath, str(td)))
+        task_result.add_report_msg(self.fpath)
 
         return task_result
+
 
 class Convertor(FFMPRunner):
     def convert(self, src_dir,
                     end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None, convert_options = None, backup = True):
-        ''' Fragment media file by specified starttime & duration
+                    target_format = None, convert_options = None, backup = True,
+                    ffmpeg_options = None, preserve_metadata = False):
+        ''' Converts media to specified format
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
                                         end_level = end_level, sort = sort,
                                         include = include, exclude = exclude, quiet = quiet,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_format = target_format, convert_options = convert_options,
-                                        backup = backup)
+                                        serial_exec = serial_exec, backup = backup,
+                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -98,7 +107,8 @@ class Convertor(FFMPRunner):
     def run(self, src_dir,
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                target_format = None, convert_options = None, backup = True):
+                target_format = None, convert_options = None, backup = True,
+                ffmpeg_options = None, preserve_metadata = False):
 
         ''' Perform segmentation by size | duration
         '''
@@ -110,29 +120,23 @@ class Convertor(FFMPRunner):
         if not target_format.startswith('.'):
             target_format = '.{}'.format(target_format)
 
-        media_files = [f for f in FFH.media_files(src_dir,
+        media_files, backup_dirs = self._prepare_files(src_dir,
                                         end_level = end_level, sort = sort,
                                         include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files)]
-
+                                        filter_dirs = filter_dirs, filter_files = filter_files)
         if len(media_files) > 0:
-            # if backup is required, prepare the backup dirs
-            if backup:
-                backup_dirs = FFH.setup_backup_dirs(media_files)
-            else:
-                backup_dirs = [None for bd in media_files]
-
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir, target_format, convert_options)
+            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+                                target_format, convert_options)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []
             for task_param in tasks_params:
                 task = ConvertorTask(*task_param)
                 tasks.append(task)
 
-            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec)
+            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
         else:
             print('No media files to process')
 

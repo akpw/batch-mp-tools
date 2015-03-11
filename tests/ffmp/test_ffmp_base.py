@@ -12,6 +12,7 @@
 
 import os
 from ..base import test_base
+from batchmp.ffmptools.ffutils import FFH
 
 class FFMPTest(test_base.BMPTest):
     @classmethod
@@ -20,8 +21,56 @@ class FFMPTest(test_base.BMPTest):
         cls.bckp_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '.data'))
         super(FFMPTest, cls).setUpClass()
 
-    def setUp(self):
-        self.media_info = {'00 Background noise.mp3': 6,
-                           '01 Background noise.mp4': 116,
-                           '02 Background noise.mp4': 175}
+    def compare_media(self, full_entry_orig, full_entry_processed, strict_compare = True):
+        ''' Compares base stream info for two media files
+        '''
+        self.assertIsNotNone(full_entry_orig,
+                        msg = 'Original media info should not be None')
+        self.assertIsNotNone(full_entry_processed,
+                        msg = 'Processed media info should not be None')
+        self.assertIsNotNone(full_entry_orig.audio_streams,
+                        msg = '{}: Original media audio streams should not be None'.format(full_entry_orig.path))
+        self.assertIsNotNone(full_entry_processed.audio_streams,
+                        msg = '{}: Processed media audio streams should not be None'.format(full_entry_processed.path))
+
+        assert_method = self.assertEqual if strict_compare else self.assertLessEqual
+
+        # Check audio streams
+        assert_method(len(full_entry_orig.audio_streams), len(full_entry_processed.audio_streams),
+                        msg = '\n{0}\n{1}'
+                                    '\n\tDifferent number of audio streams:'
+                                    '\n\tOriginal has {2}, but processed has {3}'.format(
+                                full_entry_orig.path, full_entry_processed.path,
+                                len(full_entry_orig.audio_streams), len(full_entry_processed.audio_streams)))
+
+        # Check video streams
+        assert_method(len(full_entry_orig.video_streams), len(full_entry_processed.video_streams),
+                        msg = '\n{0}\n{1}'
+                                    '\n\tDifferent number of video streams:'
+                                    '\n\tOriginal has {2}, but processed has {3}'
+                                    '\n\t{4}\n\t{5}'.format(
+                                full_entry_orig.path, full_entry_processed.path,
+                                len(full_entry_orig.video_streams), len(full_entry_processed.video_streams),
+                                full_entry_orig.video_streams, full_entry_processed.video_streams))
+
+        # Check artwork streams
+        artwork_streams_orig = [stream for stream in full_entry_orig.video_streams
+                                    if 'codec_type' in stream and stream['codec_type'] == 'video'
+                                        and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
+        artwork_streams_processed = [stream for stream in full_entry_processed.video_streams
+                                    if 'codec_type' in stream and stream['codec_type'] == 'video'
+                                        and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
+
+        assert_method(len(artwork_streams_orig), len(artwork_streams_processed),
+                        msg = '\n{0}\n{1}'
+                                    '\n\tDifferent number of artwork streams:'
+                                    '\n\tOriginal has {2}, but processed has {3}'.format(
+                                full_entry_orig.path, full_entry_processed.path,
+                                len(artwork_streams_orig), len(artwork_streams_processed)))
+
+
+
+
+
+
 

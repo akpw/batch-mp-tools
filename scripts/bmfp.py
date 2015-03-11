@@ -49,6 +49,8 @@ from scripts.base.bmpbargp import BMPBaseArgParser
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
+        [-fo, --ffmpeg-options]     Additional options for running FFmpeg
+        [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
@@ -62,7 +64,13 @@ class BMFPArgParser(BMPBaseArgParser):
     @staticmethod
     def parse_commands(parser):
         # BFMP Global
-        misc_group = parser.add_argument_group('Commands Execution')
+        misc_group = parser.add_argument_group('FFmpeg Commands Execution')
+        misc_group.add_argument('-fo', '--ffmpeg-options', dest='ffmpeg_options',
+                help = 'Additional options for running FFmpeg',
+                type = str)
+        misc_group.add_argument("-pm", "--preserve-meta", dest='preserve_metadata',
+                    help = "Preserve metadata of processed files",
+                    action='store_true')
         misc_group.add_argument("-se", "--serial-exec", dest='serial_exec',
                     help = "Runs all task's commands in a single process",
                     action='store_true')
@@ -75,14 +83,14 @@ class BMFPArgParser(BMPBaseArgParser):
                                             dest='sub_cmd', title = 'BMFP Commands')
 
         # Convert
-        convert_parser = subparsers.add_parser('convert', help = 'Convert media to specified format')
-        convert_parser.add_argument('-tf', '--target_format', dest='target_format',
+        convert_parser = subparsers.add_parser('convert', help = 'Converts media to specified format')
+        convert_parser.add_argument('-tf', '--target-format', dest='target_format',
                 help = 'Target format file extension, e.g. mp3 / m4a / mp4 / mov /...',
                 type = str,
                 required = True)
         group = convert_parser.add_argument_group('Conversion Options')
         group.add_argument('-co', '--convert-options', dest='convert_options',
-                help = 'FFmpeg conversion options. When specified, overrides all other option switches',
+                help = 'FFmpeg conversion options. When specified, overrides all other conversion option switches',
                 type = str,
                 default = BMFPArgParser.DEFAULT_CONVERSION_OPTIONS)
         group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
@@ -99,7 +107,6 @@ class BMFPArgParser(BMPBaseArgParser):
                 help = 'Applies filters in multiple passes',
                 type = int,
                 default = 1)
-
         group = denoise_parser.add_argument_group('Pass Filters')
         group.add_argument("-hp", "--highpass", dest='highpass',
                     help = "Cutoff boundary for lower frequencies",
@@ -126,12 +133,12 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
         # Segment
-        segment_parser = subparsers.add_parser('segment', help = 'Segments media by duration or file size')
+        segment_parser = subparsers.add_parser('segment', help = 'Segments media by specified maximum duration or file size')
         segment_group = segment_parser.add_mutually_exclusive_group()
         segment_group.add_argument('-fs', '--filesize', dest='segment_filesize',
                 help = 'Maximum media file size in MB',
-                type = int,
-                default = 0)
+                type = float,
+                default = 0.0)
         segment_group.add_argument('-d', '--duration', dest='segment_duration',
                 help = 'Maximum media duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
@@ -148,66 +155,41 @@ class BMFPArgParser(BMPBaseArgParser):
         BMPBaseArgParser.check_args(args, parser)
 
         # Segment attributes check
-        if args['sub_cmd'] is 'segment':
-            if args['segment_filesize'] is 0 and args['segment_duration'] is timedelta(0):
+        if args['sub_cmd'] == 'segment':
+            if not args['segment_filesize'] and not args['segment_duration'].total_seconds():
                 parser.error('bmfp segment:\n\t'
                              'One of the command parameters needs to be specified: <filesize | duration>')
 
-        elif args['sub_cmd'] is 'convert':
+        elif args['sub_cmd'] == 'convert':
             # Convert attributes check
-            if args['convert_options'] is BMFPArgParser.DEFAULT_CONVERSION_OPTIONS:
+            if args['convert_options'] == BMFPArgParser.DEFAULT_CONVERSION_OPTIONS:
                 if args['lossless_audio']:
                     args['convert_options'] = '-q:v 0 -acodec alac'
 
                 if args['change_container']:
                     args['convert_options'] = '-c copy -copyts'
 
-        '''
-        if not args['sub_cmd']:
-            args['sub_cmd'] = 'convert'
-            args['target_format'] = 'm4a'
-            args['convert_options'] = '-q:v 0 -q:a 0'
-            args['lossless_audio'] = False
-            args['change_container'] = False
-            args['dir'] = '/Users/AKPower/Desktop/music/samples/convert/test'
-            args['nobackup'] = False
-
-
-            if not args['sub_cmd']:
-                args['sub_cmd'] = 'fragment'
-                args['fragment_starttime'] = timedelta(seconds = 10)
-                args['fragment_duration'] = timedelta(days = 380)
-                args['nobackup'] = False
-
-            if not args['sub_cmd']:
-                args['sub_cmd'] = 'segment'
-                args['segment_filesize'] = 40
-                args['segment_duration'] = timedelta(minutes = 4, seconds = 10)
-                args['nobackup'] = False
-
-                args['dir'] = '/Users/AKPower/Desktop/music/samples/test'
-        '''
-
-
 class BMFPDispatcher:
     @staticmethod
     def convert(args):
+        print(args)
         Convertor().convert(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
-                target_format = args['target_format'], convert_options = args['convert_options'])
+                target_format = args['target_format'], convert_options = args['convert_options'],
+                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
-    def segment(args):
-        Segmenter().segment(src_dir = args['dir'],
+    def denoise(args):
+        Denoiser().apply_af_filters(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                segment_size_MB = args['segment_filesize'],
-                segment_length_secs = args['segment_duration'].total_seconds(),
-                backup = not args['nobackup'], serial_exec = args['serial_exec'])
+                num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
+                backup = not args['nobackup'],
+                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
     def fragment(args):
@@ -218,16 +200,20 @@ class BMFPDispatcher:
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
-                replace_original = args['replace_original'])
+                replace_original = args['replace_original'],
+                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
-    def denoise(args):
-        Denoiser().apply_af_filters(src_dir = args['dir'],
+    def segment(args):
+        Segmenter().segment(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                num_passes=args['numpasses'], highpass=args['highpass'], lowpass=args['lowpass'],
-                backup = not args['nobackup'])
+                segment_size_MB = args['segment_filesize'],
+                segment_length_secs = args['segment_duration'].total_seconds(),
+                backup = not args['nobackup'], serial_exec = args['serial_exec'],
+                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
+
 
 
     @staticmethod

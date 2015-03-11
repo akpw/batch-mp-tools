@@ -107,10 +107,11 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Minimal number of digits for indexing (2 by default, adding leading zeros as needed)',
                 type = int,
                 default = 2)
-        add_index_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
-                help = "Include directories for rename processing",
+        include_mode_group = add_index_parser.add_argument_group('Include for processing')
+        include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
+                help = "Include directories from rename processing",
                 action = 'store_true')
-        add_index_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
+        include_mode_group.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                 help = "Exclude files from rename processing",
                 action = 'store_true')
 
@@ -127,10 +128,11 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Date format',
                 type = str,
                 default = '%Y-%m-%d')
-        add_date_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
-                help = "Include directories for rename processing",
+        include_mode_group = add_date_parser.add_argument_group('Include for processing')
+        include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
+                help = "Include directories from rename processing",
                 action = 'store_true')
-        add_date_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
+        include_mode_group.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                 help = "Exclude files from rename processing",
                 action = 'store_true')
 
@@ -147,10 +149,11 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Text to add',
                 type = str,
                 default = '')
-        add_text_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
-                help = "Include directories for rename processing",
+        include_mode_group = add_text_parser.add_argument_group('Include for processing')
+        include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
+                help = "Include directories from rename processing",
                 action = 'store_true')
-        add_text_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
+        include_mode_group.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                 help = "Exclude files from rename processing",
                 action = 'store_true')
 
@@ -163,10 +166,11 @@ class RenameArgParser(BMPBaseArgParser):
         remove_chars_parser.add_argument('-ft', '--fromtail', dest='from_tail',
                 help = 'Removes text from tail',
                 action = 'store_true')
-        remove_chars_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
-                help = "Include directories for rename processing",
+        include_mode_group = remove_chars_parser.add_argument_group('Include for processing')
+        include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
+                help = "Include directories from rename processing",
                 action = 'store_true')
-        remove_chars_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
+        include_mode_group.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                 help = "Exclude files from rename processing",
                 action = 'store_true')
 
@@ -184,10 +188,11 @@ class RenameArgParser(BMPBaseArgParser):
         add_text_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
-        add_text_parser.add_argument("-id", "--includedirs", dest = "include_dirs",
-                help = "Include directories for rename processing",
+        include_mode_group = add_text_parser.add_argument_group('Include for processing')
+        include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
+                help = "Include directories from rename processing",
                 action = 'store_true')
-        add_text_parser.add_argument("-ef", "--excludefiles", dest = "exclude_files",
+        include_mode_group.add_argument("-ef", "--excludefiles", dest = "exclude_files",
                 help = "Exclude files from rename processing",
                 action = 'store_true')
 
