@@ -81,7 +81,7 @@ class TaskResult:
 
 
 class TasksProcessor:
-    ''' Run tasks in a pool of processes
+    ''' Run tasks, sequentially or in a pool of processes
         Displays progress / tasks done
     '''
     def _process_task(self, task):

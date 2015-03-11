@@ -142,11 +142,13 @@ A rainy-weekends project under occasional development :)
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
+        [-fo, --ffmpeg-options]     Additional options for running FFmpeg
+        [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
       Commands: (bmfp {command} -h for additional help)
-        {convert, segment, fragment, denoise, ...}
+        {convert, denoise, fragment, segment, ...}
 
 
 

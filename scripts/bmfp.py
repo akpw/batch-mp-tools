@@ -55,7 +55,7 @@ from scripts.base.bmpbargp import BMPBaseArgParser
         [-nb, --no-backup]          Do not backup the original file
 
       Commands: (bmfp {command} -h for additional help)
-        {convert, segment, fragment, denoise, ...}
+        {convert, denoise, fragment, segment, ...}
 """
 
 class BMFPArgParser(BMPBaseArgParser):

@@ -124,8 +124,6 @@ class Fragmenter(FFMPRunner):
                 backup = True, replace_original = False,
                 ffmpeg_options = None, preserve_metadata = False):
 
-        ''' Perform segmentation by size | duration
-        '''
         cpu_core_time = 0.0
 
         # validate input values

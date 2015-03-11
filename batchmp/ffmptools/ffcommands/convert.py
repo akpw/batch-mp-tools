@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 
-""" Batch Fragmentation of media files
+""" Batch Conversion of media files
 """
 
 import shutil, sys, os
@@ -110,8 +110,6 @@ class Convertor(FFMPRunner):
                 target_format = None, convert_options = None, backup = True,
                 ffmpeg_options = None, preserve_metadata = False):
 
-        ''' Perform segmentation by size | duration
-        '''
         cpu_core_time = 0.0
 
         # validate input values

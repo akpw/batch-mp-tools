@@ -13,11 +13,7 @@
 
 """ Batch Reduce of background audio noise in media files,
     via filtering out highpass / low-pass frequencies
-
-    Uses batchmp.ffmptools.taskpp.TasksProcessor to leverage available CPU cores
-
     Supports multi-passes processing, e.g. 3 times for each media file
-    Supports backing up original media in their respective folders
 """
 
 import shutil, sys, os, datetime, math
