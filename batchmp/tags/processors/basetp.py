@@ -151,14 +151,11 @@ class BaseTagProcessor:
             then applies it to all selected media files
             Visualises changes before proceeding
         '''
-        tag_holder_rpath = os.path.realpath(os.path.join(src_dir, tag_holder_path))
-        if self.handler.can_handle(tag_holder_rpath):
-            tag_holder = TagHolder()
-            tag_holder.copy_tags(self.handler.tag_holder)
+        if self.handler.can_handle(tag_holder_path):
             self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude, sort = sort,
                         filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
-                        tag_holder = tag_holder)
+                        tag_holder = self.handler.tag_holder)
 
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
@@ -215,7 +212,7 @@ class BaseTagProcessor:
         diff_fields = []
         for field in tag_holder.taggable_fields():
             if field == 'art':
-                if tag_holder.has_artwork != self.handler.tag_holder.has_artwork:
+                if tag_holder.has_artwork or self.handler.tag_holder.has_artwork:
                     diff_fields.append(field)
             else:
                 current_val = getattr(self.handler.tag_holder, field)

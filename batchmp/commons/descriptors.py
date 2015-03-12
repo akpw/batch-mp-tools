@@ -12,7 +12,8 @@
 
 """ Properties Descriptor Types
 """
-from weakref import WeakKeyDictionary
+from types import MethodType
+from weakref import WeakKeyDictionary, WeakMethod
 from importlib import import_module
 
 class PropertyDescriptor:
@@ -72,4 +73,19 @@ class LazyFunctionPropertyDescriptor:
             value = self._func(instance)
             instance.__dict__[self._func.__name__] = value
         return value
+
+
+class WeakMethodPropertyDescriptor(PropertyDescriptor):
+    def __get__(self, instance, type=None):
+        value = self.data.get(instance)
+        if value:
+            return value()
+        else:
+            return None
+
+    def __set__(self, instance, value):
+        if type(value) is MethodType:
+            self.data[instance] = WeakMethod(value)
+        else:
+            self.data[instance] = None
 

@@ -18,7 +18,10 @@ from weakref import WeakMethod
 from types import MethodType
 from itertools import chain
 from string import Template
-from batchmp.commons.descriptors import PropertyDescriptor, LazyFunctionPropertyDescriptor
+from batchmp.commons.descriptors import (
+        PropertyDescriptor,
+        LazyFunctionPropertyDescriptor,
+        WeakMethodPropertyDescriptor)
 
 # Tag Field Descriptors
 class TaggableMediaFieldDescriptor(PropertyDescriptor):
@@ -69,23 +72,7 @@ class TagHolder:
     format = NonTaggableMediaFieldDescriptor()
 
     filepath = PropertyDescriptor()
-
-    def __init__(self):
-        self._deferred_art_method_wref = None
-
-    # Art field supports deferred access
-    @property
-    def deferred_art_method(self):
-        if self._deferred_art_method_wref:
-            return self._deferred_art_method_wref()
-        else:
-            return None
-    @deferred_art_method.setter
-    def deferred_art_method(self, value):
-        if type(value) is MethodType:
-            self._deferred_art_method_wref = WeakMethod(value)
-        else:
-            self._deferred_art_method_wref = None
+    deferred_art_method = WeakMethodPropertyDescriptor()
 
     @property
     def has_artwork(self):
@@ -156,9 +143,14 @@ class TagHolder:
 
 
     # Internal Helpers
+    def _process_value(self, value):
+        pass
+
+
     def _expand_templates(self, value):
         template = Template(value)
         return template.safe_substitute(self._substitute_dictionary)
+
 
     @property
     def _substitute_dictionary(self):
