@@ -49,7 +49,7 @@ class ChainedHandler(metaclass = ABCMeta):
             ''' Evaluates the handler chain and select a suitable responder
             '''
             for idx, handler in enumerate(self._handlers_chain):
-                if type(handler) is ReferenceType:
+                if isinstance(handler, ReferenceType):
                     handler = handler()
                 if handler and handler._can_handle(request):
                     self._responder_idx = idx
@@ -62,7 +62,7 @@ class ChainedHandler(metaclass = ABCMeta):
             '''
             if self._responder_idx >= 0:
                 handler = self._handlers_chain[self._responder_idx]
-                if type(handler) is ReferenceType:
+                if isinstance(handler, ReferenceType):
                     handler = handler()
                 return handler
             else:

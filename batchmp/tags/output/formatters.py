@@ -21,148 +21,141 @@ from enum import Enum
 class OutputFormatType(Enum):
     COMPACT = 0
     FULL = 1
-    DIFF = 2
-
 
 class TagOutputFormatter:
     ''' Generates output for printing tags
     '''
-    COMPACT_FIELDS = ['title', 'album', 'artist', 'albumartist', 'genre', 'composer', 'year']
-    EXTENDED_FIELDS = ['encoder', 'bpm', 'comp', 'grouping', 'comments', 'lyrics']
+    COMPACT_FIELDS = ['title', 'album', 'artist', 'albumartist', 'genre', 'composer', 'year', 'track', 'tracktotal', 'disc', 'disctotal']
+    EXTENDED_FIELDS = ['encoder', 'bpm', 'comp', 'grouping', 'comments', 'lyrics', 'art']
 
     @staticmethod
     def tags_formatter(entry, *,
-                       format = None, handler = None, show_stats = True,
-                       tag_holder = None, tag_holder_gen = None, diff_fields = None,
-                       copy_empty_vals = False):
+                       format = None, handler = None, show_stats = False,
+                       tag_holder = None, tag_holder_gen = None, show_tag_holder_values = False):
 
         # check inputs
         if entry.type == DWalker.ENTRY_TYPE_DIR or entry.type == DWalker.ENTRY_TYPE_ROOT:
             return entry.basename
-
         if not handler or not handler.can_handle(entry.realpath):
             return None
 
-        if not format or (format not in OutputFormatType):
-            format = OutputFormatType.COMPACT
-
         if tag_holder_gen:
-            try:
-                th = next(tag_holder_gen)
-            except StopIteration as e:
-                pass
+            tag_holder = next(tag_holder_gen)
+
+        if not format or (format not in OutputFormatType):
+            if tag_holder:
+                format = OutputFormatType.FULL
             else:
-                tag_holder = th
+                format = OutputFormatType.COMPACT
 
+        diff_fields = None
         if tag_holder:
-            handler.tag_holder.copy_tags(tag_holder, copy_empty_vals = copy_empty_vals)
+            # figure out relevant fields
+            diff_fields = []
+            for field in tag_holder.taggable_fields():
+                value = getattr(tag_holder, field)
+                if (value is not None) or tag_holder.copy_empty_vals:
+                    #if getattr(handler.tag_holder, field) != value:
+                    diff_fields.append(field)
 
-        # dispatch call to requested formatter
+        # care for original values?
+        if (not tag_holder) or (not show_tag_holder_values):
+            tag_holder = handler.tag_holder
+        else:
+            # if looking for new values, need to process templates
+            if not tag_holder.process_templates:
+                handler.tag_holder.copy_tags(tag_holder)
+                tag_holder = handler.tag_holder
+
         if format == OutputFormatType.COMPACT:
-            return TagOutputFormatter._formatter(entry, handler, show_stats = show_stats)
+            return TagOutputFormatter._formatter(entry, tag_holder, show_stats = show_stats)
         elif format == OutputFormatType.FULL:
-            return TagOutputFormatter._formatter(entry, handler,
-                                                      show_extended = True, show_stats = show_stats)
-        elif format == OutputFormatType.DIFF:
-            return TagOutputFormatter._diff_formatter(entry, handler, diff_fields)
+            return TagOutputFormatter._formatter(entry, tag_holder, show_extended = True,
+                                                 show_stats = show_stats, diff_fields = diff_fields)
         else:
             return None
 
-    # Formatter methods
-    @staticmethod
-    def _formatter(entry, handler, show_extended = False, show_stats = False):
-        indent = entry.indent[:-3] + '\t'
-        media_str = ''
-
-        for field in TagOutputFormatter.COMPACT_FIELDS:
-            field_val = getattr(handler.tag_holder, field)
-            if field_val:
-                media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
-                                                      TagOutputFormatter._tag_display_name(field),
-                                                      field_val)
-        # Tracks / Discs
-        if handler.tag_holder.track or handler.tag_holder.tracktotal:
-            media_str = TagOutputFormatter._track_str(handler, indent, media_str)
-        if handler.tag_holder.disc or handler.tag_holder.disctotal:
-            media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
-
-        if show_extended:
-            for field in TagOutputFormatter.EXTENDED_FIELDS:
-                field_val = getattr(handler.tag_holder, field)
-                if field_val:
-                    media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
-                                                          TagOutputFormatter._tag_display_name(field),
-                                                          field_val)
-            if handler.tag_holder.has_artwork:
-                media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
-
-        # Stats
-        if show_stats:
-            media_str = TagOutputFormatter._stats_str(handler, indent, media_str)
-
-        return '{0}{1}'.format(entry.basename, media_str)
-
-
-    @staticmethod
-    def _diff_formatter(entry, handler, diff_fields):
-        indent = entry.indent[:-3] + '\t'
-        media_str = ''
-        track_set = disc_set = False
-        for field in diff_fields:
-            if field == 'art' and handler.tag_holder.has_artwork:
-                media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
-            elif field in ('disc', 'disctotal'):
-                if not disc_set:
-                    disc_set = True
-                    if handler.tag_holder.disc or handler.tag_holder.disctotal:
-                        media_str = TagOutputFormatter._disc_str(handler, indent, media_str)
-            elif field in ('track', 'tracktotal'):
-                if not track_set:
-                    track_set = True
-                    if handler.tag_holder.track or handler.tag_holder.tracktotal:
-                        media_str = TagOutputFormatter._track_str(handler, indent, media_str)
-            else:
-                field_val = getattr(handler.tag_holder, field)
-                if field_val:
-                    media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
-                                                          TagOutputFormatter._tag_display_name(field),
-                                                          field_val)
-        return '{0}{1}'.format(entry.basename, media_str)
-
     # Helpers
     @staticmethod
-    def _disc_str(handler, indent, media_str):
-        disc = handler.tag_holder.disc if handler.tag_holder.disc else '_'
-        if handler.tag_holder.disctotal:
-            disc_str = '{}/{}'.format(disc, handler.tag_holder.disctotal)
+    def _formatter(entry, tag_holder, show_extended = False, show_stats = False, diff_fields = None):
+        indent = entry.indent[:-3] + '\t'
+        media_str = ''
+
+        if diff_fields is not None:
+            compact_fields = [f for f in TagOutputFormatter.COMPACT_FIELDS if f in diff_fields]
+            extended_fields = [f for f in TagOutputFormatter.EXTENDED_FIELDS if f in diff_fields]
         else:
-            disc_str = handler.tag_holder.disc
+            compact_fields = TagOutputFormatter.COMPACT_FIELDS
+            extended_fields = TagOutputFormatter.EXTENDED_FIELDS
+
+        track_set = disc_set = False
+        for field in compact_fields:
+            field_val = getattr(tag_holder, field)
+            if field_val:
+                if field in ('disc', 'disctotal'):
+                    if not disc_set:
+                        disc_set = True
+                        if tag_holder.disc or tag_holder.disctotal:
+                            media_str = TagOutputFormatter._disc_str(tag_holder, indent, media_str)
+                elif field in ('track', 'tracktotal'):
+                    if not track_set:
+                        track_set = True
+                        if tag_holder.track or tag_holder.tracktotal:
+                            media_str = TagOutputFormatter._track_str(tag_holder, indent, media_str)
+                else:
+                    media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
+                                                      TagOutputFormatter._tag_display_name(field),
+                                                      field_val)
+        if show_extended:
+            for field in extended_fields:
+                field_val = getattr(tag_holder, field)
+                if field_val:
+                    if field == 'art':
+                        if tag_holder.has_artwork:
+                            media_str = '{0}\n{1}Artwork present'.format(media_str, indent)
+                    else:
+                        media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
+                                                          TagOutputFormatter._tag_display_name(field),
+                                                          field_val)
+        # Stats
+        if show_stats:
+            media_str = TagOutputFormatter._stats_str(tag_holder, indent, media_str)
+
+        return '{0}{1}'.format(entry.basename, media_str)
+
+    @staticmethod
+    def _disc_str(tag_holder, indent, media_str):
+        disc = tag_holder.disc if tag_holder.disc else '_'
+        if tag_holder.disctotal:
+            disc_str = '{}/{}'.format(disc, tag_holder.disctotal)
+        else:
+            disc_str = tag_holder.disc
         return '{0}\n{1}Disk: {2}'.format(media_str, indent, disc_str)
 
     @staticmethod
-    def _track_str(handler, indent, media_str, show_always = False):
-        track = handler.tag_holder.track if handler.tag_holder.track else '_'
-        if handler.tag_holder.tracktotal:
-            track_str = '{}/{}'.format(track, handler.tag_holder.tracktotal)
+    def _track_str(tag_holder, indent, media_str, show_always = False):
+        track = tag_holder.track if tag_holder.track else '_'
+        if tag_holder.tracktotal:
+            track_str = '{}/{}'.format(track, tag_holder.tracktotal)
         else:
-            track_str = handler.tag_holder.track
+            track_str = tag_holder.track
         return '{0}\n{1}Track: {2}'.format(media_str, indent, track_str)
 
     @staticmethod
-    def _stats_str(handler, indent, media_str):
-        if handler.tag_holder.format:
-            media_str = '{0}\n{1}Format: {2}'.format(media_str, indent, handler.tag_holder.format)
+    def _stats_str(tag_holder, indent, media_str):
+        if tag_holder.format:
+            media_str = '{0}\n{1}Format: {2}'.format(media_str, indent, tag_holder.format)
 
-        duration = datetime.timedelta(seconds = math.ceil(handler.tag_holder.length)) if handler.tag_holder.length else None
+        duration = datetime.timedelta(seconds = math.ceil(tag_holder.length)) if tag_holder.length else None
         duration = 'Duration: {}'.format(duration if duration else 'n/a')
 
-        bitrate = math.ceil(handler.tag_holder.bitrate / 1000) if handler.tag_holder.bitrate else None
+        bitrate = math.ceil(tag_holder.bitrate / 1000) if tag_holder.bitrate else None
         bitrate = 'Bit rate: {}'.format('{}kb/s'.format(bitrate) if bitrate else 'n/a')
 
-        samplerate = handler.tag_holder.samplerate if handler.tag_holder.samplerate else None
+        samplerate = tag_holder.samplerate if tag_holder.samplerate else None
         samplerate = 'Sample rate: {}'.format('{}Hz'.format(samplerate) if samplerate else 'n/a')
 
-        bitdepth = handler.tag_holder.bitdepth if handler.tag_holder.bitdepth else None
+        bitdepth = tag_holder.bitdepth if tag_holder.bitdepth else None
         bitdepth = 'Bit depth: {}'.format(bitdepth if bitdepth else 'n/a')
 
         return '{0}\n{1}{2}, {3}, {4}, {5}'.format(media_str, indent, duration,
@@ -206,4 +199,3 @@ class TagOutputFormatter:
             return 'Lyrics'
 
         return None
-

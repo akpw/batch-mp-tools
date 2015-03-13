@@ -62,8 +62,8 @@ class ConvertorTask(Task):
                 _, task_elapsed = run_cmd(p_in)
                 task_result.add_task_step_duration(task_elapsed)
             except CmdProcessingError as e:
-                task_result.add_task_step_info_msg('A problem while processing media file:\n\t{0}'
-                                                '\nOriginal error message:\n\t{1}'
+                task_result.add_task_step_info_msg('A problem while processing media file:\n\t{0}' \
+                                                   '\nOriginal error message:\n\t{1}' \
                                                         .format(self.fpath, e.args[0]))
             else:
                 # restore tags if needed

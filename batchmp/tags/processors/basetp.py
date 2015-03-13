@@ -13,7 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-import sys, os
+import sys, os, re
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
@@ -55,7 +55,7 @@ class BaseTagProcessor:
     def set_tags(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
-                            tag_holder = None, tag_holder_gen = None, copy_empty_vals = False):
+                            tag_holder = None, tag_holder_gen = None):
         ''' Set tags from tag_holder attributes
         '''
         if not tag_holder and not tag_holder_gen:
@@ -69,14 +69,9 @@ class BaseTagProcessor:
                                             filter_dirs = filter_dirs, filter_files = filter_files,
                                             pass_filter = pass_filter):
             if tag_holder_gen:
-                try:
-                    th = next(tag_holder_gen)
-                except StopIteration as e:
-                    pass
-                else:
-                    tag_holder = th
+                tag_holder = next(tag_holder_gen)
 
-            self.handler.copy_tags(tag_holder, copy_empty_vals = copy_empty_vals)
+            self.handler.copy_tags(tag_holder)
             self.handler.save()
             fcnt += 1
 
@@ -88,31 +83,29 @@ class BaseTagProcessor:
     def set_tags_visual(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
-                            tag_holder = None, copy_empty_vals = False):
+                            tag_holder = None, tag_holder_gen = None):
         ''' Set tags from tag_holder attributes
             Visualises changes before proceeding
         '''
-        if not tag_holder:
+        if not tag_holder and not tag_holder_gen:
             return
 
         if quiet:
             proceed = True
         else:
-            # diff fields
-            diff_fields = self._diff_fields(tag_holder)
-
             # visualise changes to tags and proceed if confirmed
             preformatter = partial(TagOutputFormatter.tags_formatter,
-                                            format = OutputFormatType.DIFF,
                                             handler = self.handler,
-                                            diff_fields = diff_fields,
-                                            show_stats = False)
+                                            show_stats = False,
+                                            tag_holder = tag_holder,
+                                            tag_holder_gen = tag_holder_gen() if tag_holder_gen else None)
 
             formatter = partial(TagOutputFormatter.tags_formatter,
-                                            format = OutputFormatType.DIFF,
-                                            handler = self.handler, diff_fields = diff_fields,
+                                            handler = self.handler,
                                             show_stats = False,
-                                            tag_holder = tag_holder, copy_empty_vals = copy_empty_vals)
+                                            tag_holder = tag_holder,
+                                            tag_holder_gen = tag_holder_gen() if tag_holder_gen else None,
+                                            show_tag_holder_values = True)
 
             proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
                                             sort = sort,
@@ -125,37 +118,11 @@ class BaseTagProcessor:
             self.set_tags(src_dir,
                     sort = sort,
                     end_level = end_level,
-                    include = include, exclude = exclude,
+                    include = include, exclude = exclude, quiet = quiet,
                     filter_dirs = filter_dirs, filter_files = filter_files,
-                    tag_holder = tag_holder, quiet = quiet, copy_empty_vals = copy_empty_vals)
+                    tag_holder = tag_holder,
+                    tag_holder_gen = tag_holder_gen() if tag_holder_gen else None)
 
-
-
-    def remove_tags(self, src_dir, *, end_level = sys.maxsize,
-                        include = '*', exclude = '', sort = 'n',
-                        filter_dirs = True, filter_files = True, quiet = False):
-        ''' Removes all metadata info (including artwork) from selected media files
-            Visualises changes before proceeding
-        '''
-        self.set_tags_visual(src_dir, end_level = end_level,
-                        include = include, exclude = exclude, sort = sort,
-                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
-                        tag_holder = TagHolder(), copy_empty_vals = True)
-
-
-    def copy_tags(self, src_dir, *, end_level = sys.maxsize,
-                        include = '*', exclude = '', sort = 'n',
-                        filter_dirs = True, filter_files = True, quiet = False,
-                        tag_holder_path):
-        ''' Copies metadata (including artwork) from a tag_holder file
-            then applies it to all selected media files
-            Visualises changes before proceeding
-        '''
-        if self.handler.can_handle(tag_holder_path):
-            self.set_tags_visual(src_dir, end_level = end_level,
-                        include = include, exclude = exclude, sort = sort,
-                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
-                        tag_holder = self.handler.tag_holder)
 
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
@@ -180,45 +147,72 @@ class BaseTagProcessor:
                 tag_holder.tracktotal = tracks_total
                 yield tag_holder
 
-        diff_fields = ['track', 'tracktotal']
-        preformatter = partial(TagOutputFormatter.tags_formatter,
-                                        format = OutputFormatType.DIFF,
-                                        handler = self.handler, diff_fields = diff_fields,
-                                        show_stats = False)
+        self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude, sort = sort,
+                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
+                        tag_holder_gen = tag_holder_gen)
 
-        formatter = partial(TagOutputFormatter.tags_formatter,
-                                        format = OutputFormatType.DIFF,
-                                        handler = self.handler, diff_fields = diff_fields,
-                                        show_stats = False,
-                                        tag_holder_gen = tag_holder_gen())
 
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                    sort = sort,
-                    orig_end_level = end_level, target_end_level = end_level,
-                    include = include, exclude = exclude,
-                    filter_dirs = filter_dirs, filter_files = filter_files,
-                    preformatter = preformatter,
-                    formatter = formatter)
+    def remove_tags(self, src_dir, *, end_level = sys.maxsize,
+                        include = '*', exclude = '', sort = 'n',
+                        filter_dirs = True, filter_files = True, quiet = False):
+        ''' Removes all metadata info (including artwork) from selected media files
+            Visualises changes before proceeding
+        '''
+        self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude, sort = sort,
+                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
+                        tag_holder = TagHolder(copy_empty_vals = True))
 
-        if proceed:
-            self.set_tags(src_dir,
-                    end_level = end_level,
-                    include = include, exclude = exclude,
-                    filter_dirs = filter_dirs, filter_files = filter_files,
-                    tag_holder_gen = tag_holder_gen(), quiet = quiet)
 
-    # Helper methods
-    def _diff_fields(self, tag_holder):
-        diff_fields = []
-        for field in tag_holder.taggable_fields():
-            if field == 'art':
-                if tag_holder.has_artwork or self.handler.tag_holder.has_artwork:
-                    diff_fields.append(field)
-            else:
-                current_val = getattr(self.handler.tag_holder, field)
-                new_val = getattr(tag_holder, field)
-                if current_val != new_val:
-                    diff_fields.append(field)
-        return diff_fields
+    def copy_tags(self, src_dir, *, end_level = sys.maxsize,
+                        include = '*', exclude = '', sort = 'n',
+                        filter_dirs = True, filter_files = True, quiet = False,
+                        tag_holder_path):
+        ''' Copies metadata (including artwork) from a tag_holder file
+            then applies it to all selected media files
+            Visualises changes before proceeding
+        '''
+        if self.handler.can_handle(tag_holder_path):
+            self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude, sort = sort,
+                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
+                        tag_holder = self.handler.tag_holder)
+
+
+    def replace_tag(self, src_dir, *, end_level = sys.maxsize,
+                    include = '*', exclude = '', sort = 'n',
+                    filter_dirs = True, filter_files = True, quiet = False,
+                    tag_field = None, ignore_case = False, find_str = None, replace_str = None):
+        ''' RegExp-based replace in specified fields
+            Visualises changes before proceeding
+        '''
+
+        if not (tag_field and find_str):
+            return
+
+        flags = re.UNICODE
+        if ignore_case:
+            flags = flags | re.IGNORECASE
+        p = re.compile(find_str, flags)
+
+        def replace_transform(value):
+            match = p.search(value)
+            if match:
+                if replace_str is not None:
+                    value = p.sub(replace_str, value)
+                else:
+                    value = match.group()
+            return value
+
+        tag_holder = TagHolder(process_templates = False)
+        setattr(tag_holder, tag_field, '${}'.format(tag_field))
+        tag_holder.template_processor_method = replace_transform
+
+        self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude, sort = sort,
+                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
+                        tag_holder = tag_holder)
+
 
 

@@ -12,9 +12,9 @@
 
 """ Properties Descriptor Types
 """
-from types import MethodType
-from weakref import WeakKeyDictionary, WeakMethod
 from importlib import import_module
+from types import MethodType, FunctionType
+from weakref import WeakKeyDictionary, WeakMethod
 
 class PropertyDescriptor:
     ''' Base Property Descriptor
@@ -33,7 +33,7 @@ class PropertyDescriptor:
             del self.data[instance]
 
 class LazyTypedPropertyDescriptor(PropertyDescriptor):
-    ''' Dynamically instantiates property of a given type
+    ''' Dynamically instantiates property of a given custom type
         Example:
           tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
     '''
@@ -42,11 +42,18 @@ class LazyTypedPropertyDescriptor(PropertyDescriptor):
         self._pt_cpath = property_type_classpath
 
     def __get__(self, instance, type=None):
-        value = self.data.get(instance)
+        value = super().__get__(instance, type = type)
         if not value:
             value = self.__load_lazy_property_class()
-            self.data[instance] = value
+            self.__set__(instance, value)
         return value
+
+    def __set__(self, instance, value):
+        classpath = '.'.join((value.__module__, value.__class__.__name__))
+        if classpath == self._pt_cpath:
+            super().__set__(instance, value)
+        else:
+            raise TypeError("Type error: {0} is not {1}".format(classpath, self._pt_cpath))
 
     # Helpers
     def __load_lazy_property_class(self):
@@ -58,14 +65,16 @@ class LazyTypedPropertyDescriptor(PropertyDescriptor):
 
 
 class LazyFunctionPropertyDescriptor:
+    ''' Provides lazy property access on the class level
+    '''
     def __init__(self, func):
         self._func = func
     def __get__(self, instance, type=None):
         if instance is None:
             return self
-        # this method should only be called when
+        # this method will only be called when
         # the property has not yet been set on the instance level
-        # so checking the instance dictionary here is probably a bit superfluous...
+        # so checking the instance dictionary here is mostly for the sake of good manners...
         value = instance.__dict__.get(self._func.__name__)
         if not value:
             # the property has not been set yet
@@ -75,17 +84,39 @@ class LazyFunctionPropertyDescriptor:
         return value
 
 
+class FunctionPropertyDescriptor(PropertyDescriptor):
+    def __set__(self, instance, value):
+        if (value is None) or isinstance(value, FunctionType):
+            super().__set__(instance, value)
+        else:
+            raise TypeError("Not a Function Type: {}".format(value))
+
+
 class WeakMethodPropertyDescriptor(PropertyDescriptor):
     def __get__(self, instance, type=None):
-        value = self.data.get(instance)
+        value = super().__get__(instance, type = type)
         if value:
             return value()
         else:
             return None
 
     def __set__(self, instance, value):
-        if type(value) is MethodType:
-            self.data[instance] = WeakMethod(value)
+        if isinstance(value, MethodType):
+            super().__set__(instance, WeakMethod(value))
         else:
-            self.data[instance] = None
+            raise TypeError("Not a Method Type: {}".format(value))
+
+
+class BooleanPropertyDescriptor(PropertyDescriptor):
+    def __set__(self, instance, value):
+        if isinstance(value, bool):
+            super().__set__(instance, value)
+        else:
+            raise TypeError("Not a Boolean Type: {}".format(value))
+
+
+
+
+
+
 

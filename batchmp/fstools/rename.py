@@ -252,7 +252,7 @@ class Renamer(object):
             flags = flags | re.IGNORECASE
         p = re.compile(find_str, flags)
 
-        def add_replace_transform(entry):
+        def replace_transform(entry):
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
                 return entry.basename
             if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
@@ -263,7 +263,7 @@ class Renamer(object):
             match = p.search(entry.basename)
             if match:
                 name_base, name_ext = os.path.splitext(entry.basename)
-                if replace_str:
+                if replace_str is not None:
                     name_base = p.sub(replace_str, name_base)
                 else:
                     name_base = match.group()
@@ -276,11 +276,11 @@ class Renamer(object):
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_replace_transform)
+                                    formatter = replace_transform)
         if proceed:
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_replace_transform, quiet = quiet)
+                                    formatter = replace_transform, quiet = quiet)
 
 

@@ -60,11 +60,10 @@ class RenameArgParser(BMPBaseArgParser):
     @staticmethod
     def parse_commands(parser):
         # Commands
-        subparsers = parser.add_subparsers(help = 'Renamer commands',
-                                            dest='sub_cmd', title = 'Renamer Commands')
+        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'Renamer Commands')
 
         # Print
-        print_parser = subparsers.add_parser('print', help = 'Print source directory')
+        print_parser = subparsers.add_parser('print', description = 'Print source directory')
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
                 help = 'Initial nested level for printing (0, i.e. root source directory by default)',
                 type = int,
@@ -75,7 +74,7 @@ class RenameArgParser(BMPBaseArgParser):
 
         # Flatten
         flatten_parser = subparsers.add_parser('flatten',
-                help = 'Flatten all folders below target level, moving the files up the target level. \
+                description = 'Flatten all folders below target level, moving the files up the target level. \
                                                   By default, all empty flattened folders will be deleted.')
         flatten_parser.add_argument('-tl', '--targetlevel', dest='target_level',
                 help = 'Target level below which all folders will be flattened (a reasonably large number by default :)',
@@ -91,7 +90,7 @@ class RenameArgParser(BMPBaseArgParser):
                 default = 'na')
 
         # Add index
-        add_index_parser = subparsers.add_parser('index', help = 'Adds index to files and directories')
+        add_index_parser = subparsers.add_parser('index', description = 'Adds index to files and directories')
         add_index_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                 help = 'Add index as prefix to names',
                 action = 'store_true')
@@ -116,7 +115,7 @@ class RenameArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Add Date
-        add_date_parser = subparsers.add_parser('date', help = 'Adds date to files and directories')
+        add_date_parser = subparsers.add_parser('date', description = 'Adds date to files and directories')
         add_date_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                 help = 'Add date as prefix to names',
                 action = 'store_true')
@@ -137,7 +136,7 @@ class RenameArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Add Text
-        add_text_parser = subparsers.add_parser('text', help = 'Adds text to files and directories')
+        add_text_parser = subparsers.add_parser('text', description = 'Adds text to files and directories')
         add_text_parser.add_argument('-ap', '--asprefix', dest='as_prefix',
                 help = 'Add text as prefix to names',
                 action = 'store_true')
@@ -158,7 +157,7 @@ class RenameArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Remove chars
-        remove_chars_parser = subparsers.add_parser('remove', help = 'Removes n characters from files and directories')
+        remove_chars_parser = subparsers.add_parser('remove', description = 'Removes n characters from files and directories')
         remove_chars_parser.add_argument('-nc', '--numchars', dest='num_chars',
                 help = "Number of characters to remove (0 by default)",
                 type = int,
@@ -175,20 +174,20 @@ class RenameArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Replace
-        add_text_parser = subparsers.add_parser('replace', help = 'RegExp-based replace in files and directories')
-        add_text_parser.add_argument('-fs', '--findstring', dest='find_str',
+        replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in files and directories')
+        replace_parser.add_argument('-fs', '--findstring', dest='find_str',
                 help = "Find pattern to look for",
                 type = str,
                 required=True)
-        add_text_parser.add_argument('-rs', '--replacestring', dest='replace_str',
+        replace_parser.add_argument('-rs', '--replacestring', dest='replace_str',
                 help = "Replace pattern to replace with.\
                         If not specified and there is a match from the find pattern, \
                         the entire string will be replaced with that match",
                 type = str)
-        add_text_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
+        replace_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
-        include_mode_group = add_text_parser.add_argument_group('Include for processing')
+        include_mode_group = replace_parser.add_argument_group('Include for processing')
         include_mode_group.add_argument("-id", "--includedirs", dest = "include_dirs",
                 help = "Include directories from rename processing",
                 action = 'store_true')

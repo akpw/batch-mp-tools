@@ -14,13 +14,12 @@
 ## limitations under the License.
 
 import os
-from weakref import WeakMethod
-from types import MethodType
-from itertools import chain
 from string import Template
 from batchmp.commons.descriptors import (
         PropertyDescriptor,
         LazyFunctionPropertyDescriptor,
+        FunctionPropertyDescriptor,
+        BooleanPropertyDescriptor,
         WeakMethodPropertyDescriptor)
 
 # Tag Field Descriptors
@@ -30,8 +29,8 @@ class TaggableMediaFieldDescriptor(PropertyDescriptor):
 class ExpandableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
     def __set__(self, instance, value):
         if value:
-            value = instance._expand_templates(value)
-        self.data[instance] = value
+            value = instance._process_value(value)
+        super().__set__(instance, value)
 
 class NonTaggableMediaFieldDescriptor(PropertyDescriptor):
     pass
@@ -71,8 +70,15 @@ class TagHolder:
     bitdepth = NonTaggableMediaFieldDescriptor()
     format = NonTaggableMediaFieldDescriptor()
 
-    filepath = PropertyDescriptor()
     deferred_art_method = WeakMethodPropertyDescriptor()
+
+    filepath = PropertyDescriptor()
+    template_processor_method = FunctionPropertyDescriptor()
+
+    def __init__(self, copy_empty_vals = False, copy_non_taggable = False, process_templates = True):
+        self.copy_empty_vals = copy_empty_vals
+        self.copy_non_taggable = copy_non_taggable
+        self.process_templates = process_templates
 
     @property
     def has_artwork(self):
@@ -115,20 +121,24 @@ class TagHolder:
 
     @classmethod
     def fields(cls):
-        for field in chain(cls.taggable_fields, cls.non_taggable_fields):
-            yield field
+        yield from cls.taggable_fields
+        yield from cls.non_taggable_fields
 
-    def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
+    def copy_tags(self, tag_holder = None):
             ''' copies tags from passed tag_holder object
             '''
             if not tag_holder:
                 return
-            fields = self.fields if copy_non_taggable else self.taggable_fields
+
+            fields = self.fields if tag_holder.copy_non_taggable else self.taggable_fields
+
+            if tag_holder.template_processor_method:
+                self.template_processor_method = tag_holder.template_processor_method
+
             for field in fields():
-                if hasattr(tag_holder, field):
-                    value = getattr(tag_holder, field)
-                    if value or copy_empty_vals:
-                        setattr(self, field, value)
+                value = getattr(tag_holder, field)
+                if (value is not None) or tag_holder.copy_empty_vals:
+                    setattr(self, field, value)
 
     def clear_tags(self, reset_art = False):
         ''' clears writable tags values
@@ -139,69 +149,53 @@ class TagHolder:
                 del self.art
 
     def reset_tags(self):
+        self.template_processor_method = None
+        self.filepath = None
         self.clear_tags(reset_art = True)
 
 
     # Internal Helpers
     def _process_value(self, value):
-        pass
+        if not self.process_templates:
+            return value
 
+        if self.template_processor_method:
+            return (self.template_processor_method(self._expand_templates(value)))
+        else:
+            return self._expand_templates(value)
 
     def _expand_templates(self, value):
         template = Template(value)
         return template.safe_substitute(self._substitute_dictionary)
 
-
     @property
     def _substitute_dictionary(self):
         sd = {}
-        if self.title:
-            sd['title'] = self.title
-        if self.album:
-            sd['album'] = self.album
-        if self.artist:
-            sd['artist'] = self.artist
-        if self.albumartist:
-            sd['albumartist'] = self.albumartist
-        if self.genre:
-            sd['genre'] = self.genre
-        if self.composer:
-            sd['composer'] = self.composer
-        if self.track:
-            sd['track'] = self.track
-        if self.tracktotal:
-            sd['tracktotal'] = self.tracktotal
-        if self.disc:
-            sd['disc'] = self.disc
-        if self.disctotal:
-            sd['disctotal'] = self.disctotal
-        if self.year:
-            sd['year'] = self.year
-        if self.encoder:
-            sd['encoder'] = self.encoder
-        if self.bpm:
-            sd['bpm'] = self.bpm
-        if self.comp:
-            sd['compilaton'] = self.comp
-        if self.grouping:
-            sd['grouping'] = self.grouping
-        if self.comments:
-            sd['comments'] = self.comments
-        if self.lyrics:
-            sd['lyrics'] = self.lyrics
-        if self.length:
-            sd['length'] = self.length
-        if self.bitrate:
-            sd['bitrate'] = self.bitrate
-        if self.samplerate:
-            sd['samplerate'] = self.samplerate
-        if self.channels:
-            sd['channels'] = self.channels
-        if self.bitdepth:
-            sd['bitdepth'] = self.bitdepth
-        if self.format:
-            sd['format'] = self.format
-        if self.filepath:
-            sd['filename'] = os.path.splitext(os.path.basename(self.filepath))[0]
+        sd['title'] = self.title if self.title else ''
+        sd['album'] = self.album if self.album else ''
+        sd['artist'] = self.artist if self.artist else ''
+        sd['albumartist'] = self.albumartist if self.albumartist else ''
+        sd['genre'] = self.genre if self.genre else ''
+        sd['composer'] = self.composer if self.composer else ''
+        sd['track'] = self.track if self.track else ''
+        sd['tracktotal'] = self.tracktotal if self.tracktotal else ''
+        sd['disc'] = self.disc if self.disc else ''
+        sd['disctotal'] = self.disctotal if self.disctotal else ''
+        sd['year'] = self.year if self.year else ''
+        sd['encoder'] = self.encoder if self.encoder else ''
+        sd['bpm'] = self.bpm if self.bpm else ''
+        sd['compilaton'] = self.comp if self.comp else ''
+        sd['grouping'] = self.grouping if self.grouping else ''
+        sd['comments'] = self.comments if self.comments else ''
+        sd['lyrics'] = self.lyrics if self.lyrics else ''
+        sd['length'] = self.length if self.length else ''
+        sd['bitrate'] = self.bitrate if self.bitrate else ''
+        sd['samplerate'] = self.samplerate if self.samplerate else ''
+        sd['channels'] = self.channels if self.channels else ''
+        sd['bitdepth'] = self.bitdepth if self.bitdepth else ''
+        sd['format'] = self.format if self.format else ''
+
+        sd['filename'] = os.path.splitext(os.path.basename(self.filepath))[0] if self.filepath else ''
+
         return sd
 

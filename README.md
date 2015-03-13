@@ -12,7 +12,7 @@ A rainy-weekends project under occasional development :)
 
 
 ##Requirements
-- [Python 3.x](https://www.python.org/download/releases/3.4.1/)
+- [Python 3.4.x](https://www.python.org/download/releases/3.4.1/)
 
 
 ##Install

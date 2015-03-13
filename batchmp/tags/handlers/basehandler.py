@@ -63,12 +63,10 @@ class TagHandler(ChainedHandler):
         self._media_handler = None
         self.tag_holder.reset_tags()
 
-    def copy_tags(self, tag_holder = None, copy_non_taggable = False, copy_empty_vals = False):
+    def copy_tags(self, tag_holder = None):
         ''' copies tags from a tag_holder
         '''
-        self.tag_holder.copy_tags(tag_holder = tag_holder,
-                                  copy_non_taggable = copy_non_taggable,
-                                  copy_empty_vals = copy_empty_vals)
+        self.tag_holder.copy_tags(tag_holder = tag_holder)
 
     def clear_tags(self):
         ''' clear tags values

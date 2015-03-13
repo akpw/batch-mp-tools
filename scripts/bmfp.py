@@ -79,11 +79,10 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
         # Commands
-        subparsers = parser.add_subparsers(help = 'BMFP commands',
-                                            dest='sub_cmd', title = 'BMFP Commands')
+        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'BMFP Commands')
 
         # Convert
-        convert_parser = subparsers.add_parser('convert', help = 'Converts media to specified format')
+        convert_parser = subparsers.add_parser('convert', description = 'Converts media to specified format')
         convert_parser.add_argument('-tf', '--target-format', dest='target_format',
                 help = 'Target format file extension, e.g. mp3 / m4a / mp4 / mov /...',
                 type = str,
@@ -102,7 +101,7 @@ class BMFPArgParser(BMPBaseArgParser):
                 action='store_true')
 
         # Denoise
-        denoise_parser = subparsers.add_parser('denoise', help = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies')
+        denoise_parser = subparsers.add_parser('denoise', description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies')
         denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
                 help = 'Applies filters in multiple passes',
                 type = int,
@@ -118,7 +117,7 @@ class BMFPArgParser(BMPBaseArgParser):
                     default = 3000)
 
         # Fragment
-        fragment_parser = subparsers.add_parser('fragment', help = 'Extracts a fragment via specified start time & duration')
+        fragment_parser = subparsers.add_parser('fragment', description = 'Extracts a fragment via specified start time & duration')
         group = fragment_parser.add_argument_group('Fragment parameters')
         group.add_argument('-s', '--starttime', dest='fragment_starttime',
                 help = 'Fragment start time, in seconds or in the "hh:mm:ss[.xxx]" format',
@@ -133,7 +132,7 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
         # Segment
-        segment_parser = subparsers.add_parser('segment', help = 'Segments media by specified maximum duration or file size')
+        segment_parser = subparsers.add_parser('segment', description = 'Segments media by specified maximum duration or file size')
         segment_group = segment_parser.add_mutually_exclusive_group()
         segment_group.add_argument('-fs', '--filesize', dest='segment_filesize',
                 help = 'Maximum media file size in MB',

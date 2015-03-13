@@ -39,12 +39,11 @@ from functools import partial
                           e.g.  <tagger set --title 'The Title, part $track of $tracktotal'>
                           to specify a template value, use the long tag name preceded by $:
                                 <tagger set --album 'The Album, ($format)'>, ...
+                          In addition to tag fields names, $filename template is also supported
           .. copy       Copies tags from a specified media file
-          .. remove     Remove all tags
+          .. remove     Remove all tags from media files
           .. index      Index Track / Track Total tags
-          .. add        TBD: add characters in tags (title, artist, ...)
-          .. remove     TBD: remove characters in tags (title, artist, ...)
-          .. replace    TBD: regexp-based replace in tags (title, artist, ...)
+          .. replace    regexp-based replace in tags (title, artist, ...)
           .. extract    TBD: extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
@@ -66,12 +65,14 @@ from functools import partial
 """
 
 class TaggerArgParser(BMPBaseArgParser):
+    SUPPORTED_REPLACE_FIELDS = ['title', 'album', 'artist', 'albumartist', 'composer', 'comments', 'lyrics']
+
     @staticmethod
     def parse_commands(parser):
-        subparsers = parser.add_subparsers(help = 'Tagger commands',
-                                            dest='sub_cmd', title = 'Tagger Commands')
+        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'Tagger Commands')
+
         # Print
-        print_parser = subparsers.add_parser('print', help = 'Print source directory')
+        print_parser = subparsers.add_parser('print', description = 'Print source directory')
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
                 help = 'Initial nested level for printing (0, i.e. root source directory by default)',
                 type = int,
@@ -87,7 +88,11 @@ class TaggerArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Set Tags
-        set_tags_parser = subparsers.add_parser('set', help = 'Sets specified tags in media files')
+        set_tags_parser = subparsers.add_parser('set', description = 'Sets specified tags in media files. ' \
+                                                   'Supports templates, such as $filename, $title, $album, ... ' \
+                                                   'Example: <tagger set --title "$filename, part $track of $tracktotal">' \
+                                                   ' will set the title in media files to their respective filename, ' \
+                                                   'followed by "part" and the values of respective tracks / tracktotal')
         set_tags_parser.add_argument('-ti', '--title', dest='title',
                 help = "Sets the Title tag",
                 type = str)
@@ -108,19 +113,19 @@ class TaggerArgParser(BMPBaseArgParser):
                 type = str)
         set_tags_parser.add_argument('-tr', '--track', dest='track',
                 help = "Sets the Track tag",
-                type = str)
+                type = int)
         set_tags_parser.add_argument('-tt', '--tracktotal', dest='tracktotal',
                 help = 'Set the Track Total tag for selected media files',
-                type = str)
+                type = int)
         set_tags_parser.add_argument('-d', '--disc', dest='disc',
                 help = "Sets the Disc tag",
-                type = str)
+                type = int)
         set_tags_parser.add_argument('-dt', '--disctotal', dest='disctotal',
                 help = "Sets the Disctotal tag",
-                type = str)
+                type = int)
         set_tags_parser.add_argument('-y', '--year', dest='year',
                 help = "Sets the Year tag",
-                type = str)
+                type = int)
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
@@ -142,21 +147,40 @@ class TaggerArgParser(BMPBaseArgParser):
                 type = str)
 
          # Copy Tags
-        copy_tags_parser = subparsers.add_parser('copy', help = 'Copies tags from a specified media file')
+        copy_tags_parser = subparsers.add_parser('copy', description = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
 
          # Remove Tags
-        copy_tags_parser = subparsers.add_parser('remove', help = 'Removes all tags')
+        copy_tags_parser = subparsers.add_parser('remove', description = 'Remove all tags from media files')
 
         # Index
-        index_parser = subparsers.add_parser('index',
-                                            help = 'Index Tracks for selected media files')
+        index_parser = subparsers.add_parser('index', description = 'Index Tracks for selected media files')
         print_parser.add_argument('-sf', '--startfrom', dest='start_from',
                 help = 'A number from which the indexing starts (1 by default)',
                 type = int,
                 default = 1)
+
+         # Replace Tags
+        replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in specified tag fields')
+        replace_parser.add_argument('-tf', '--tag-field', dest='tag_field',
+                help = "A tag field in which to replace. " \
+                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)),
+                type = str,
+                required=True)
+        replace_parser.add_argument('-fs', '--find-string', dest='find_str',
+                help = "Find pattern to look for",
+                type = str,
+                required=True)
+        replace_parser.add_argument('-rs', '--replace-string', dest='replace_str',
+                help = "Replace pattern to replace with."\
+                        "If not specified and there is a match from the find pattern," \
+                        "the entire string will be replaced with that match",
+                type = str)
+        replace_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
+                help = 'Case insensitive',
+                action = 'store_true')
 
 
     @staticmethod
@@ -169,6 +193,12 @@ class TaggerArgParser(BMPBaseArgParser):
             args['show_size'] = False
             args['show_stats'] = False
             args['full_format'] = False
+
+        if args['sub_cmd'] == 'replace':
+            if args['tag_field'] not in TaggerArgParser.SUPPORTED_REPLACE_FIELDS:
+                parser.error('tagger replace: the field "{0}" is not supported\n\t' \
+                             'Supported tag fields: {1}'.format(
+                                    args['tag_field'], ', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)))
 
 
 class TagsDispatcher:
@@ -211,18 +241,15 @@ class TagsDispatcher:
         if art:
             tag_holder.art = art
 
-        BaseTagProcessor().set_tags_visual(args['dir'],
-                sort = args['sort'],
+        BaseTagProcessor().set_tags_visual(args['dir'], sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 tag_holder = tag_holder, quiet = args['quiet'])
 
-
     @staticmethod
     def copy_tags(args):
-        BaseTagProcessor().copy_tags(src_dir = args['dir'],
-                sort = args['sort'],
+        BaseTagProcessor().copy_tags(src_dir = args['dir'], sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
@@ -230,19 +257,26 @@ class TagsDispatcher:
 
     @staticmethod
     def remove_tags(args):
-        BaseTagProcessor().remove_tags(src_dir = args['dir'],
-                sort = args['sort'],
+        BaseTagProcessor().remove_tags(src_dir = args['dir'], sort = args['sort'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
 
     @staticmethod
     def index(args):
-        BaseTagProcessor().index(src_dir = args['dir'],
-                sort = args['sort'],
+        BaseTagProcessor().index(src_dir = args['dir'], sort = args['sort'],
                 end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
+                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
+
+    @staticmethod
+    def replace_tags(args):
+        BaseTagProcessor().replace_tag(args['dir'], sort = args['sort'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                tag_field = args['tag_field'], ignore_case = args['ignore_case'],
+                find_str = args['find_str'], replace_str = args['replace_str'])
 
     @staticmethod
     def dispatch():
@@ -257,6 +291,8 @@ class TagsDispatcher:
             TagsDispatcher.copy_tags(args)
         elif args['sub_cmd'] == 'remove':
             TagsDispatcher.remove_tags(args)
+        elif args['sub_cmd'] == 'replace':
+            TagsDispatcher.replace_tags(args)
 
 
 def main():
