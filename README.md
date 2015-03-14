@@ -123,6 +123,8 @@ A rainy-weekends project under occasional development :)
       . action commands:
           .. convert        Converts media to specified format
           .. segment        Splits media files into segments
+                                For example, to split media files in segments of 45 mins:
+                                    $ bmfp segment -d 45:00
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed

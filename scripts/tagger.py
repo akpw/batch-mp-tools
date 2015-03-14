@@ -34,7 +34,7 @@ from functools import partial
       . visualises original / targeted files metadata structure
       . action commands:
           .. print      Prints media info
-          .. set        Sets tags in media files, including artwork. e.g:
+          .. set        Sets tags in media files, including artwork, e.g:
                                 $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
                             Supports expandable templates. To specify a template value,
                             use the long tag name preceded by $:
@@ -45,7 +45,7 @@ from functools import partial
           .. remove     Removes all tags from media files
           .. index      Indexes Track / Track Total tags
           .. replace    RegExp-based replace in tags (title, artist, ...)
-                            e.g., to remove the first three charachters in title:
+                            e.g., to remove the first three characters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
           .. extract    TBD: extracts artwork
 
@@ -235,7 +235,7 @@ class TagsDispatcher:
 
         art, art_path = None, args['artwork']
         if art_path:
-            with open(os.path.realpath(art_path), 'rb') as f:
+            with open(art_path, 'rb') as f:
                 art = f.read()
         if art:
             tag_holder.art = art

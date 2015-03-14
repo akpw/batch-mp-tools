@@ -222,7 +222,7 @@ class DWalker(object):
 
             # yield current folder
             rpath = os.path.realpath(r)
-            basename = os.path.basename(r)
+            basename = os.path.basename(rpath)
             if current_level == 0:
                 # src dir goes in full and without indent
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_ROOT,
@@ -238,7 +238,7 @@ class DWalker(object):
 
             # files sort key
             if by_size:
-                sort_key = lambda fname: os.path.getsize(os.path.join(r,fname))
+                sort_key = lambda fname: os.path.getsize(os.path.join(rpath,fname))
             else:
                 sort_key = lambda fname: fname
 
@@ -251,7 +251,7 @@ class DWalker(object):
                 unique_fname = unique_fnames()
 
             for fname in sorted(fnames, key = sort_key, reverse = reversed):
-                fpath = os.path.realpath(os.path.join(r, fname))
+                fpath = os.path.join(rpath, fname)
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE, fname, fpath, siblings_indent)
                 if not flattening:
                     yield entry
@@ -264,7 +264,7 @@ class DWalker(object):
 
             # dirs
             for dname in sorted(dnames):
-                dpath = os.path.realpath(os.path.join(r, dname))
+                dpath = os.path.join(rpath, dname)
 
                 # check the current_level from root
                 if current_level == end_level:

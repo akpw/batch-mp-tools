@@ -28,6 +28,8 @@ from scripts.base.bmpbargp import BMPBaseArgParser
       . action commands:
           .. convert        Converts media to specified format
           .. segment        Splits media files into segments
+                                For example, to split media files in segments of 45 mins:
+                                    $ bmfp segment -d 45:00
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
@@ -142,6 +144,12 @@ class BMFPArgParser(BMPBaseArgParser):
                 help = 'Maximum media duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
                 default = timedelta(0))
+        segment_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
+                    help = "Reset timestamps at the begin of each segment, so that it "
+                            "starts with near-zero timestamps and therefore there are minimum pauses "
+                            "betweeen segments when played one after another. "
+                            "May not work well for some formats / combinations of muxers/codecs",
+                    action='store_true')
 
 
     @staticmethod
@@ -171,7 +179,6 @@ class BMFPArgParser(BMPBaseArgParser):
 class BMFPDispatcher:
     @staticmethod
     def convert(args):
-        print(args)
         Convertor().convert(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
@@ -211,7 +218,8 @@ class BMFPDispatcher:
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
-                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
+                ffmpeg_options = args['ffmpeg_options'], reset_timestamps = args['reset_timestamps'],
+                preserve_metadata = args['preserve_metadata'])
 
 
 

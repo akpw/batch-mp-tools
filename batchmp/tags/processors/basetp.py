@@ -174,10 +174,14 @@ class BaseTagProcessor:
             Visualises changes before proceeding
         '''
         if self.handler.can_handle(tag_holder_path):
+            tag_holder = TagHolder()
+            tag_holder.copy_tags(self.handler.tag_holder)
             self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude, sort = sort,
                         filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
-                        tag_holder = self.handler.tag_holder)
+                        tag_holder = tag_holder)
+        else:
+            print('Can not handle tags holder: {}'.format(tag_holder_path))
 
 
     def replace_tag(self, src_dir, *, end_level = sys.maxsize,

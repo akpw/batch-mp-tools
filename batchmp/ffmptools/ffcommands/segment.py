@@ -31,12 +31,13 @@ class SegmenterTask(Task):
     ''' A specific TasksProcessor task
     '''
     def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
-                                                    segment_size_MB, segment_length_secs):
+                                    reset_timestamps, segment_size_MB, segment_length_secs):
 
         super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
 
         self.segment_size_MB = segment_size_MB
         self.segment_length_secs = segment_length_secs
+        self.reset_timestamps = reset_timestamps
 
     def execute(self):
         ''' builds and runs FFmpeg command in a subprocess
@@ -66,7 +67,7 @@ class SegmenterTask(Task):
                             ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
                             ' -f segment',
                             ' -segment_time {}'.format(self.segment_length_secs),
-                            #' -reset_timestamps 1',
+                            ' -reset_timestamps 1' if self.reset_timestamps else '',
                             ' "{}"'.format(fpath_output)))
 
             # run ffmpeg command as a subprocess
@@ -116,7 +117,7 @@ class Segmenter(FFMPRunner):
                     end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
-                    ffmpeg_options = None, preserve_metadata = False):
+                    ffmpeg_options = None, reset_timestamps = False, preserve_metadata = False):
         ''' Segment media file by specified size | duration
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
@@ -126,7 +127,9 @@ class Segmenter(FFMPRunner):
                                         segment_size_MB = segment_size_MB,
                                         segment_length_secs = segment_length_secs,
                                         serial_exec = serial_exec, backup=backup,
-                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
+                                        ffmpeg_options = ffmpeg_options,
+                                        reset_timestamps = reset_timestamps,
+                                        preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -136,7 +139,7 @@ class Segmenter(FFMPRunner):
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
-                ffmpeg_options = None, preserve_metadata = False):
+                ffmpeg_options = None, reset_timestamps = False, preserve_metadata = False):
 
         ''' Perform segmentation by size | duration
         '''
@@ -165,7 +168,7 @@ class Segmenter(FFMPRunner):
 
             # build tasks
             tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
-                                segment_size_MB, segment_length_secs)
+                                reset_timestamps, segment_size_MB, segment_length_secs)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []
             for task_param in tasks_params:

@@ -30,7 +30,7 @@ class BMPBaseArgParser:
     def is_valid_dir_path(parser, path_arg):
         """ Checks if path_arg is a valid dir path
         """
-        path_arg = os.path.realpath(path_arg)
+        path_arg = os.path.realpath(os.path.expanduser(path_arg))
         if not (os.path.exists(path_arg) and os.path.isdir(path_arg)):
             parser.error('Please enter a valid source directory path'.format(path_arg))
         else:
@@ -40,7 +40,7 @@ class BMPBaseArgParser:
     def is_valid_file_path(parser, path_arg):
         """ Checks if path_arg is a valid file path
         """
-        path_arg = os.path.realpath(path_arg)
+        path_arg = os.path.realpath(os.path.expanduser(path_arg))
         if not (os.path.exists(path_arg) and os.path.isfile(path_arg)):
             parser.error('Please enter a valid file path'.format(path_arg))
         else:
@@ -64,14 +64,14 @@ class BMPBaseArgParser:
     def is_timedelta(parser, td_arg):
         hrs = mins = secs = None
         td = td_arg.split(':')
-        for i in range(len(td)):
-            tdd = td.pop(-1)
-            if not secs:
-                secs = float(tdd)
-            elif not mins:
-                mins = int(tdd)
-            elif not hrs:
-                hrs = int(tdd)
+        time_parts = range(len(td))
+        for i in time_parts:
+            if secs is None:
+                secs = float(td.pop(-1))
+            elif mins is None:
+                mins = int(td.pop(-1))
+            elif hrs is None:
+                hrs = int(td.pop(-1))
             else:
                 break
         return  datetime.timedelta(hours = hrs if hrs else 0,
