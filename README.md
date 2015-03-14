@@ -81,18 +81,20 @@ A rainy-weekends project under occasional development :)
       . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
       . action commands:
-          .. print      print media info
-          .. set        Set tags in media files,
-                        Supports expandable templates:
-                          e.g.  <tagger set --title 'The Title, part $track of $tracktotal'>
-                          to specify a template value, use the long tag name preceded by $:
-                                <tagger set --album 'The Album, ($format)'>, ...
+          .. print      Prints media info
+          .. set        Sets tags in media files, including artwork. e.g:
+                                $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
+                            Supports expandable templates. To specify a template value,
+                            use the long tag name preceded by $:
+                                $ tagger set --title '$title, $track of $tracktotal'
+                            In addition to tag fields templates, file names are also supported:
+                                $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Remove all tags
-          .. index      Index Track / Track Total tags
-          .. add        TBD: add characters in tags (title, artist, ...)
-          .. remove     TBD: remove characters in tags (title, artist, ...)
-          .. replace    TBD: regexp-based replace in tags (title, artist, ...)
+          .. remove     Removes all tags from media files
+          .. index      Indexes Track / Track Total tags
+          .. replace    RegExp-based replace in tags (title, artist, ...)
+                            e.g., to remove the first three charachters in title:
+                                $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
           .. extract    TBD: extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]

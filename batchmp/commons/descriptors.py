@@ -10,7 +10,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-""" Properties Descriptor Types
+""" Properties Descriptors Types
 """
 from importlib import import_module
 from types import MethodType, FunctionType
@@ -85,6 +85,8 @@ class LazyFunctionPropertyDescriptor:
 
 
 class FunctionPropertyDescriptor(PropertyDescriptor):
+    ''' A function type property descriptor
+    '''
     def __set__(self, instance, value):
         if (value is None) or isinstance(value, FunctionType):
             super().__set__(instance, value)
@@ -93,6 +95,9 @@ class FunctionPropertyDescriptor(PropertyDescriptor):
 
 
 class WeakMethodPropertyDescriptor(PropertyDescriptor):
+    ''' A bound method type property descriptor
+        Uses WeakMethod to prevent reference cycles
+    '''
     def __get__(self, instance, type=None):
         value = super().__get__(instance, type = type)
         if value:
@@ -108,6 +113,8 @@ class WeakMethodPropertyDescriptor(PropertyDescriptor):
 
 
 class BooleanPropertyDescriptor(PropertyDescriptor):
+    ''' A function type property descriptor
+    '''
     def __set__(self, instance, value):
         if isinstance(value, bool):
             super().__set__(instance, value)

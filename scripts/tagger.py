@@ -33,17 +33,20 @@ from functools import partial
       . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
       . action commands:
-          .. print      print media info
-          .. set        Set tags in media files,
-                        Supports expandable templates:
-                          e.g.  <tagger set --title 'The Title, part $track of $tracktotal'>
-                          to specify a template value, use the long tag name preceded by $:
-                                <tagger set --album 'The Album, ($format)'>, ...
-                          In addition to tag fields names, $filename template is also supported
+          .. print      Prints media info
+          .. set        Sets tags in media files, including artwork. e.g:
+                                $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
+                            Supports expandable templates. To specify a template value,
+                            use the long tag name preceded by $:
+                                $ tagger set --title '$title, $track of $tracktotal'
+                            In addition to tag fields templates, file names are also supported:
+                                $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Remove all tags from media files
-          .. index      Index Track / Track Total tags
-          .. replace    regexp-based replace in tags (title, artist, ...)
+          .. remove     Removes all tags from media files
+          .. index      Indexes Track / Track Total tags
+          .. replace    RegExp-based replace in tags (title, artist, ...)
+                            e.g., to remove the first three charachters in title:
+                                $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
           .. extract    TBD: extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
@@ -89,10 +92,7 @@ class TaggerArgParser(BMPBaseArgParser):
 
         # Set Tags
         set_tags_parser = subparsers.add_parser('set', description = 'Sets specified tags in media files. ' \
-                                                   'Supports templates, such as $filename, $title, $album, ... ' \
-                                                   'Example: <tagger set --title "$filename, part $track of $tracktotal">' \
-                                                   ' will set the title in media files to their respective filename, ' \
-                                                   'followed by "part" and the values of respective tracks / tracktotal')
+                                                   'Supports templates, such as $filename, $title, $album, ... ')
         set_tags_parser.add_argument('-ti', '--title', dest='title',
                 help = "Sets the Title tag",
                 type = str)
@@ -189,7 +189,6 @@ class TaggerArgParser(BMPBaseArgParser):
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
-            args['start_level'] = 0
             args['show_size'] = False
             args['show_stats'] = False
             args['full_format'] = False
@@ -216,7 +215,7 @@ class TagsDispatcher:
 
     @staticmethod
     def set_tags(args):
-        tag_holder = TagHolder()
+        tag_holder = TagHolder(process_templates = False)
         tag_holder.title = args['title']
         tag_holder.album = args['album']
         tag_holder.artist = args['artist']

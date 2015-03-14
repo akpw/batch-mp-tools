@@ -81,9 +81,9 @@ class DenoiserTask(Task):
                 try:
                     _, pass_elapsed = run_cmd(p_in)
                 except CmdProcessingError as e:
-                    task_result.add_task_step_info_msg('\nA problem while processing media file:\n\t{0}'
-                                  '\nSkipping further processing at pass {1} ...'
-                                  '\nOriginal error message:\n\t{2}'
+                    task_result.add_task_step_info_msg('\nA problem while processing media file:\n\t{0}' \
+                                  '\nSkipping further processing at pass {1} ...' \
+                                  '\nOriginal error message:\n\t{2}' \
                                   .format(fpath_input, pass_cnt + 1, e.args[0]))
                     break
                 else:

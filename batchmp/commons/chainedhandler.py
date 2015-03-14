@@ -18,9 +18,6 @@
     >>> handler = ConcreteHandler1() + ConcreteHandler2() + ...
     >>> if handler.can_handle(request):
         .... handler.operation()
-
-    Example:
-        batchmp.tags.handlers.basehandler.TagHandler
 """
 
 from abc import ABCMeta, abstractmethod
