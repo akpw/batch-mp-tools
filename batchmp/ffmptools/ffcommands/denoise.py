@@ -30,13 +30,23 @@ from batchmp.ffmptools.ffutils import (
 class DenoiserTask(Task):
     ''' A specific TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
+    def __init__(self, fpath, backup_path,
+                            ff_global_options, ff_other_options, preserve_metadata,
                                                         highpass, lowpass, num_passes):
 
-        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
 
-        self.highpass = highpass
-        self.lowpass = lowpass
+        # build ffmpeg -af parameter
+        if highpass and lowpass:
+            af_str = 'highpass=f={0}, lowpass=f={1}'.format(highpass, lowpass)
+        elif lowpass:
+            af_str = 'lowpass=f={}'.format(lowpass)
+        elif highpass:
+            af_str = 'highpass=f={}'.format(highpass)
+        else:
+            raise ValueError('At least of the highpass / lowpass values must be specified')
+
+        self.cmd = ''.join((self.cmd, ' -af "{}"'.format(af_str)))
         self.num_passes = num_passes
 
     def execute(self):
@@ -44,14 +54,6 @@ class DenoiserTask(Task):
         '''
         fname = os.path.basename(self.fpath)
         fname_ext = os.path.splitext(fname)[1].strip().lower()
-
-        # build ffmpeg -af parameter
-        if self.highpass and self.lowpass:
-            af_str = 'highpass=f={0}, lowpass=f={1}'.format(self.highpass, self.lowpass)
-        elif self.lowpass:
-            af_str = 'lowpass=f={}'.format(self.lowpass)
-        elif self.highpass:
-            af_str = 'highpass=f={}'.format(self.highpass)
 
         # ffmpeg initial input path
         fpath_input = self.fpath
@@ -70,12 +72,8 @@ class DenoiserTask(Task):
                                         fname_ext))
                 fpath_output = os.path.join(tmp_dir, fpath_output)
 
-                p_in = ''.join(('ffmpeg',
-                            ' -v error',
-                            ' -i "{}"'.format(fpath_input),
-                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
-                            ' -af "{}"'.format(af_str),
-                            ' "{}"'.format(fpath_output)))
+                p_in = ''.join((self.cmd,
+                                    ' "{}"'.format(fpath_output)))
 
                 # run ffmpeg command as a subprocess
                 try:
@@ -113,7 +111,8 @@ class Denoiser(FFMPRunner):
                             end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                             num_passes = 1, highpass = None, lowpass = None, backup=True,
-                            ffmpeg_options = None, preserve_metadata = False):
+                            ff_global_options = None, ff_other_options = None,
+                            preserve_metadata = False):
 
         cpu_core_time, total_elapsed = self.run(src_dir,
                                         end_level = end_level, sort = sort,
@@ -121,7 +120,9 @@ class Denoiser(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         quiet = quiet, num_passes = num_passes, serial_exec = serial_exec,
                                         highpass = highpass, lowpass = lowpass, backup=backup,
-                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
+                                        ff_global_options = ff_global_options,
+                                        ff_other_options = ff_other_options,
+                                        preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -131,7 +132,8 @@ class Denoiser(FFMPRunner):
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 num_passes = 1, highpass = None, lowpass = None, backup=True,
-                ffmpeg_options = None, preserve_metadata = False):
+                ff_global_options = None, ff_other_options = None,
+                preserve_metadata = False):
 
         ''' Applies low-pass / highpass filters
         '''
@@ -151,7 +153,8 @@ class Denoiser(FFMPRunner):
                                                     len(media_files), num_passes,
                                                    'passes' if num_passes > 1 else 'pass'))
             # build tasks
-            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+            tasks_params = ((media_file, backup_dir,
+                                ff_global_options, ff_other_options, preserve_metadata,
                                 highpass, lowpass, num_passes)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []

@@ -28,13 +28,15 @@ from batchmp.ffmptools.ffutils import (
 class ConvertorTask(Task):
     ''' A specific TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
+    def __init__(self, fpath, backup_path,
+                                ff_global_options, ff_other_options, preserve_metadata,
                                                         target_format, convert_options):
 
-        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
 
         self.target_format = target_format
-        self.convert_options = convert_options
+        self.cmd = ''.join((self.cmd,
+                            ' {}'.format(convert_options) if convert_options else ''))
 
     def execute(self):
         ''' builds and runs FFmpeg command in a subprocess
@@ -50,11 +52,7 @@ class ConvertorTask(Task):
             cv_path = os.path.join(tmp_dir, cv_name)
 
             # build ffmpeg cmd string
-            p_in = ''.join(('ffmpeg',
-                            ' -v error',
-                            ' -i "{}"'.format(self.fpath),
-                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
-                            ' {}'.format(self.convert_options) if self.convert_options else '',
+            p_in = ''.join((self.cmd,
                             ' "{}"'.format(cv_path)))
 
             # run ffmpeg command as a subprocess
@@ -89,7 +87,8 @@ class Convertor(FFMPRunner):
                     end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     target_format = None, convert_options = None, backup = True,
-                    ffmpeg_options = None, preserve_metadata = False):
+                    ff_global_options = None, ff_other_options = None,
+                    preserve_metadata = False):
         ''' Converts media to specified format
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
@@ -98,7 +97,9 @@ class Convertor(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_format = target_format, convert_options = convert_options,
                                         serial_exec = serial_exec, backup = backup,
-                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
+                                        ff_global_options = ff_global_options,
+                                        ff_other_options = ff_other_options,
+                                        preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -108,7 +109,8 @@ class Convertor(FFMPRunner):
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 target_format = None, convert_options = None, backup = True,
-                ffmpeg_options = None, preserve_metadata = False):
+                ff_global_options = None, ff_other_options = None,
+                preserve_metadata = False):
 
         cpu_core_time = 0.0
 
@@ -126,7 +128,8 @@ class Convertor(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+            tasks_params = ((media_file, backup_dir,
+                                ff_global_options, ff_other_options, preserve_metadata,
                                 target_format, convert_options)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []

@@ -31,13 +31,16 @@ class FragmenterTask(Task):
 
     FRAGMENTED_FILE_PREFIX = '_fr'
 
-    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
+    def __init__(self, fpath, backup_path,
+                            ff_global_options, ff_other_options, preserve_metadata,
                             fragment_starttime, fragment_duration, replace_original):
 
-        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
 
-        self.fragment_starttime = fragment_starttime
-        self.fragment_duration = fragment_duration
+        self.cmd = ''.join((self.cmd,
+                            ' -ss {}'.format(fragment_starttime),
+                            ' -t {}'.format(fragment_duration)))
+
         self.replace_original = replace_original
 
     def execute(self):
@@ -57,12 +60,7 @@ class FragmenterTask(Task):
             fr_path = os.path.join(tmp_dir, fr_name)
 
             # build ffmpeg cmd string
-            p_in = ''.join(('ffmpeg',
-                            ' -v error',
-                            ' -i "{}"'.format(self.fpath),
-                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
-                            ' -ss {}'.format(self.fragment_starttime),
-                            ' -t {}'.format(self.fragment_duration),
+            p_in = ''.join((self.cmd,
                             ' "{}"'.format(fr_path)))
 
             # run ffmpeg command as a subprocess
@@ -100,7 +98,8 @@ class Fragmenter(FFMPRunner):
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     fragment_starttime = None, fragment_duration = None,
                     backup = True, replace_original = False,
-                    ffmpeg_options = None, preserve_metadata = False):
+                    ff_global_options = None, ff_other_options = None,
+                    preserve_metadata = False):
         ''' Fragment media file by specified starttime & duration
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
@@ -111,7 +110,9 @@ class Fragmenter(FFMPRunner):
                                         fragment_duration = fragment_duration,
                                         serial_exec = serial_exec,
                                         backup = backup, replace_original = replace_original,
-                                        ffmpeg_options = ffmpeg_options, preserve_metadata = preserve_metadata)
+                                        ff_global_options = ff_global_options,
+                                        ff_other_options = ff_other_options,
+                                        preserve_metadata = preserve_metadata)
         # print run report
         if not quiet:
             self.run_report(cpu_core_time, total_elapsed)
@@ -122,7 +123,8 @@ class Fragmenter(FFMPRunner):
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 fragment_starttime = None, fragment_duration = None,
                 backup = True, replace_original = False,
-                ffmpeg_options = None, preserve_metadata = False):
+                ff_global_options = None, ff_other_options = None,
+                preserve_metadata = False):
 
         cpu_core_time = 0.0
 
@@ -138,7 +140,8 @@ class Fragmenter(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+            tasks_params = ((media_file, backup_dir,
+                                ff_global_options, ff_other_options, preserve_metadata,
                                 fragment_starttime, fragment_duration, replace_original)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []

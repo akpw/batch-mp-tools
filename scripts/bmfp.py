@@ -19,6 +19,7 @@ from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from scripts.base.bmpbargp import BMPBaseArgParser
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 """ Batch processing of media files
       . Uses multiprocessing to utilize available CPU cores
@@ -35,7 +36,6 @@ from scripts.base.bmpbargp import BMPBaseArgParser
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
           .. adjust volume  TDB: Adjust audio volume
-          .. detauch        TDB: Detauch streams from original media
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -51,7 +51,13 @@ from scripts.base.bmpbargp import BMPBaseArgParser
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-        [-fo, --ffmpeg-options]     Additional options for running FFmpeg
+        [-ma, --map-all]            Force including all streams from the input file
+        [-cc, --copy-codecs]        Copy streams codecs without re-encoding
+        [-vn, --no-video]           Exclude video streams from the output
+        [-an, --no-audio]           Exclude audio streams from the output
+        [-sn, --no-subs]            Exclude subtitles streams from the output
+        [-fo, --ffmpeg-options]     Additional FFmpeg options
+
         [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
@@ -61,15 +67,30 @@ from scripts.base.bmpbargp import BMPBaseArgParser
 """
 
 class BMFPArgParser(BMPBaseArgParser):
-    DEFAULT_CONVERSION_OPTIONS = '-q:v 0 -q:a 0'
-
     @staticmethod
     def parse_commands(parser):
         # BFMP Global
-        misc_group = parser.add_argument_group('FFmpeg Commands Execution')
-        misc_group.add_argument('-fo', '--ffmpeg-options', dest='ffmpeg_options',
+        ffmpeg_group = parser.add_argument_group('FFmpeg General Options')
+        ffmpeg_group.add_argument("-ma", "--map-all", dest='all_streams',
+                    help = "Force including all streams from the input file",
+                    action='store_true')
+        ffmpeg_group.add_argument("-cc", "--copy-codecs", dest='copy_codecs',
+                    help = "Copy streams codecs without re-encoding",
+                    action='store_true')
+        ffmpeg_group.add_argument("-vn", "--no-video", dest='exclude_video',
+                    help = "Exclude video streams from the output",
+                    action='store_true')
+        ffmpeg_group.add_argument("-an", "--no-audio", dest='exclude_audio',
+                    help = "Exclude audio streams from the output",
+                    action='store_true')
+        ffmpeg_group.add_argument("-sn", "--no-subs", dest='exclude_subtitles',
+                    help = "Exclude subtitles streams from the output",
+                    action='store_true')
+        ffmpeg_group.add_argument('-fo', '--ffmpeg-options', dest='ff_other_options',
                 help = 'Additional options for running FFmpeg',
                 type = str)
+
+        misc_group = parser.add_argument_group('FFmpeg Commands Execution')
         misc_group.add_argument("-pm", "--preserve-meta", dest='preserve_metadata',
                     help = "Preserve metadata of processed files",
                     action='store_true')
@@ -93,7 +114,7 @@ class BMFPArgParser(BMPBaseArgParser):
         group.add_argument('-co', '--convert-options', dest='convert_options',
                 help = 'FFmpeg conversion options. When specified, overrides all other conversion option switches',
                 type = str,
-                default = BMFPArgParser.DEFAULT_CONVERSION_OPTIONS)
+                default = FFmpegCommands.CONVERT_COPY_VBR_QUALITY)
         group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
                 help = 'For media formats with support for lossless audio, tries a lossless conversion',
                 action='store_true')
@@ -121,11 +142,11 @@ class BMFPArgParser(BMPBaseArgParser):
         # Fragment
         fragment_parser = subparsers.add_parser('fragment', description = 'Extracts a fragment via specified start time & duration')
         group = fragment_parser.add_argument_group('Fragment parameters')
-        group.add_argument('-s', '--starttime', dest='fragment_starttime',
+        group.add_argument('-fs', '--starttime', dest='fragment_starttime',
                 help = 'Fragment start time, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
                 required = True)
-        group.add_argument('-d', '--duration', dest='fragment_duration',
+        group.add_argument('-fd', '--duration', dest='fragment_duration',
                 help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
                 default = timedelta(days = 380))
@@ -140,7 +161,7 @@ class BMFPArgParser(BMPBaseArgParser):
                 help = 'Maximum media file size in MB',
                 type = float,
                 default = 0.0)
-        segment_group.add_argument('-d', '--duration', dest='segment_duration',
+        segment_group.add_argument('-sd', '--duration', dest='segment_duration',
                 help = 'Maximum media duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
                 default = timedelta(0))
@@ -161,6 +182,22 @@ class BMFPArgParser(BMPBaseArgParser):
         # Global options check
         BMPBaseArgParser.check_args(args, parser)
 
+        # Compile FF global options
+        ff_global_options = 0
+        if args['all_streams']:
+            ff_global_options |= FFmpegBitMaskOptions.MAP_ALL_STREAMS
+        if args['copy_codecs']:
+            ff_global_options |= FFmpegBitMaskOptions.COPY_CODECS
+        if args['exclude_video']:
+            ff_global_options |= FFmpegBitMaskOptions.DISABLE_VIDEO
+        if args['exclude_audio']:
+            ff_global_options |= FFmpegBitMaskOptions.DISABLE_AUDIO
+        if args['exclude_subtitles']:
+            ff_global_options |= FFmpegBitMaskOptions.DISABLE_SUBTITLES
+
+        args['ff_global_options'] = ff_global_options
+
+
         # Segment attributes check
         if args['sub_cmd'] == 'segment':
             if not args['segment_filesize'] and not args['segment_duration'].total_seconds():
@@ -169,12 +206,12 @@ class BMFPArgParser(BMPBaseArgParser):
 
         elif args['sub_cmd'] == 'convert':
             # Convert attributes check
-            if args['convert_options'] == BMFPArgParser.DEFAULT_CONVERSION_OPTIONS:
+            if args['convert_options'] == FFmpegCommands.CONVERT_COPY_VBR_QUALITY: #default
                 if args['lossless_audio']:
-                    args['convert_options'] = '-q:v 0 -acodec alac'
+                    args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS
 
                 if args['change_container']:
-                    args['convert_options'] = '-c copy -copyts'
+                    args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 
 class BMFPDispatcher:
     @staticmethod
@@ -185,7 +222,8 @@ class BMFPDispatcher:
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
                 target_format = args['target_format'], convert_options = args['convert_options'],
-                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
+                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
     def denoise(args):
@@ -195,7 +233,8 @@ class BMFPDispatcher:
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
                 backup = not args['nobackup'],
-                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
+                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
     def fragment(args):
@@ -207,7 +246,8 @@ class BMFPDispatcher:
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
                 replace_original = args['replace_original'],
-                ffmpeg_options = args['ffmpeg_options'], preserve_metadata = args['preserve_metadata'])
+                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
     def segment(args):
@@ -218,7 +258,8 @@ class BMFPDispatcher:
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
-                ffmpeg_options = args['ffmpeg_options'], reset_timestamps = args['reset_timestamps'],
+                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                reset_timestamps = args['reset_timestamps'],
                 preserve_metadata = args['preserve_metadata'])
 
 

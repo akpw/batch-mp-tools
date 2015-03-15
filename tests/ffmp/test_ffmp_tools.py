@@ -20,6 +20,7 @@ from batchmp.fstools.fsutils import FSH
 
 from .test_ffmp_base import FFMPTest
 from scripts.bmfp import BMFPArgParser
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
@@ -41,7 +42,7 @@ class FFMPTests(FFMPTest):
         # get the original media files md5 hashes
         orig_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
 
-        hpass, lpass, num_passes = 200, 0, 4
+        hpass, lpass, num_passes = 200, 0, 2
         Denoiser().apply_af_filters(self.src_dir, exclude = 'bmfp*',
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes)
 
@@ -60,7 +61,8 @@ class FFMPTests(FFMPTest):
         hpass, lpass, num_passes = 200, 0, 4
         Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_a',   filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
-                                    preserve_metadata = True, ffmpeg_options = ' -vn')
+                                    preserve_metadata = True,
+                                    ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
@@ -77,7 +79,7 @@ class FFMPTests(FFMPTest):
         hpass, lpass, num_passes = 200, 0, 4
         Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_v',   filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
-                                    preserve_metadata = True, ffmpeg_options = None)
+                                    preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
@@ -91,7 +93,7 @@ class FFMPTests(FFMPTest):
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
 
         Convertor().convert(self.src_dir, include = 'bmfp_a',  filter_files = False,
-                            target_format = 'mp3', convert_options = BMFPArgParser.DEFAULT_CONVERSION_OPTIONS,
+                            target_format = 'mp3', convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
                             preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
@@ -107,7 +109,7 @@ class FFMPTests(FFMPTest):
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
 
         Convertor().convert(self.src_dir, include = 'bmfp_v',  filter_files = False,
-                            target_format = 'mp4', convert_options = BMFPArgParser.DEFAULT_CONVERSION_OPTIONS,
+                            target_format = 'mp4', convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
                             preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
@@ -126,7 +128,8 @@ class FFMPTests(FFMPTest):
         Fragmenter().fragment(self.src_dir, include = 'bmfp_a', filter_files = False,
                                 fragment_starttime = 0, fragment_duration = 1,
                                 serial_exec = False,
-                                preserve_metadata = True, ffmpeg_options = ' -vn')
+                                preserve_metadata = True,
+                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
@@ -159,7 +162,8 @@ class FFMPTests(FFMPTest):
         Segmenter().segment(self.src_dir, include = 'bmfp_a', filter_files = False,
                                 segment_size_MB = 0.0, segment_length_secs = 1,
                                 serial_exec = False,
-                                preserve_metadata = True, ffmpeg_options = ' -vn')
+                                preserve_metadata = True,
+                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
         src_dir = self.src_dir + '/bmfp_a'
         processed_media_entries = self._media_entries(src_dir, end_level = 0, include = '*_0.*')

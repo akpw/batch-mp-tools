@@ -20,6 +20,7 @@ from batchmp.ffmptools.ffrunner import FFMPRunner
 from batchmp.ffmptools.taskpp import Task, TasksProcessor, TaskResult
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
 from batchmp.ffmptools.ffutils import (
     timed,
     run_cmd,
@@ -30,23 +31,26 @@ from batchmp.ffmptools.ffutils import (
 class SegmenterTask(Task):
     ''' A specific TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata,
-                                    reset_timestamps, segment_size_MB, segment_length_secs):
+    def __init__(self, fpath, backup_path,
+                            ff_global_options, ff_other_options, preserve_metadata,
+                            reset_timestamps, segment_size_MB, segment_length_secs):
 
-        super().__init__(fpath, backup_path, ffmpeg_options, preserve_metadata)
+        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
 
-        self.segment_size_MB = segment_size_MB
-        self.segment_length_secs = segment_length_secs
-        self.reset_timestamps = reset_timestamps
+        # if needed, calculate segment duration via given file size
+        if not segment_length_secs and segment_size_MB:
+            split_factor = Segmenter._media_size_MB(self.fpath) / segment_size_MB
+            split_factor  = split_factor if split_factor > 1.11 else 1.11
+            segment_length_secs = Segmenter._media_duration(self.fpath) / split_factor
+
+        self.cmd = ''.join((self.cmd,
+                            FFmpegCommands.SEGMENT,
+                            ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIME, segment_length_secs),
+                            FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if reset_timestamps else ''))
 
     def execute(self):
         ''' builds and runs FFmpeg command in a subprocess
         '''
-        # if needed, calculate segment duration via given file size
-        if not self.segment_length_secs and self.segment_size_MB:
-            split_factor = Segmenter._media_size_MB(self.fpath) / self.segment_size_MB
-            split_factor  = split_factor if split_factor > 1.11 else 1.11
-            self.segment_length_secs = Segmenter._media_duration(self.fpath) / split_factor
 
         # store tags if needed
         self._store_tags()
@@ -61,13 +65,7 @@ class SegmenterTask(Task):
             fpath_output = os.path.join(tmp_dir, fpath_output)
 
             # build ffmpeg cmd string
-            p_in = ''.join(('ffmpeg',
-                            ' -v error',
-                            ' -i "{}"'.format(self.fpath),
-                            ' {}'.format(self.ffmpeg_options) if self.ffmpeg_options else '',
-                            ' -f segment',
-                            ' -segment_time {}'.format(self.segment_length_secs),
-                            ' -reset_timestamps 1' if self.reset_timestamps else '',
+            p_in = ''.join((self.cmd,
                             ' "{}"'.format(fpath_output)))
 
             # run ffmpeg command as a subprocess
@@ -117,7 +115,8 @@ class Segmenter(FFMPRunner):
                     end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
-                    ffmpeg_options = None, reset_timestamps = False, preserve_metadata = False):
+                    ff_global_options = None, ff_other_options = None,
+                    reset_timestamps = False, preserve_metadata = False):
         ''' Segment media file by specified size | duration
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
@@ -127,7 +126,8 @@ class Segmenter(FFMPRunner):
                                         segment_size_MB = segment_size_MB,
                                         segment_length_secs = segment_length_secs,
                                         serial_exec = serial_exec, backup=backup,
-                                        ffmpeg_options = ffmpeg_options,
+                                        ff_global_options = ff_global_options,
+                                        ff_other_options = ff_other_options,
                                         reset_timestamps = reset_timestamps,
                                         preserve_metadata = preserve_metadata)
         # print run report
@@ -139,7 +139,8 @@ class Segmenter(FFMPRunner):
                 end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
-                ffmpeg_options = None, reset_timestamps = False, preserve_metadata = False):
+                ff_global_options = None, ff_other_options = None,
+                reset_timestamps = False, preserve_metadata = False):
 
         ''' Perform segmentation by size | duration
         '''
@@ -167,7 +168,8 @@ class Segmenter(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir, ffmpeg_options, preserve_metadata,
+            tasks_params = ((media_file, backup_dir,
+                                ff_global_options, ff_other_options, preserve_metadata,
                                 reset_timestamps, segment_size_MB, segment_length_secs)
                                     for media_file, backup_dir in zip(media_files, backup_dirs))
             tasks = []

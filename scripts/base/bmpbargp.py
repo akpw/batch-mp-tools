@@ -158,5 +158,3 @@ class BMPBaseArgParser:
         cls.check_args(args, parser)
 
         return args
-
-

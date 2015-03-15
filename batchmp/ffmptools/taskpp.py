@@ -16,16 +16,21 @@ from batchmp.commons.progressbar import progress_bar
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
-
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 class Task(metaclass = ABCMeta):
     ''' Represents an abstract TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path, ffmpeg_options, preserve_metadata):
+    def __init__(self, fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata):
         self.fpath = fpath
         self.backup_path = backup_path
-        self.ffmpeg_options = ffmpeg_options
         self.tag_holder = TagHolder() if preserve_metadata else None
+
+        self.cmd = ''.join(('ffmpeg',
+                            FFmpegCommands.LOG_LEVEL_ERROR,
+                            ' -i "{}"'.format(self.fpath),
+                            FFmpegBitMaskOptions.ff_global_options(ff_global_options),
+                            ' {}'.format(ff_other_options) if ff_other_options else ''))
 
     @abstractmethod
     def execute(self):

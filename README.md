@@ -130,7 +130,6 @@ A rainy-weekends project under occasional development :)
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
           .. adjust volume  TDB: Adjust audio volume
-          .. detauch        TDB: Detauch streams from original media
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -146,7 +145,13 @@ A rainy-weekends project under occasional development :)
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-        [-fo, --ffmpeg-options]     Additional options for running FFmpeg
+        [-ma, --map-all]            Force including all streams from the input file
+        [-cc, --copy-codecs]        Copy streams codecs without re-encoding
+        [-vn, --no-video]           Exclude video streams from the output
+        [-an, --no-audio]           Exclude audio streams from the output
+        [-sn, --no-subs]            Exclude subtitles streams from the output
+        [-fo, --ffmpeg-options]     Additional FFmpeg options
+
         [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
