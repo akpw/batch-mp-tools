@@ -215,8 +215,37 @@ class BaseTagProcessor:
 
         self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude, sort = sort,
-                        filter_dirs = filter_dirs, filter_files = filter_files, quiet = quiet,
-                        tag_holder = tag_holder)
+                        filter_dirs = filter_dirs, filter_files = filter_files,
+                        quiet = quiet, tag_holder = tag_holder)
+
+
+    def detauch_art(self, src_dir, *, end_level = sys.maxsize,
+                    include = '*', exclude = '', sort = 'n',
+                    filter_dirs = True, filter_files = True,
+                    quiet = False, target_dir = None):
+
+        fcnt = 0
+        pass_filter = lambda fpath: self.handler.can_handle(fpath)
+        for entry in DWalker.file_entries(src_dir,
+                                            end_level = end_level,
+                                            include = include, exclude = exclude, sort = sort,
+                                            filter_dirs = filter_dirs, filter_files = filter_files,
+                                            pass_filter = pass_filter):
+
+            if not target_dir:
+                target_dir = src_dir
+            else:
+                os.makedirs(target_dir, exist_ok = True)
+
+            if  self.handler.tag_holder.has_artwork:
+                self.handler.detauch_art(target_dir)
+                fcnt += 1
+
+        # print summary
+        if not quiet:
+            print('Detauched art from {0} media entries'.format(fcnt))
+
+
 
 
 

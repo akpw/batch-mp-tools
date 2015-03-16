@@ -30,9 +30,13 @@ class FSH:
     ''' FS helper
     '''
     @staticmethod
+    def full_path(path):
+        return  os.path.realpath(os.path.expanduser(path))
+
+    @staticmethod
     def is_subdir(subdir_path, parent_path):
-        subdir_path = os.path.realpath(subdir_path)
-        parent_path = os.path.realpath(parent_path)
+        subdir_path = FSH.full_path(subdir_path)
+        parent_path = FSH.full_path(parent_path)
 
         relative = os.path.relpath(subdir_path, start=parent_path)
 
@@ -42,8 +46,8 @@ class FSH:
     def level_from_root(root_path, nested_path):
         ''' determines the level from root_path folder
         '''
-        return os.path.realpath(nested_path).count(os.path.sep) - \
-                            os.path.realpath(root_path).count(os.path.sep)
+        return FSH.full_path(nested_path).count(os.path.sep) - \
+                            FSH.full_path(root_path).count(os.path.sep)
 
     @staticmethod
     def folders_at_level(src_dir, target_level):
@@ -51,7 +55,7 @@ class FSH:
         '''
         for r,d,f in os.walk(src_dir):
            if FSH.level_from_root(src_dir, r) == target_level:
-                yield os.path.realpath(r)
+                yield FSH.full_path(r)
 
     @staticmethod
     def remove_folders_below_target_level(src_dir, target_level=sys.maxsize, empty_only=True):
@@ -221,7 +225,7 @@ class DWalker(object):
             siblings_indent = '{0}{1}'.format("\t" * (current_level + 1), '|- ')
 
             # yield current folder
-            rpath = os.path.realpath(r)
+            rpath = FSH.full_path(r)
             basename = os.path.basename(rpath)
             if current_level == 0:
                 # src dir goes in full and without indent
@@ -281,7 +285,7 @@ class DWalker(object):
                             if filter_files:
                                 dfnames = (fname for fname in dfnames if passed_filters(fname))
                             for fname in dfnames:
-                                fpath = os.path.realpath(os.path.join(dr, fname))
+                                fpath = FSH.full_path(os.path.join(dr, fname))
                                 if ensure_uniq:
                                     next(unique_fname)
                                     fname = unique_fname.send(fname)

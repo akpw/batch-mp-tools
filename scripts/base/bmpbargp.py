@@ -14,6 +14,7 @@
 
 import os, sys, datetime
 from argparse import ArgumentParser
+from batchmp.fstools.fsutils import FSH
 
 """ Global options parsing for scripts:
         [-r, --recursive]           Recurse into nested folders
@@ -27,10 +28,14 @@ from argparse import ArgumentParser
 """
 class BMPBaseArgParser:
     @staticmethod
+    def expanded_path(path):
+        return FSH.full_path(path)
+
+    @staticmethod
     def is_valid_dir_path(parser, path_arg):
         """ Checks if path_arg is a valid dir path
         """
-        path_arg = os.path.realpath(os.path.expanduser(path_arg))
+        path_arg = BMPBaseArgParser.expanded_path(path_arg)
         if not (os.path.exists(path_arg) and os.path.isdir(path_arg)):
             parser.error('Please enter a valid source directory path'.format(path_arg))
         else:
@@ -40,7 +45,7 @@ class BMPBaseArgParser:
     def is_valid_file_path(parser, path_arg):
         """ Checks if path_arg is a valid file path
         """
-        path_arg = os.path.realpath(os.path.expanduser(path_arg))
+        path_arg = BMPBaseArgParser.expanded_path(path_arg)
         if not (os.path.exists(path_arg) and os.path.isfile(path_arg)):
             parser.error('Please enter a valid file path'.format(path_arg))
         else:

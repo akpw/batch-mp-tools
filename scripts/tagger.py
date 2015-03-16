@@ -47,7 +47,7 @@ from functools import partial
           .. replace    RegExp-based replace in tags (title, artist, ...)
                             e.g., to remove the first three characters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
-          .. extract    TBD: extracts artwork
+          .. extract    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -182,6 +182,13 @@ class TaggerArgParser(BMPBaseArgParser):
                 help = 'Case insensitive',
                 action = 'store_true')
 
+        # Detauch Art
+        detauch_parser = subparsers.add_parser('detauch', description = 'Detauches art into specified target directory')
+        detauch_parser.add_argument("-td", "--target_dir", dest = "target_dir",
+            type = lambda fpath: BMPBaseArgParser.expanded_path(fpath),
+            default = None,
+            help = "Target directory for detauching art. When omitted, detauched art will be stored in "
+                        "the top-level media files source directory")
 
     @staticmethod
     def check_args(args, parser):
@@ -199,6 +206,9 @@ class TaggerArgParser(BMPBaseArgParser):
                              'Supported tag fields: {1}'.format(
                                     args['tag_field'], ', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)))
 
+        if args['sub_cmd'] == 'detauch':
+            if args['target_dir'] is None:
+                args['target_dir'] = args['dir']
 
 class TagsDispatcher:
     @staticmethod
@@ -278,6 +288,14 @@ class TagsDispatcher:
                 find_str = args['find_str'], replace_str = args['replace_str'])
 
     @staticmethod
+    def detauch_art(args):
+        BaseTagProcessor().detauch_art(args['dir'], sort = args['sort'],
+                end_level = args['end_level'], quiet = args['quiet'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'])
+
+    @staticmethod
     def dispatch():
         args = TaggerArgParser().parse_options(script_name = 'tagger')
         if args['sub_cmd'] == 'print':
@@ -292,7 +310,8 @@ class TagsDispatcher:
             TagsDispatcher.remove_tags(args)
         elif args['sub_cmd'] == 'replace':
             TagsDispatcher.replace_tags(args)
-
+        elif args['sub_cmd'] == 'detauch':
+            TagsDispatcher.detauch_art(args)
 
 def main():
     TagsDispatcher.dispatch()
