@@ -95,7 +95,7 @@ A rainy-weekends project under occasional development :)
           .. replace    RegExp-based replace in tags (title, artist, ...)
                             e.g., to remove the first three charachters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
-          .. extract    Extracts artwork
+          .. detauch    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -112,7 +112,7 @@ A rainy-weekends project under occasional development :)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
-        {print, set, copy, remove, index, ...}
+        {print, set, copy, remove, index, replace, detauch}
 
 ###bmfp
     Batch processing of media files
