@@ -95,7 +95,7 @@ A rainy-weekends project under occasional development :)
           .. replace    RegExp-based replace in tags (title, artist, ...)
                             e.g., to remove the first three charachters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
-          .. extract    TBD: extracts artwork
+          .. extract    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
