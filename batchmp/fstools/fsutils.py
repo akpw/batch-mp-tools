@@ -159,22 +159,22 @@ class FSH:
             can deal with with read-only files
         '''
         def check_writable(fpath):
-            if include_read_only and (not os.access(path, os.W_OK)):
-                os.chmod(path, stat.S_IWUSR)
+            if include_read_only and (not os.access(fpath, os.W_OK)):
+                os.chmod(fpath, stat.S_IWUSR)
                 return True
             else:
                 return False
 
-        def onerror(func, path, exc_info):
-            if check_writable(path):
-                func(path)
+        def onerror(func, fpath, exc_info):
+            if check_writable(fpath):
+                func(fpath)
             else:
                 raise
 
         entry_path = FSH.full_path(entry_path)
         if os.path.isfile(entry_path):
             check_writable(entry_path)
-            os.remove(fpath)
+            os.remove(entry_path)
 
         elif os.path.isdir(entry_path):
             shutil.rmtree(entry_path, onerror = onerror)

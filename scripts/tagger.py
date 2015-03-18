@@ -170,7 +170,7 @@ class TaggerArgParser(BMPBaseArgParser):
 
          # Remove Tags
         remove_tags_parser = subparsers.add_parser('remove', description = 'Remove tags from media files')
-        remove_tags_parser.add_argument('-rf', '--removable-fields', dest='removable_fields',
+        remove_tags_parser.add_argument('-tf', '--tag-fields', dest='removable_fields',
                 help = "Comma-separated list of tag fields to remove",
                 type = str)
         BMPBaseArgParser.add_display_curent_state(remove_tags_parser)
@@ -262,7 +262,6 @@ class TagsDispatcher:
 
     @staticmethod
     def set_tags(args):
-        print(args)
         tag_holder = TagHolder(process_templates = False)
         tag_holder.title = args['title']
         tag_holder.album = args['album']
