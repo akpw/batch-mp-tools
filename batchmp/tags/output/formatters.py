@@ -15,10 +15,10 @@
 
 import datetime, math
 from batchmp.fstools.fsutils import DWalker
-from enum import Enum
+from enum import IntEnum
 
 
-class OutputFormatType(Enum):
+class OutputFormatType(IntEnum):
     COMPACT = 0
     FULL = 1
 
@@ -30,8 +30,10 @@ class TagOutputFormatter:
 
     @staticmethod
     def tags_formatter(entry, *,
-                       format = None, handler = None, show_stats = False,
-                       tag_holder = None, tag_holder_gen = None, show_tag_holder_values = False):
+                           format = None, handler = None, show_stats = False,
+                           tag_holder = None, tag_holder_gen = None,
+                           show_tag_holder_values = False,
+                           diff_tags_only = False):
 
         # check inputs
         if entry.type == DWalker.ENTRY_TYPE_DIR or entry.type == DWalker.ENTRY_TYPE_ROOT:
@@ -50,27 +52,29 @@ class TagOutputFormatter:
 
         diff_fields = None
         if tag_holder:
-            # figure out relevant fields
+            # figure out relevant fields to show
             diff_fields = []
             for field in tag_holder.taggable_fields():
                 value = getattr(tag_holder, field)
-                if (value is not None) or tag_holder.copy_empty_vals:
-                    #if getattr(handler.tag_holder, field) != value:
+                if (value is not None) or \
+                        (tag_holder.copy_empty_vals) or \
+                        (tag_holder.nullable_fields and (field in tag_holder.nullable_fields)):
                     diff_fields.append(field)
 
-        # care for original values?
-        if (not tag_holder) or (not show_tag_holder_values):
-            tag_holder = handler.tag_holder
-        else:
-            # if looking for new values, need to process templates
-            if not tag_holder.process_templates:
-                handler.tag_holder.copy_tags(tag_holder)
-                tag_holder = handler.tag_holder
+            if not diff_tags_only:
+                # if need to show the changes along with other tag fields,
+                # return a minimal set of compact fields + all changed fields (including extended)
+                diff_extended_fields = list(set(diff_fields).intersection(set(TagOutputFormatter.EXTENDED_FIELDS)))
+                diff_fields = TagOutputFormatter.COMPACT_FIELDS + diff_extended_fields
+
+        if tag_holder and show_tag_holder_values:
+            # if care for new values, copy tags / process templates
+            handler.tag_holder.copy_tags(tag_holder)
 
         if format == OutputFormatType.COMPACT:
-            return TagOutputFormatter._formatter(entry, tag_holder, show_stats = show_stats)
+            return TagOutputFormatter._formatter(entry, handler.tag_holder, show_stats = show_stats)
         elif format == OutputFormatType.FULL:
-            return TagOutputFormatter._formatter(entry, tag_holder, show_extended = True,
+            return TagOutputFormatter._formatter(entry, handler.tag_holder, show_extended = True,
                                                  show_stats = show_stats, diff_fields = diff_fields)
         else:
             return None

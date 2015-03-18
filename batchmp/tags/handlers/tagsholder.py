@@ -32,6 +32,17 @@ class ExpandableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
             value = instance._process_value(value)
         super().__set__(instance, value)
 
+class NullableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
+    def __set__(self, instance, value):
+        if value is not None:
+            if not isinstance(value, list):
+                raise ValueError('{}: Nullable fields should be either None or a list of taggable fields'.format(value))
+            taggable_fields = [field for field in instance.taggable_fields()]
+            for field in value:
+                if not field in taggable_fields:
+                    raise ValueError('Field is not supported: {}'.format(field))
+        super().__set__(instance, value)
+
 class NonTaggableMediaFieldDescriptor(PropertyDescriptor):
     pass
 
@@ -74,11 +85,24 @@ class TagHolder:
 
     filepath = PropertyDescriptor()
     template_processor_method = FunctionPropertyDescriptor()
+    nullable_fields = NullableMediaFieldDescriptor()
 
-    def __init__(self, copy_empty_vals = False, copy_non_taggable = False, process_templates = True):
-        self.copy_empty_vals = copy_empty_vals
-        self.copy_non_taggable = copy_non_taggable
-        self.process_templates = process_templates
+    def __init__(self, copy_empty_vals = False, nullable_fields = None,
+                            copy_non_taggable = False, process_templates = True):
+        self._copy_empty_vals = copy_empty_vals
+        self._copy_non_taggable = copy_non_taggable
+        self._process_templates = process_templates
+        self.nullable_fields = nullable_fields
+
+    @property
+    def copy_empty_vals(self):
+        return self._copy_empty_vals
+    @property
+    def copy_non_taggable(self):
+        return self._copy_non_taggable
+    @property
+    def process_templates(self):
+        return self._process_templates
 
     @property
     def has_artwork(self):
@@ -137,7 +161,9 @@ class TagHolder:
 
             for field in fields():
                 value = getattr(tag_holder, field)
-                if (value is not None) or tag_holder.copy_empty_vals:
+                if (value is not None) or \
+                            (tag_holder.copy_empty_vals) or \
+                                (tag_holder.nullable_fields and (field in tag_holder.nullable_fields)):
                     setattr(self, field, value)
 
     def clear_tags(self, reset_art = False):

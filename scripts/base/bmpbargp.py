@@ -18,12 +18,15 @@ from batchmp.fstools.fsutils import FSH
 
 """ Global options parsing for scripts:
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]           End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]            Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]           Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 """
 class BMPBaseArgParser:
@@ -83,6 +86,12 @@ class BMPBaseArgParser:
                                       minutes = mins if mins else 0,
                                       seconds = secs if secs else 0)
 
+    # Processing mode for relevant commands
+    @staticmethod
+    def add_display_curent_state(parser):
+        parser.add_argument('-dc', '--display-current', dest = 'display_current',
+                help ='Unless in quiet mode, display current (pre-processing) state in the confirmation propmt',
+                action = 'store_true')
 
     @staticmethod
     def parse_global_options(parser):
@@ -100,7 +109,7 @@ class BMPBaseArgParser:
         recursive_mode_group.add_argument("-r", "--recursive", dest = "recursive",
                     help = "Recurse into nested folders",
                     action = 'store_true')
-        recursive_mode_group.add_argument("-el", "--endlevel", dest = "end_level",
+        recursive_mode_group.add_argument("-el", "--end-level", dest = "end_level",
                     help = "End level for recursion into nested folders",
                     type = int,
                     default = 0)
@@ -114,22 +123,27 @@ class BMPBaseArgParser:
                     help = "Exclude names pattern",
                     type = str,
                     default = '')
-        include_mode_group.add_argument("-fd", "--alldirs", dest = "all_dirs",
+        include_mode_group.add_argument("-ad", "--all-dirs", dest = "all_dirs",
                     help = "Disable Include/Exclude patterns on directories",
                     action = 'store_true')
-        include_mode_group.add_argument("-af", "--allfiles", dest = "all_files",
+        include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
                     help = "Disable Include/Exclude patterns on files",
                     action = 'store_true')
 
         misc_group = parser.add_argument_group('Miscellaneous')
         misc_group.add_argument('-s', '--sort', dest = 'sort',
                     help = "Sorting for files ('na', i.e. by name ascending by default)",
-                    type=str,
+                    type = str,
                     choices = ['na', 'nd', 'sa', 'sd'],
                     default = 'na')
+        misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
+                    help = "Indent for printing  nested directories",
+                    type = str,
+                    default = '  ')
         misc_group.add_argument("-q", "--quiet", dest = 'quiet',
                     help = "Disable visualising changes & displaying info messages during processing",
                     action = 'store_true')
+
 
     @staticmethod
     def parse_commands(parser):

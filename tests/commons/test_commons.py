@@ -149,7 +149,6 @@ class DescriptorTests(unittest.TestCase):
         gc.collect()
         self.assertIsNone(r())
 
-
 # quick dev test
 if __name__ == '__main__':
     DescriptorTests().test_PropertyDescriptor

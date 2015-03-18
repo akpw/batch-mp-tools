@@ -153,6 +153,23 @@ class FSH:
                 sys.exit(1)
         return succeeded
 
+    @staticmethod
+    def remove_FS_entry(entry_path, include_read_only = False):
+        ''' Remove files / dirs,
+            can deal with with read-only files
+        '''
+        def delete_file_entry(fpath):
+            if include_read_only:
+                os.chmod(fpath, stat.S_IWRITE)
+            os.remove(fpath)
+
+        entry_path = FSH.full_path(entry_path)
+
+        if os.path.isfile(entry_path):
+            delete_file_entry(entry_path)
+
+        elif os.path.isdir(entry_path):
+            shutil.rmtree(entry_path, onerror = delete_file_entry)
 
 class UniqueDirNamesChecker:
     ''' Produces a unique name for file in a directory
@@ -186,7 +203,8 @@ class DWalker(object):
     @staticmethod
     def entries(src_dir, *,
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '', sort = 'n',
+                    include = '*', exclude = '',
+                    sort = 'n', nested_indent = '\t',
                     filter_dirs = True, filter_files = True,
                     flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
         ''' generates a sequence of FSEntries elements
@@ -221,8 +239,8 @@ class DWalker(object):
                 return
 
             # indents
-            current_indent  = '{0}{1}'.format("\t" * (current_level), '|- ')
-            siblings_indent = '{0}{1}'.format("\t" * (current_level + 1), '|- ')
+            current_indent  = '{0}{1}'.format(nested_indent * (current_level), '|- ')
+            siblings_indent = '{0}{1}'.format(nested_indent * (current_level + 1), '|- ')
 
             # yield current folder
             rpath = FSH.full_path(r)
@@ -306,8 +324,9 @@ class DWalker(object):
 
     @staticmethod
     def file_entries(src_dir, *,
+                     sort = 'n', nested_indent = '\t',
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '', sort = 'n',
+                    include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
                     pass_filter = None):
 
@@ -315,7 +334,8 @@ class DWalker(object):
             pass_filter = lambda f: True
 
         for entry in DWalker.entries(src_dir,
-                                        end_level = end_level,
+                                        sort = sort, nested_indent = nested_indent,
+                                        start_level = start_level, end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files):
 
@@ -326,3 +346,29 @@ class DWalker(object):
                 continue
             else:
                 yield entry
+
+    @staticmethod
+    def dir_entries(src_dir, *,
+                    sort = 'n', nested_indent = '\t',
+                    start_level = 0, end_level = sys.maxsize,
+                    include = '*', exclude = '',
+                    filter_dirs = True, filter_files = True,
+                    pass_filter = None):
+
+        if not pass_filter:
+            pass_filter = lambda f: True
+
+        for entry in DWalker.entries(src_dir,
+                                        sort = sort, nested_indent = nested_indent,
+                                        start_level = start_level, end_level = end_level,
+                                        include = include, exclude = exclude,
+                                        filter_dirs = filter_dirs, filter_files = filter_files):
+
+            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_FILE):
+                continue
+
+            if not pass_filter(entry.realpath):
+                continue
+            else:
+                yield entry
+

@@ -42,7 +42,7 @@ from functools import partial
                             In addition to tag fields templates, file names are also supported:
                                 $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Removes all tags from media files
+          .. remove     Removes tags from media files
           .. index      Indexes Track / Track Total tags
           .. replace    RegExp-based replace in tags (title, artist, ...)
                             e.g., to remove the first three characters in title:
@@ -55,12 +55,15 @@ from functools import partial
 
       Global Options (tagger -h for additional help)
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]          End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
@@ -72,6 +75,12 @@ class TaggerArgParser(BMPBaseArgParser):
 
     @staticmethod
     def parse_commands(parser):
+
+        def add_show_other_tags_mode(parser):
+            parser.add_argument('-do', '--diff-only', dest = 'diff_tags_only',
+                    help ='Show only changed tags in the confirmation propmt',
+                    action = 'store_true')
+
         subparsers = parser.add_subparsers(dest='sub_cmd', title = 'Tagger Commands')
 
         # Print
@@ -126,6 +135,9 @@ class TaggerArgParser(BMPBaseArgParser):
         set_tags_parser.add_argument('-y', '--year', dest='year',
                 help = "Sets the Year tag",
                 type = int)
+        set_tags_parser.add_argument('-en', '--encoder', dest='encoder',
+                help = "Sets the Encoder tag",
+                type = str)
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
@@ -145,22 +157,33 @@ class TaggerArgParser(BMPBaseArgParser):
         set_tags_parser.add_argument('-lr', '--lyrics', dest='lyrics',
                 help = "Sets the Lyrics tag",
                 type = str)
+        BMPBaseArgParser.add_display_curent_state(set_tags_parser)
+        add_show_other_tags_mode(set_tags_parser)
 
          # Copy Tags
         copy_tags_parser = subparsers.add_parser('copy', description = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
+        BMPBaseArgParser.add_display_curent_state(copy_tags_parser)
+        add_show_other_tags_mode(copy_tags_parser)
 
          # Remove Tags
-        copy_tags_parser = subparsers.add_parser('remove', description = 'Remove all tags from media files')
+        remove_tags_parser = subparsers.add_parser('remove', description = 'Remove tags from media files')
+        remove_tags_parser.add_argument('-rf', '--removable-fields', dest='removable_fields',
+                help = "Comma-separated list of tag fields to remove",
+                type = str)
+        BMPBaseArgParser.add_display_curent_state(remove_tags_parser)
+        add_show_other_tags_mode(remove_tags_parser)
 
         # Index
         index_parser = subparsers.add_parser('index', description = 'Index Tracks for selected media files')
-        print_parser.add_argument('-sf', '--startfrom', dest='start_from',
-                help = 'A number from which the indexing starts (1 by default)',
+        index_parser.add_argument('-sf', '--startfrom', dest='start_from',
+                help = 'A number from which the indexing starts, 1 by default',
                 type = int,
                 default = 1)
+        BMPBaseArgParser.add_display_curent_state(index_parser)
+        add_show_other_tags_mode(index_parser)
 
          # Replace Tags
         replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in specified tag fields')
@@ -181,6 +204,8 @@ class TaggerArgParser(BMPBaseArgParser):
         replace_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
+        BMPBaseArgParser.add_display_curent_state(replace_parser)
+        add_show_other_tags_mode(replace_parser)
 
         # Detauch Art
         detauch_parser = subparsers.add_parser('detauch', description = 'Detauches art into specified target directory')
@@ -206,15 +231,27 @@ class TaggerArgParser(BMPBaseArgParser):
                              'Supported tag fields: {1}'.format(
                                     args['tag_field'], ', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)))
 
+        if args['sub_cmd'] == 'index':
+            if args['start_from'] < 1:
+                parser.error('Track indexing should start from 1, or a larger int number')
+
         if args['sub_cmd'] == 'detauch':
             if args['target_dir'] is None:
                 args['target_dir'] = args['dir']
+
+        if args['sub_cmd'] == 'remove':
+            if args['removable_fields'] is not None:
+                args['removable_fields'] = [r.strip() for r in args['removable_fields'].split(',')]
+                taggable_fields = [field for field in TagHolder.taggable_fields()]
+                for removable_field in args['removable_fields']:
+                    if removable_field not in (taggable_fields):
+                        parser.error('The tag field "{}" is not supported'.format(removable_field))
 
 class TagsDispatcher:
     @staticmethod
     def print_dir(args):
         BaseTagProcessor().print_dir(src_dir = args['dir'],
-                sort = args['sort'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
@@ -225,6 +262,7 @@ class TagsDispatcher:
 
     @staticmethod
     def set_tags(args):
+        print(args)
         tag_holder = TagHolder(process_templates = False)
         tag_holder.title = args['title']
         tag_holder.album = args['album']
@@ -237,6 +275,7 @@ class TagsDispatcher:
         tag_holder.disc = args['disc']
         tag_holder.disctotal = args['disctotal']
         tag_holder.year = args['year']
+        tag_holder.encoder = args['encoder']
         tag_holder.bpm = args['bpm']
         tag_holder.comp = args['compilaton']
         tag_holder.grouping = args['grouping']
@@ -250,47 +289,65 @@ class TagsDispatcher:
         if art:
             tag_holder.art = art
 
-        BaseTagProcessor().set_tags_visual(args['dir'], sort = args['sort'],
+        BaseTagProcessor().set_tags_visual(args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                tag_holder = tag_holder, quiet = args['quiet'])
+                tag_holder = tag_holder,
+                display_current = args['display_current'], quiet = args['quiet'],
+                diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
     def copy_tags(args):
-        BaseTagProcessor().copy_tags(src_dir = args['dir'], sort = args['sort'],
+        BaseTagProcessor().copy_tags(src_dir = args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                tag_holder_path = args['tagholder'], quiet = args['quiet'])
+                tag_holder_path = args['tagholder'],
+                display_current = args['display_current'], quiet = args['quiet'],
+                diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
     def remove_tags(args):
-        BaseTagProcessor().remove_tags(src_dir = args['dir'], sort = args['sort'],
+        BaseTagProcessor().remove_tags(src_dir = args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
+                include = args['include'], exclude = args['exclude'],
+                display_current = args['display_current'], quiet = args['quiet'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                nullable_fields = args['removable_fields'],
+                diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
     def index(args):
-        BaseTagProcessor().index(src_dir = args['dir'], sort = args['sort'],
+        BaseTagProcessor().index(src_dir = args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'])
+                include = args['include'], exclude = args['exclude'],
+                display_current = args['display_current'], quiet = args['quiet'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                diff_tags_only = args['diff_tags_only'], start_from = args['start_from'])
 
     @staticmethod
     def replace_tags(args):
-        BaseTagProcessor().replace_tag(args['dir'], sort = args['sort'],
+        BaseTagProcessor().replace_tag(args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'], quiet = args['quiet'],
+                include = args['include'], exclude = args['exclude'],
+                display_current = args['display_current'], quiet = args['quiet'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 tag_field = args['tag_field'], ignore_case = args['ignore_case'],
-                find_str = args['find_str'], replace_str = args['replace_str'])
+                find_str = args['find_str'], replace_str = args['replace_str'],
+                diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
     def detauch_art(args):
-        BaseTagProcessor().detauch_art(args['dir'], sort = args['sort'],
-                end_level = args['end_level'], quiet = args['quiet'],
+        BaseTagProcessor().detauch_art(args['dir'],
+                sort = args['sort'],
+                end_level = args['end_level'],
+                display_current = args['display_current'], quiet = args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'])

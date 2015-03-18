@@ -103,13 +103,26 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = True)
 
-        cmd = 'find . -type f | grep "_\d\d\d\d-\d\d-\d\d" | wc -l'.format(self.src_dir)
+        cmd = 'find {} -type f | grep "_\d\d\d\d-\d\d-\d\d" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
         self.assertTrue(fcnt == 30)
         self.resetDataFromBackup(quiet=True)
 
 
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_delete_non_media(self):
+        Renamer.delete(src_dir = self.src_dir, end_level = 1,
+                                include = '*png',
+                                filter_dirs = False,
+                                include_dirs = False,
+                                non_media_files_only = True, quiet = True)
+
+        cmd = 'find {} -maxdepth 2 | wc -l'.format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd) - 1 # not counting the src_dir
+
+        self.assertTrue(fcnt == 7)
+        self.resetDataFromBackup(quiet=True)
 
 
 

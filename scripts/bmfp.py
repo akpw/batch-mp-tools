@@ -43,11 +43,13 @@ from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOpt
 
       Global Options (bmfp -h for additional help)
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]          End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
@@ -261,8 +263,6 @@ class BMFPDispatcher:
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
                 reset_timestamps = args['reset_timestamps'],
                 preserve_metadata = args['preserve_metadata'])
-
-
 
     @staticmethod
     def dispatch():

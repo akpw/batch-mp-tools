@@ -45,11 +45,12 @@ A rainy-weekends project under occasional development :)
           .. print      Prints source directory
           .. flatten    Flatten all folders below target level, moving the files up
                             at the target level. By default, deletes all empty flattened folders
+          .. replace    RegExp-based replace in files and directories
           .. index      Adds index to files and directories
-          .. date       Adds date to files and directories
-          .. text       Adds text to files and directories
-             remove     Removes n characters from files and directories
-             replace    RegExp-based replace in files and directories
+          .. add_date   Adds date to files and directories
+          .. add_text   Adds text to files and directories
+          .. remove     Removes n characters from files and directories
+          .. delete     Delete selected files
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -57,16 +58,19 @@ A rainy-weekends project under occasional development :)
 
       Global Options (renamer -h for additional help)
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]          End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (renamer {command} -h for additional help)
-        {print, flatten, index, date, text, remove,replace}
+        {print, flatten, replace, index, add_date, add_text, remove, delete}
 
 ###tagger
     Batch management of media files metadata (tags & artwork)
@@ -82,7 +86,7 @@ A rainy-weekends project under occasional development :)
       . visualises original / targeted files metadata structure
       . action commands:
           .. print      Prints media info
-          .. set        Sets tags in media files, including artwork. e.g:
+          .. set        Sets tags in media files, including artwork, e.g:
                                 $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
                             Supports expandable templates. To specify a template value,
                             use the long tag name preceded by $:
@@ -90,10 +94,10 @@ A rainy-weekends project under occasional development :)
                             In addition to tag fields templates, file names are also supported:
                                 $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Removes all tags from media files
+          .. remove     Removes tags from media files
           .. index      Indexes Track / Track Total tags
           .. replace    RegExp-based replace in tags (title, artist, ...)
-                            e.g., to remove the first three charachters in title:
+                            e.g., to remove the first three characters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
           .. detauch    Extracts artwork
 
@@ -103,12 +107,15 @@ A rainy-weekends project under occasional development :)
 
       Global Options (tagger -h for additional help)
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]          End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
@@ -137,11 +144,13 @@ A rainy-weekends project under occasional development :)
 
       Global Options (bmfp -h for additional help)
         [-r, --recursive]           Recurse into nested folders
-        [-el, --endlevel]           End level for recursion into nested folders
+        [-el, --end-level]          End level for recursion into nested folders
+
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --alldirs]            Prevent using Include/Exclude patterns on directories
-        [-af, --allfiles]           Prevent using Include/Exclude patterns on files
+        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
+        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 

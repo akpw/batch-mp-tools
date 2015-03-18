@@ -14,7 +14,8 @@ import os, re, datetime
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import FSH, DWalker
-
+from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
+from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 
 class DirsIndexInfo:
     ''' A helper class,
@@ -57,10 +58,12 @@ class Renamer(object):
     @staticmethod
     def add_index(src_dir, as_prefix = False, join_str = '_',
                             start_from = 1, min_digits = 1,
-                            end_level = 0, sort = 'n',
+                            end_level = 0,
+                            sort = 'n', nested_indent = '\t',
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
-                            include_dirs = False, include_files = True, quiet = False):
+                            include_dirs = False, include_files = True,
+                            display_current = True, quiet = False):
         ''' adds indexing
             automatically figures out right number of min_digits
         '''
@@ -109,11 +112,12 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_index_transform)
+                                    formatter = add_index_transform, display_current = display_current)
         if proceed:
             # reset counters
             dir_info.reset_counters()
@@ -127,10 +131,12 @@ class Renamer(object):
 
     @staticmethod
     def add_date(src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
-                                end_level = 0, sort = 'n',
+                                end_level = 0,
+                                sort = 'n', nested_indent = '\t',
                                 include = '*', exclude = '',
                                 filter_dirs = True, filter_files = True,
-                                include_dirs = False, include_files = True, quiet = False):
+                                include_dirs = False, include_files = True,
+                                display_current = True, quiet = False):
         ''' adds current date
         '''
         addition = datetime.datetime.now().strftime(format)
@@ -151,11 +157,12 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_date_transform)
+                                    formatter = add_date_transform, display_current = display_current)
         if proceed:
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
@@ -166,10 +173,12 @@ class Renamer(object):
     @staticmethod
     def add_text(src_dir, text,
                     as_prefix = False, join_str = ' ',
-                    end_level = 0, sort = 'n',
+                    end_level = 0,
+                    sort = 'n', nested_indent = '\t',
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
-                    include_dirs = False, include_files = True, quiet = False):
+                    include_dirs = False, include_files = True,
+                    display_current = True, quiet = False):
         ''' adds text
         '''
         addition = text
@@ -190,11 +199,12 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_text_transform)
+                                    formatter = add_text_transform, display_current = display_current)
         if proceed:
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
@@ -202,11 +212,13 @@ class Renamer(object):
                                     formatter = add_text_transform, quiet = quiet)
 
     @staticmethod
-    def remove_n_characters(src_dir, sort = 'n',
+    def remove_n_characters(src_dir,
+                            sort = 'n', nested_indent = '\t',
                             num_chars = 0, from_head = True,
                             end_level = 0, include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
-                            include_dirs = False, include_files = True, quiet = False):
+                            include_dirs = False, include_files = True,
+                            display_current = True, quiet = False):
         ''' removes n first characters
         '''
         num_chars = abs(num_chars)
@@ -227,11 +239,12 @@ class Renamer(object):
             return ''.join((name_base, name_ext))
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = remove_n_chars_transform)
+                                    formatter = remove_n_chars_transform, display_current = display_current)
         if proceed:
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
@@ -241,10 +254,12 @@ class Renamer(object):
     @staticmethod
     def replace(src_dir,
                     find_str, replace_str, case_insensitive=False,
-                    end_level = 0, sort = 'n',
+                    end_level = 0,
+                    sort = 'n', nested_indent = '\t',
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
-                    include_dirs = False, include_files = True, quiet = False):
+                    include_dirs = False, include_files = True,
+                    display_current = True, quiet = False):
         ''' replaces text
         '''
         flags = re.UNICODE
@@ -272,15 +287,65 @@ class Renamer(object):
                 return entry.basename
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir, sort = sort,
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
                                     orig_end_level = end_level, target_end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = replace_transform)
+                                    formatter = replace_transform, display_current = display_current)
         if proceed:
             DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = replace_transform, quiet = quiet)
+
+
+    @staticmethod
+    def delete(src_dir, *,
+                non_media_files_only = True,
+                end_level = 0,
+                sort = 'n', nested_indent = '\t',
+                include = '*', exclude = '',
+                filter_dirs = True, filter_files = True,
+                include_dirs = False, include_files = True,
+                display_current = True, quiet = False):
+
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+
+        def delete_transform(entry):
+            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+                return entry.basename
+            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+                return None
+            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+                return None
+
+            if non_media_files_only:
+                if handler.can_handle(entry.realpath):
+                    return None
+
+            # these are to be gone soon...
+            return entry.basename
+
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
+                                    orig_end_level = end_level, target_end_level = end_level,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    formatter = delete_transform, display_current = display_current,
+                                    after_msg = 'The following files / folders will be deleted')
+
+        if proceed:
+            DHandler.remove_entries(src_dir = src_dir, end_level = end_level,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    formatter = delete_transform, quiet = quiet)
+
+
+
+
+
+
+
 
 
