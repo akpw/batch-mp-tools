@@ -158,18 +158,26 @@ class FSH:
         ''' Remove files / dirs,
             can deal with with read-only files
         '''
-        def delete_file_entry(fpath):
-            if include_read_only:
-                os.chmod(fpath, stat.S_IWRITE)
-            os.remove(fpath)
+        def check_writable(fpath):
+            if include_read_only and (not os.access(path, os.W_OK)):
+                os.chmod(path, stat.S_IWUSR)
+                return True
+            else:
+                return False
+
+        def onerror(func, path, exc_info):
+            if check_writable(path):
+                func(path)
+            else:
+                raise
 
         entry_path = FSH.full_path(entry_path)
-
         if os.path.isfile(entry_path):
-            delete_file_entry(entry_path)
+            check_writable(entry_path)
+            os.remove(fpath)
 
         elif os.path.isdir(entry_path):
-            shutil.rmtree(entry_path, onerror = delete_file_entry)
+            shutil.rmtree(entry_path, onerror = onerror)
 
 class UniqueDirNamesChecker:
     ''' Produces a unique name for file in a directory

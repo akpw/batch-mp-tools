@@ -259,18 +259,15 @@ class DHandler:
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
                 continue
 
-            target_name = formatter(entry)
-            if target_name is None:
+            if formatter(entry) is None:
                 continue
-
-            target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
 
             if entry.type == DWalker.ENTRY_TYPE_DIR:
                 # for dirs, need to postpone
                 dir_entries.append(entry.realpath)
 
             elif entry.type == DWalker.ENTRY_TYPE_FILE:
-                # for files, just remove
+                # for files, OK to remove now
                 FSH.remove_FS_entry(entry.realpath)
                 fcnt += 1
 
