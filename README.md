@@ -152,6 +152,7 @@ A rainy-weekends project under occasional development :)
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
         [-ma, --map-all]            Force including all streams from the input file
