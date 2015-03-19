@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version="0.61",
+    version='0.61',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -25,11 +25,11 @@ setup(
     license='GNU General Public License v2 (GPLv2)',
 
     packages=find_packages(exclude=['test*']),
-    keywords = "batch processing media video audio CLI ",
+    keywords = 'batch processing media video audio CLI ',
 
     install_requires = ['mutagen>=1.27'],
 
-    test_suite = "tests.batch_mp_test_suite",
+    test_suite = 'tests.batch_mp_test_suite',
 
     entry_points={'console_scripts': [
         'bmfp = scripts.bmfp:main',
@@ -42,14 +42,19 @@ setup(
         'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3 :: Only',
+        'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Information Technology',
         'Operating System :: OS Independent',
-        "Topic :: Multimedia :: Sound/Audio",
-        "Topic :: Multimedia :: Sound/Audio :: Analysis",
-        "Topic :: Multimedia :: Sound/Audio :: Conversion",
-        "Topic :: Multimedia :: Sound/Audio :: Noise reduction",
-        "Topic :: Software Development :: Libraries",
+        'Topic :: Multimedia :: Sound/Audio',
+        'Topic :: Multimedia :: Sound/Audio :: Analysis',
+        'Topic :: Multimedia :: Sound/Audio :: Conversion',
+        'Topic :: Multimedia :: Sound/Audio :: Noise reduction',
+        'Topic :: Multimedia :: Video',
+        'Topic :: Multimedia :: Video :: Conversion',
+        'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',
     ]
 )
