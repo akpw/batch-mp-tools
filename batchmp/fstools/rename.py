@@ -13,7 +13,7 @@
 import os, re, datetime
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.fsutils import FSH, DWalker
+from batchmp.fstools.fsutils import DWalker
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 
@@ -24,14 +24,20 @@ class DirsIndexInfo:
     DirStats = namedtuple('DirStats',
              ['total_files', 'total_dirs', 'files_cnt', 'dirs_cnt'])
 
-    def __init__(self, start_from, min_digits):
+    def __init__(self, start_from = 0, min_digits = 0,
+                                file_pass_filter = None, dir_pass_filter = None):
         self.dirs_info = {}
         self.start_from = start_from
         self.min_digits = min_digits
 
-    def get_dir_stats(self, dirname):
+        self.file_pass_filter = file_pass_filter
+        self.dir_pass_filter = dir_pass_filter
+
+    def fetch_dir_stats(self, dirname):
         if not dirname in self.dirs_info.keys():
-            total_files, total_dirs, _ = DHandler.dir_stats(src_dir = dirname, end_level = 0)
+            total_files, total_dirs, _ = DHandler.dir_stats(src_dir = dirname, end_level = 0,
+                                                            file_pass_filter = self.file_pass_filter,
+                                                            dir_pass_filter = self.dir_pass_filter)
             dir_info = self.DirStats(total_files, total_dirs, self.start_from, self.start_from)
             self.dirs_info[dirname] = dir_info
         return self.dirs_info[dirname]
@@ -42,7 +48,7 @@ class DirsIndexInfo:
 
     def reset_counters(self):
         for key in self.dirs_info.keys():
-            dir_info = self.get_dir_stats(key)
+            dir_info = self.fetch_dir_stats(key)
             self.dirs_info[key] = self.DirStats(dir_info.total_files, dir_info.total_dirs,
                                                                     self.start_from, self.start_from)
     def num_digits(self, n):
@@ -68,7 +74,7 @@ class Renamer(object):
             automatically figures out right number of min_digits
         '''
         try:
-            start_from = int(start_from)
+            start_from = abs(int(start_from))
         except ValueError:
             start_from = 1
 
@@ -80,7 +86,7 @@ class Renamer(object):
                 return entry.basename
 
             parent_dir = os.path.dirname(entry.realpath)
-            dir_stats = dir_info.get_dir_stats(parent_dir)
+            dir_stats = dir_info.fetch_dir_stats(parent_dir)
 
             if entry.type == DWalker.ENTRY_TYPE_DIR:
                 if not include_dirs:

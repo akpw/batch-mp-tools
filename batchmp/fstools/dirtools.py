@@ -68,7 +68,8 @@ class DHandler:
                         start_level = 0, end_level = sys.maxsize, flatten = False,
                         include = '*', exclude = '',
                         filter_dirs = True, filter_files = True,
-                        include_size = True):
+                        include_size = False,
+                        file_pass_filter = None, dir_pass_filter = None):
         """ Returns base stats for given directory
         """
         if not os.path.exists(src_dir):
@@ -82,8 +83,12 @@ class DHandler:
                                         filter_dirs = filter_dirs, filter_files = filter_files):
 
             if entry.type == DWalker.ENTRY_TYPE_FILE:
+                if file_pass_filter and (not file_pass_filter(entry.realpath)):
+                    continue
                 fcnt += 1
             elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                if dir_pass_filter and (not dir_pass_filter(entry.realpath)):
+                    continue
                 if FSH.level_from_root(src_dir, entry.realpath) > start_level:
                     dcnt += 1
 
@@ -119,7 +124,8 @@ class DHandler:
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True,
                                 flatten = False, ensure_uniq = False,
-                                preformatter = None, formatter = None, display_current = True):
+                                preformatter = None, formatter = None, reset_formatters = None,
+                                display_current = True):
 
         if display_current:
             print(before_msg)
@@ -129,6 +135,8 @@ class DHandler:
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = preformatter)
+            if reset_formatters:
+                reset_formatters()
             print()
 
         print(after_msg)

@@ -36,7 +36,7 @@ class FSTests(FSTest):
         DHandler.flatten_folders(src_dir = self.src_dir,
                                 target_level = 0, include = '*', filter_dirs = False, quiet = True)
 
-        fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir, include_size = False)
+        fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir)
         self.assertTrue(fcnt == 30 and dcnt == 0)
         self.resetDataFromBackup(quiet=True)
 

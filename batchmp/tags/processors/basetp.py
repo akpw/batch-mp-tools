@@ -16,6 +16,7 @@
 import sys, os, re
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
+from batchmp.fstools.rename import DirsIndexInfo
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
@@ -53,14 +54,13 @@ class BaseTagProcessor:
                             flatten = flatten, ensure_uniq = ensure_uniq,
                             show_size = show_size, formatter = formatter)
 
-
     def set_tags(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
-                            tag_holder = None, tag_holder_gen = None):
+                            tag_holder = None, tag_holder_builder = None):
         ''' Set tags from tag_holder attributes
         '''
-        if not tag_holder and not tag_holder_gen:
+        if not tag_holder and not tag_holder_builder:
             return
 
         fcnt = 0
@@ -70,8 +70,8 @@ class BaseTagProcessor:
                                             include = include, exclude = exclude, sort = sort,
                                             filter_dirs = filter_dirs, filter_files = filter_files,
                                             pass_filter = pass_filter):
-            if tag_holder_gen:
-                tag_holder = next(tag_holder_gen)
+            if tag_holder_builder:
+                tag_holder = tag_holder_builder(entry)
 
             self.handler.copy_tags(tag_holder)
             self.handler.save()
@@ -81,18 +81,18 @@ class BaseTagProcessor:
         if not quiet:
             print('Set tags in {0} entries'.format(fcnt))
 
-
     def set_tags_visual(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
                             sort = 'n', nested_indent = '\t',
                             filter_dirs = True, filter_files = True,
                             display_current = True, diff_tags_only = False,
                             quiet = False,
-                            tag_holder = None, tag_holder_gen = None):
+                            tag_holder = None,
+                            tag_holder_builder = None, reset_tag_holder_builder = None):
         ''' Set tags from tag_holder attributes
             Visualises changes before proceeding
         '''
-        if not tag_holder and not tag_holder_gen:
+        if not tag_holder and not tag_holder_builder:
             return
         if quiet:
             proceed = True
@@ -102,14 +102,14 @@ class BaseTagProcessor:
                                             handler = self.handler,
                                             show_stats = False,
                                             tag_holder = tag_holder,
-                                            tag_holder_gen = tag_holder_gen() if tag_holder_gen else None,
+                                            tag_holder_builder = tag_holder_builder,
                                             diff_tags_only = diff_tags_only)
 
             formatter = partial(TagOutputFormatter.tags_formatter,
                                             handler = self.handler,
                                             show_stats = False,
                                             tag_holder = tag_holder,
-                                            tag_holder_gen = tag_holder_gen() if tag_holder_gen else None,
+                                            tag_holder_builder = tag_holder_builder,
                                             show_tag_holder_values = True,
                                             diff_tags_only = diff_tags_only)
 
@@ -118,17 +118,20 @@ class BaseTagProcessor:
                                             orig_end_level = end_level, target_end_level = end_level,
                                             include = include, exclude = exclude,
                                             filter_dirs = filter_dirs, filter_files = filter_files,
-                                            preformatter = preformatter,
-                                            formatter = formatter, display_current = display_current)
+                                            preformatter = preformatter, formatter = formatter,
+                                            reset_formatters = reset_tag_holder_builder,
+                                            display_current = display_current)
         if proceed:
+            if reset_tag_holder_builder:
+                reset_tag_holder_builder()
+
             self.set_tags(src_dir,
                     sort = sort,
                     end_level = end_level,
                     include = include, exclude = exclude, quiet = quiet,
                     filter_dirs = filter_dirs, filter_files = filter_files,
                     tag_holder = tag_holder,
-                    tag_holder_gen = tag_holder_gen() if tag_holder_gen else None)
-
+                    tag_holder_builder = tag_holder_builder)
 
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
@@ -136,28 +139,44 @@ class BaseTagProcessor:
                             filter_dirs = True, filter_files = True,
                             display_current = True, quiet = False,
                             diff_tags_only = False, start_from = 1):
-        ''' Indexes the tracks / tracktotal tags
+        ''' Indexes the tracks / tracktotal tags, per media files' respective directories
             Visualises changes before proceeding
         '''
-        if (start_from) < 1:
+        try:
+            start_from = int(start_from)
+            if (start_from) < 1:
+                start_from = 1
+        except ValueError:
             start_from = 1
 
-        # Get the number of affected media files
-        tracks_total = start_from - 1
         pass_filter = lambda fpath: self.handler.can_handle(fpath)
+        dir_info = DirsIndexInfo(start_from = start_from, file_pass_filter = pass_filter)
         for entry in DWalker.file_entries(src_dir,
                                             end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,
                                             filter_dirs = filter_dirs, filter_files = filter_files,
                                             pass_filter = pass_filter):
-            tracks_total += 1
+            # get the directory info
+            dir_info.fetch_dir_stats(os.path.dirname(entry.realpath))
 
-        def tag_holder_gen():
-            for track_idx in range(start_from, tracks_total + 1):
-                tag_holder = TagHolder()
-                tag_holder.track = track_idx
-                tag_holder.tracktotal = tracks_total
-                yield tag_holder
+        def tag_holder_builder(entry):
+            tag_holder = TagHolder()
+
+            parent_dir = os.path.dirname(entry.realpath)
+            dir_stats = dir_info.fetch_dir_stats(parent_dir)
+
+            tag_holder.track = dir_stats.files_cnt
+            tag_holder.tracktotal = dir_stats.total_files
+
+            # need to update the files counter
+            dir_stats = dir_info.DirStats(dir_stats.total_files, dir_stats.total_dirs,
+                                                dir_stats.files_cnt + 1, dir_stats.dirs_cnt)
+            dir_info.update_dir_stats(parent_dir, dir_stats)
+
+            return tag_holder
+
+        def reset_tag_holder_builder():
+            dir_info.reset_counters()
 
         self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude,
@@ -165,8 +184,8 @@ class BaseTagProcessor:
                         filter_dirs = filter_dirs, filter_files = filter_files,
                         quiet = quiet, display_current = display_current,
                         diff_tags_only = diff_tags_only,
-                        tag_holder_gen = tag_holder_gen)
-
+                        tag_holder_builder = tag_holder_builder,
+                        reset_tag_holder_builder = reset_tag_holder_builder)
 
     def remove_tags(self, src_dir, *, end_level = sys.maxsize,
                         include = '*', exclude = '',
@@ -193,7 +212,6 @@ class BaseTagProcessor:
                         diff_tags_only = diff_tags_only,
                         tag_holder = tag_holder)
 
-
     def copy_tags(self, src_dir, *, end_level = sys.maxsize,
                         include = '*', exclude = '',
                         sort = 'n', nested_indent = '\t',
@@ -216,7 +234,6 @@ class BaseTagProcessor:
                         tag_holder = tag_holder)
         else:
             print('Can not handle tags holder: {}'.format(tag_holder_path))
-
 
     def replace_tag(self, src_dir, *, end_level = sys.maxsize,
                     include = '*', exclude = '',
@@ -257,7 +274,6 @@ class BaseTagProcessor:
                         quiet = quiet, diff_tags_only = diff_tags_only,
                         display_current = display_current,
                         tag_holder = tag_holder)
-
 
     def detauch_art(self, src_dir, *, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',

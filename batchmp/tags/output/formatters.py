@@ -31,7 +31,7 @@ class TagOutputFormatter:
     @staticmethod
     def tags_formatter(entry, *,
                            format = None, handler = None, show_stats = False,
-                           tag_holder = None, tag_holder_gen = None,
+                           tag_holder = None, tag_holder_builder = None,
                            show_tag_holder_values = False,
                            diff_tags_only = False):
 
@@ -41,8 +41,8 @@ class TagOutputFormatter:
         if not handler or not handler.can_handle(entry.realpath):
             return None
 
-        if tag_holder_gen:
-            tag_holder = next(tag_holder_gen)
+        if tag_holder_builder:
+            tag_holder = tag_holder_builder(entry)
 
         if not format or (format not in OutputFormatType):
             if tag_holder:
