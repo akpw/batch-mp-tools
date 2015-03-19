@@ -10,20 +10,21 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-""" A simple single-line console progress bar
+
+''' A simple single-line console progress bar
     Displays progress by fractions of 10%
     Supports premature stops & info messages during execution
-"""
-
+'''
 import sys, time
 from bisect import bisect as bs
 import threading, queue
 from contextlib import contextmanager
 
+
 @contextmanager
 def progress_bar(starts_from=0):
-    """ Convinient way to use via a runtime context
-    """
+    ''' Enables usage via a runtime context
+    '''
     p_bar = CmdProgressBar(starts_from)
     p_bar.start()
     try:
@@ -31,9 +32,11 @@ def progress_bar(starts_from=0):
     finally:
         p_bar.stop()
 
+
 class CmdProgressBarUpdateTypes:
     UPDATE_PROGRESS = 0
     UPDATE_MSG = 1
+
 
 class CmdProgressBar(object):
     def __init__(self, start_from=0):

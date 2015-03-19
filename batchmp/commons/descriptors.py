@@ -10,11 +10,13 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-""" Properties Descriptors Types
-"""
+
+''' Properties Descriptors Types
+'''
 from importlib import import_module
 from types import MethodType, FunctionType
 from weakref import WeakKeyDictionary, WeakMethod
+
 
 class PropertyDescriptor:
     ''' Base Property Descriptor
@@ -31,6 +33,7 @@ class PropertyDescriptor:
     def __delete__(self, instance):
         if self.data.get(instance):
             del self.data[instance]
+
 
 class LazyTypedPropertyDescriptor(PropertyDescriptor):
     ''' Dynamically instantiates property of a given custom type
@@ -113,7 +116,7 @@ class WeakMethodPropertyDescriptor(PropertyDescriptor):
 
 
 class BooleanPropertyDescriptor(PropertyDescriptor):
-    ''' A function type property descriptor
+    ''' A boolean type property descriptor
     '''
     def __set__(self, instance, value):
         if isinstance(value, bool):

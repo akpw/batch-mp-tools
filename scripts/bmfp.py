@@ -12,14 +12,6 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import sys
-from datetime import timedelta
-from batchmp.ffmptools.ffcommands.convert import Convertor
-from batchmp.ffmptools.ffcommands.segment import Segmenter
-from batchmp.ffmptools.ffcommands.fragment import Fragmenter
-from batchmp.ffmptools.ffcommands.denoise import Denoiser
-from scripts.base.bmpbargp import BMPBaseArgParser
-from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 """ Batch processing of media files
       . Uses multiprocessing to utilize available CPU cores
@@ -67,11 +59,24 @@ from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOpt
       Commands: (bmfp {command} -h for additional help)
         {convert, denoise, fragment, segment, ...}
 """
+import sys
+from datetime import timedelta
+from batchmp.ffmptools.ffcommands.convert import Convertor
+from batchmp.ffmptools.ffcommands.segment import Segmenter
+from batchmp.ffmptools.ffcommands.fragment import Fragmenter
+from batchmp.ffmptools.ffcommands.denoise import Denoiser
+from scripts.base.bmpbargp import BMPBaseArgParser
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
+
 
 class BMFPArgParser(BMPBaseArgParser):
+    ''' BMFP commands parsing
+    '''
     @staticmethod
     def parse_commands(parser):
-        # BFMP Global
+        ''' parses BMFP parsing
+        '''
+        # BFMP Global options
         ffmpeg_group = parser.add_argument_group('FFmpeg General Options')
         ffmpeg_group.add_argument("-ma", "--map-all", dest='all_streams',
                     help = "Force including all streams from the input file",
@@ -177,6 +182,8 @@ class BMFPArgParser(BMPBaseArgParser):
 
     @staticmethod
     def check_args(args, parser):
+        ''' Validation of supplied BMFP CLI arguments
+        '''
         if not args['sub_cmd']:
             parser.print_help()
             sys.exit(1)
@@ -199,7 +206,6 @@ class BMFPArgParser(BMPBaseArgParser):
 
         args['ff_global_options'] = ff_global_options
 
-
         # Segment attributes check
         if args['sub_cmd'] == 'segment':
             if not args['segment_filesize'] and not args['segment_duration'].total_seconds():
@@ -215,7 +221,10 @@ class BMFPArgParser(BMPBaseArgParser):
                 if args['change_container']:
                     args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 
+
 class BMFPDispatcher:
+    ''' BMFP CLI commands Dispatcher
+    '''
     @staticmethod
     def convert(args):
         Convertor().convert(src_dir = args['dir'],
@@ -266,6 +275,8 @@ class BMFPDispatcher:
 
     @staticmethod
     def dispatch():
+        ''' Dispatches BMFP commands
+        '''
         args = BMFPArgParser().parse_options(script_name = 'bmfp')
 
         if args['sub_cmd'] == 'convert':
@@ -278,6 +289,8 @@ class BMFPDispatcher:
             BMFPDispatcher.segment(args)
 
 def main():
+    ''' BMFP entry point
+    '''
     BMFPDispatcher.dispatch()
 
 if __name__ == '__main__':

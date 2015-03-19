@@ -13,7 +13,6 @@
 
 """ Batch splitting of media files
 """
-
 import shutil, sys, os, datetime, math, fnmatch
 from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
 from batchmp.ffmptools.ffrunner import FFMPRunner
@@ -29,7 +28,7 @@ from batchmp.ffmptools.ffutils import (
 )
 
 class SegmenterTask(Task):
-    ''' A specific TasksProcessor task
+    ''' Segment TasksProcessor task
     '''
     def __init__(self, fpath, backup_path,
                             ff_global_options, ff_other_options, preserve_metadata,
@@ -49,9 +48,8 @@ class SegmenterTask(Task):
                             FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if reset_timestamps else ''))
 
     def execute(self):
-        ''' builds and runs FFmpeg command in a subprocess
+        ''' builds and runs Segment FFmpeg command in a subprocess
         '''
-
         # store tags if needed
         self._store_tags()
 
@@ -182,11 +180,5 @@ class Segmenter(FFMPRunner):
             print('No media files to process')
 
         return cpu_core_time
-
-
-
-
-
-
 
 

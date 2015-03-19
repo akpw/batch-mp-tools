@@ -13,14 +13,6 @@
 ## GNU General Public License for more details.
 
 
-import os
-from argparse import ArgumentParser
-from scripts.base.bmpbargp import BMPBaseArgParser
-from batchmp.tags.processors.basetp import BaseTagProcessor
-from batchmp.tags.handlers.tagsholder import TagHolder
-from batchmp.tags.output.formatters import OutputFormatType
-from functools import partial
-
 """ Batch management of media files metadata (tags & artwork)
       . Supported formats:
             'MP3', 'MP4', 'M4A', M4V', 'AIFF', 'ASF', 'QuickTime / MOV',
@@ -69,13 +61,24 @@ from functools import partial
       Commands (tagger {command} -h for additional help)
         {print, set, copy, remove, index, replace, detauch}
 """
+import os
+from argparse import ArgumentParser
+from scripts.base.bmpbargp import BMPBaseArgParser
+from batchmp.tags.processors.basetp import BaseTagProcessor
+from batchmp.tags.handlers.tagsholder import TagHolder
+from batchmp.tags.output.formatters import OutputFormatType
+from functools import partial
+
 
 class TaggerArgParser(BMPBaseArgParser):
+    ''' Tagger CLI commands parsing
+    '''
     SUPPORTED_REPLACE_FIELDS = ['title', 'album', 'artist', 'albumartist', 'composer', 'comments', 'lyrics']
 
     @staticmethod
     def parse_commands(parser):
-
+        ''' parses Tagger commands
+        '''
         def add_show_other_tags_mode(parser):
             parser.add_argument('-do', '--diff-only', dest = 'diff_tags_only',
                     help ='Show only changed tags in the confirmation propmt',
@@ -141,7 +144,6 @@ class TaggerArgParser(BMPBaseArgParser):
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
-
         set_tags_parser.add_argument('-bm', '--bpm', dest='bpm',
                 help = "Sets the BPM tag",
                 type = str)
@@ -248,6 +250,8 @@ class TaggerArgParser(BMPBaseArgParser):
                         parser.error('The tag field "{}" is not supported'.format(removable_field))
 
 class TagsDispatcher:
+    ''' Tagger CLI Commands Dispatcher
+    '''
     @staticmethod
     def print_dir(args):
         BaseTagProcessor().print_dir(src_dir = args['dir'],
@@ -353,6 +357,8 @@ class TagsDispatcher:
 
     @staticmethod
     def dispatch():
+        ''' Dispatches Tagger commands
+        '''
         args = TaggerArgParser().parse_options(script_name = 'tagger')
         if args['sub_cmd'] == 'print':
             TagsDispatcher.print_dir(args)
@@ -370,6 +376,8 @@ class TagsDispatcher:
             TagsDispatcher.detauch_art(args)
 
 def main():
+    ''' Tagger entry point
+    '''
     TagsDispatcher.dispatch()
 
 if __name__ == '__main__':

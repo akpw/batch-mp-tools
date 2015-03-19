@@ -13,7 +13,6 @@
 
 """ Batch Fragmentation of media files
 """
-
 import shutil, sys, os
 from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
 from batchmp.ffmptools.ffrunner import FFMPRunner
@@ -26,7 +25,7 @@ from batchmp.ffmptools.ffutils import (
 )
 
 class FragmenterTask(Task):
-    ''' A specific TasksProcessor task
+    ''' Fragment TasksProcessor task
     '''
 
     FRAGMENTED_FILE_PREFIX = '_fr'
@@ -44,7 +43,7 @@ class FragmenterTask(Task):
         self.replace_original = replace_original
 
     def execute(self):
-        ''' builds and runs FFmpeg command in a subprocess
+        ''' builds and runs Fragment FFmpeg command in a subprocess
         '''
         # store tags if needed
         self._store_tags()

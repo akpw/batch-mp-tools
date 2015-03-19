@@ -10,9 +10,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 import sys, datetime, math
 from batchmp.ffmptools.ffutils import FFH, timed
 from abc import ABCMeta, abstractmethod
+
 
 class FFMPRunner(metaclass = ABCMeta):
     ''' Base FFMPRunner
@@ -26,7 +28,6 @@ class FFMPRunner(metaclass = ABCMeta):
     def run(self, *args, **kwargs):
         pass
 
-
     def run_report(self, cpu_core_time, total_elapsed):
         ''' Info summary on executed FFMP commands
         '''
@@ -35,7 +36,6 @@ class FFMPRunner(metaclass = ABCMeta):
 
         print('Total running time: {}'.format(str(ttd).rstrip('0')))
         print('Cumulative FFmpeg CPU Cores time: {}'.format(str(ctd).rstrip('0')))
-
 
     # Internal helpers
     def _prepare_files(self, src_dir, *,  end_level = sys.maxsize, sort = 'n',

@@ -13,16 +13,17 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
-""" A Chain of Responsibility impl
+
+''' A Chain of Responsibility impl
     Usage:
     >>> handler = ConcreteHandler1() + ConcreteHandler2() + ...
     >>> if handler.can_handle(request):
         .... handler.operation()
-"""
-
+'''
 from abc import ABCMeta, abstractmethod
 from batchmp.commons.descriptors import LazyFunctionPropertyDescriptor
 from weakref import ref, ReferenceType
+
 
 class ChainedHandler(metaclass = ABCMeta):
     class HandlersChainDispatcher:

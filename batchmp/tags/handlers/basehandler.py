@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 """ Tag Handlers responsibility chain
 """
 import os
@@ -21,6 +22,7 @@ from batchmp.commons.chainedhandler import ChainedHandler
 from abc import abstractmethod
 from batchmp.fstools.fsutils import UniqueDirNamesChecker
 from batchmp.commons.descriptors import LazyTypedPropertyDescriptor
+
 
 class DetauchedArtType(Enum):
     ''' Detached art type specifier
@@ -32,6 +34,7 @@ class DetauchedArtType(Enum):
             return '.jpg'
         else:
             return '.png'
+
 
 class TagHandler(ChainedHandler):
     tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')

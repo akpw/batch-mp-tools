@@ -10,8 +10,6 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-''' FFmpeg-related utilities
-'''
 
 import os, subprocess, shlex, sys
 import time, datetime, json
@@ -27,6 +25,8 @@ class CmdProcessingError(Exception):
 
 
 class FFH:
+    ''' FFmpeg-related utilities
+    '''
     BACKUP_DIR_PREFIX = '_backup_'
     FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
     FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams', 'video_streams'])
@@ -50,6 +50,10 @@ class FFH:
 
     @staticmethod
     def media_file_info(fpath):
+        ''' Compact media file info
+            Extracts key information relevant for futher processing,
+            such as main audio stream, artwork, etc.
+        '''
         full_entry = FFH.media_file_info_full(fpath)
         if full_entry:
             audio_stream = artwork_stream = None
@@ -72,6 +76,8 @@ class FFH:
 
     @staticmethod
     def media_file_info_full(fpath):
+        ''' Gathers full info about a media file
+        '''
         if not FFH.ffmpeg_installed():
             return None
 
@@ -104,9 +110,10 @@ class FFH:
 
             return FFH.FFFullEntry(fpath, format, audio_streams, video_streams)
 
-
     @staticmethod
     def supported_media(fpath):
+        ''' Determines if a file can be processed with FFmpeg
+        '''
         if not FFH.media_file_info(fpath):
             return False
         else:
@@ -117,7 +124,7 @@ class FFH:
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True, pass_filter = None):
-        """ yields media files supported by FFmpeg
+        """ Return a generator of media files that are supported by FFmpeg
         """
         if not pass_filter:
             pass_filter = lambda fpath: FFH.supported_media(fpath)

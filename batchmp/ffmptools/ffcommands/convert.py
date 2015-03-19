@@ -13,7 +13,6 @@
 
 """ Batch Conversion of media files
 """
-
 import shutil, sys, os
 from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
 from batchmp.ffmptools.ffrunner import FFMPRunner
@@ -26,7 +25,7 @@ from batchmp.ffmptools.ffutils import (
 )
 
 class ConvertorTask(Task):
-    ''' A specific TasksProcessor task
+    ''' Conversion TasksProcessor task
     '''
     def __init__(self, fpath, backup_path,
                                 ff_global_options, ff_other_options, preserve_metadata,
@@ -39,7 +38,7 @@ class ConvertorTask(Task):
                             ' {}'.format(convert_options) if convert_options else ''))
 
     def execute(self):
-        ''' builds and runs FFmpeg command in a subprocess
+        ''' builds and runs FFmpeg Conversion command in a subprocess
         '''
         # store tags if needed
         self._store_tags()
@@ -142,13 +141,5 @@ class Convertor(FFMPRunner):
             print('No media files to process')
 
         return cpu_core_time
-
-
-
-
-
-
-
-
 
 

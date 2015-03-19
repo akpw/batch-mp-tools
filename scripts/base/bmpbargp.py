@@ -12,9 +12,6 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import os, sys, datetime
-from argparse import ArgumentParser
-from batchmp.fstools.fsutils import FSH
 
 """ Global options parsing for scripts:
         [-r, --recursive]           Recurse into nested folders
@@ -29,6 +26,12 @@ from batchmp.fstools.fsutils import FSH
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 """
+import os, sys, datetime
+from argparse import ArgumentParser
+from distutils.util import strtobool
+from batchmp.fstools.fsutils import FSH
+
+
 class BMPBaseArgParser:
     @staticmethod
     def expanded_path(path):
@@ -58,15 +61,11 @@ class BMPBaseArgParser:
     def is_boolean(parser, bool_arg):
         """ Checks if bool_arg can be interpreted as a boolean value
         """
-        if len(bool_arg) < 1:
+        try:
+            bool_arg = True if strtobool(bool_arg) else False
+        except ValueError:
             parser.error('Please enter a boolean value')
-        bool_arg = bool_arg[0].lower()
-        if bool_arg == 't' or bool_arg == 'y' or bool_arg == '1':
-            return True
-        elif bool_arg == 'f' or bool_arg == 'n' or bool_arg == '0':
             return False
-        else:
-            parser.error('Please enter a boolean value')
 
     @staticmethod
     def is_timedelta(parser, td_arg):
@@ -95,7 +94,8 @@ class BMPBaseArgParser:
 
     @staticmethod
     def parse_global_options(parser):
-        # Global Options
+        ''' Parses global options
+        '''
         source_mode_group = parser.add_argument_group('Input source mode')
         source_mode_group.add_argument("-d", "--dir", dest = "dir",
                     type = lambda d: BMPBaseArgParser.is_valid_dir_path(parser, d),
@@ -144,13 +144,17 @@ class BMPBaseArgParser:
                     help = "Disable visualising changes & displaying info messages during processing",
                     action = 'store_true')
 
-
     @staticmethod
     def parse_commands(parser):
+        ''' Specific commands parsing
+        '''
         pass
 
     @staticmethod
     def check_args(args, parser):
+        ''' Validation of supplied CLI arguments
+        '''
+
         # if input source is a file, need to adjust
         if args['file']:
             args['dir'] = os.path.dirname(args['file'])
@@ -166,6 +170,8 @@ class BMPBaseArgParser:
 
     @classmethod
     def parse_options(cls, script_name = 'batchmp tools', description = 'Global Options'):
+        ''' Common workflow for parsing options
+        '''
         parser = ArgumentParser(prog = script_name, description = description)
 
         cls.parse_global_options(parser)

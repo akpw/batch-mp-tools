@@ -10,12 +10,14 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 import os, re, datetime
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
+
 
 class DirsIndexInfo:
     ''' A helper class,
@@ -175,7 +177,6 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_date_transform, quiet = quiet)
 
-
     @staticmethod
     def add_text(src_dir, text,
                     as_prefix = False, join_str = ' ',
@@ -266,7 +267,7 @@ class Renamer(object):
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True,
                     display_current = True, quiet = False):
-        ''' replaces text
+        ''' Regexp-base replace
         '''
         flags = re.UNICODE
         if case_insensitive:
@@ -305,7 +306,6 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = replace_transform, quiet = quiet)
 
-
     @staticmethod
     def delete(src_dir, *,
                 non_media_files_only = True,
@@ -316,7 +316,12 @@ class Renamer(object):
                 include_dirs = False, include_files = True,
                 display_current = True, quiet = False):
 
-        handler = MutagenTagHandler() + FFmpegTagHandler()
+        ''' Deletes selected files
+            Support detection of non-media files
+        '''
+
+        if non_media_files_only:
+            handler = MutagenTagHandler() + FFmpegTagHandler()
 
         def delete_transform(entry):
             if entry.type == DWalker.ENTRY_TYPE_ROOT:
@@ -346,12 +351,6 @@ class Renamer(object):
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = delete_transform, quiet = quiet)
-
-
-
-
-
-
 
 
 

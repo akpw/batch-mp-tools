@@ -12,11 +12,6 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import sys
-from argparse import ArgumentParser
-from scripts.base.bmpbargp import BMPBaseArgParser
-from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.rename import Renamer
 
 """ Batch renaming of files and directories
       . supports source directory / source file modes
@@ -58,10 +53,20 @@ from batchmp.fstools.rename import Renamer
       Commands (renamer {command} -h for additional help)
         {print, flatten, replace, index, add_date, add_text, remove, delete}
 """
+import sys
+from argparse import ArgumentParser
+from scripts.base.bmpbargp import BMPBaseArgParser
+from batchmp.fstools.dirtools import DHandler
+from batchmp.fstools.rename import Renamer
+
 
 class RenameArgParser(BMPBaseArgParser):
+    ''' Renamer commands parsing
+    '''
     @staticmethod
     def parse_commands(parser):
+        ''' parses Renamer commands
+        '''
         # Commands
         subparsers = parser.add_subparsers(dest = 'sub_cmd', title = 'Renamer Commands')
 
@@ -193,6 +198,8 @@ class RenameArgParser(BMPBaseArgParser):
 
     @staticmethod
     def check_args(args, parser):
+        ''' Validation of supplied Renamer CLI arguments
+        '''
         BMPBaseArgParser.check_args(args, parser)
 
         if not args['sub_cmd']:
@@ -220,6 +227,8 @@ class RenameArgParser(BMPBaseArgParser):
 
 
 class RenameDispatcher:
+    ''' Renamer CLI Commands Dispatcher
+    '''
     @staticmethod
     def print_dir(args):
         DHandler.print_dir(src_dir = args['dir'],
@@ -316,6 +325,8 @@ class RenameDispatcher:
 
     @staticmethod
     def dispatch():
+        ''' Dispatches Renamer commands
+        '''
         args = RenameArgParser().parse_options(script_name = 'renamer')
         if args['sub_cmd'] == 'print':
             RenameDispatcher.print_dir(args)
@@ -334,8 +345,9 @@ class RenameDispatcher:
         elif args['sub_cmd'] == 'delete':
             RenameDispatcher.delete(args)
 
-
 def main():
+    ''' Renamer entry point
+    '''
     RenameDispatcher.dispatch()
 
 if __name__ == '__main__':

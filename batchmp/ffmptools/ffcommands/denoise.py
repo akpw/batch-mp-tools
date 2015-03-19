@@ -15,7 +15,6 @@
     via filtering out highpass / low-pass frequencies
     Supports multi-passes processing, e.g. 3 times for each media file
 """
-
 import shutil, sys, os, datetime, math
 from batchmp.fstools.fsutils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner
@@ -28,7 +27,7 @@ from batchmp.ffmptools.ffutils import (
 )
 
 class DenoiserTask(Task):
-    ''' A specific TasksProcessor task
+    ''' Denoise TasksProcessor task
     '''
     def __init__(self, fpath, backup_path,
                             ff_global_options, ff_other_options, preserve_metadata,
@@ -50,7 +49,7 @@ class DenoiserTask(Task):
         self.num_passes = num_passes
 
     def execute(self):
-        ''' builds and runs FFmpeg command in a subprocess
+        ''' builds and runs Denoise command in a subprocess
         '''
         fname = os.path.basename(self.fpath)
         fname_ext = os.path.splitext(fname)[1].strip().lower()
@@ -114,6 +113,9 @@ class Denoiser(FFMPRunner):
                             ff_global_options = None, ff_other_options = None,
                             preserve_metadata = False):
 
+        ''' Reduce of background audio noise in media files
+            via filtering out highpass / low-pass frequencies
+        '''
         cpu_core_time, total_elapsed = self.run(src_dir,
                                         end_level = end_level, sort = sort,
                                         include = include, exclude = exclude,
@@ -167,10 +169,4 @@ class Denoiser(FFMPRunner):
             print('No media files to process')
 
         return cpu_core_time
-
-
-
-
-
-
 

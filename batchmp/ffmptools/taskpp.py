@@ -10,6 +10,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 import copyreg, types, datetime, math, multiprocessing
 from abc import ABCMeta, abstractmethod
 from batchmp.commons.progressbar import progress_bar
@@ -17,6 +18,7 @@ from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
+
 
 class Task(metaclass = ABCMeta):
     ''' Represents an abstract TasksProcessor task

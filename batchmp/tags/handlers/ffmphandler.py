@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 import os, shutil
 from batchmp.fstools.fsutils import temp_dir
 from batchmp.tags.handlers.basehandler import TagHandler
@@ -22,6 +23,7 @@ from batchmp.ffmptools.ffutils import (
     run_cmd,
     CmdProcessingError
 )
+
 
 class FFmpegTagHandler(TagHandler):
     ''' FFmpeg-Based Tag Handler

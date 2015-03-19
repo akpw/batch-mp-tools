@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 import datetime, math
 from batchmp.fstools.fsutils import DWalker
 from enum import IntEnum
@@ -21,6 +22,7 @@ from enum import IntEnum
 class OutputFormatType(IntEnum):
     COMPACT = 0
     FULL = 1
+
 
 class TagOutputFormatter:
     ''' Generates output for printing tags
@@ -34,6 +36,9 @@ class TagOutputFormatter:
                            tag_holder = None, tag_holder_builder = None,
                            show_tag_holder_values = False,
                            diff_tags_only = False):
+
+        ''' Tag formatting entry point
+        '''
 
         # check inputs
         if entry.type == DWalker.ENTRY_TYPE_DIR or entry.type == DWalker.ENTRY_TYPE_ROOT:

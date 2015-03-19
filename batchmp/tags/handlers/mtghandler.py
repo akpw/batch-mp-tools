@@ -18,6 +18,7 @@ from batchmp.tags.extern.mediafile import MediaFile, UnreadableFileError
 from batchmp.tags.extern.mediafile import MutagenError
 from batchmp.tags.handlers.basehandler import TagHandler
 
+
 class MutagenTagHandler(TagHandler):
     ''' Mutagen-Based Tag Handler
     '''

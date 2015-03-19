@@ -13,9 +13,9 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 """ FFmpeg generic handler (no format-related specifics)
 """
-
 import os
 from batchmp.commons.chainedhandler import ChainedHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
@@ -112,7 +112,6 @@ class FFBaseFormatHandler(ChainedHandler):
                         self.tag_holder.disc = disc_info[0]
                         self.tag_holder.disctotal = disc_info[len(disc_info) - 1]
 
-
     def _parse_stats(self):
         # Non-taggable fields
         # non-tagable fields defaults
@@ -146,12 +145,10 @@ class FFBaseFormatHandler(ChainedHandler):
             if not self.tag_holder.length:
                 self.tag_holder.length = float(self.media_entry.format.get('duration', 0.0))
 
-
     def _parse_art(self):
         # Art
         if self.media_entry.artwork:
             self.tag_holder.deferred_art_method = self.artwork_reader
-
 
     def _build_save_cmd(self, art_path = None):
         ''' build save cmd string
@@ -218,7 +215,6 @@ class FFBaseFormatHandler(ChainedHandler):
                         track_tagger,
                         disc_tagger))
         return cmd
-
 
     def artwork_reader(self):
         ''' reads cover art from a media file

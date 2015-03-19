@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 import sys, os, re
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
@@ -40,6 +41,7 @@ class BaseTagProcessor:
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
                             show_size = False, format = None, show_stats = False):
+
         ''' Prints tags in selected media files
         '''
         formatter = partial(TagOutputFormatter.tags_formatter,
@@ -58,6 +60,7 @@ class BaseTagProcessor:
                             include = '*', exclude = '', sort = 'n',
                             filter_dirs = True, filter_files = True, quiet = False,
                             tag_holder = None, tag_holder_builder = None):
+
         ''' Set tags from tag_holder attributes
         '''
         if not tag_holder and not tag_holder_builder:
@@ -89,6 +92,7 @@ class BaseTagProcessor:
                             quiet = False,
                             tag_holder = None,
                             tag_holder_builder = None, reset_tag_holder_builder = None):
+
         ''' Set tags from tag_holder attributes
             Visualises changes before proceeding
         '''
@@ -139,6 +143,7 @@ class BaseTagProcessor:
                             filter_dirs = True, filter_files = True,
                             display_current = True, quiet = False,
                             diff_tags_only = False, start_from = 1):
+
         ''' Indexes the tracks / tracktotal tags, per media files' respective directories
             Visualises changes before proceeding
         '''
@@ -194,8 +199,10 @@ class BaseTagProcessor:
                         display_current = True, quiet = False,
                         nullable_fields = None,
                         diff_tags_only = False):
-        ''' Removes metadata info (including artwork) from selected media files
-            Visualises changes before proceeding
+
+        ''' Removes metadata info from selected media files
+            Can remove all metadata, or metadata from specified fields
+            Visualises targeted changes before actual processing
         '''
         if nullable_fields is None:
             # remove all tags
@@ -218,8 +225,9 @@ class BaseTagProcessor:
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False, diff_tags_only = False,
                         tag_holder_path):
+
         ''' Copies metadata (including artwork) from a tag_holder file
-            then applies it to all selected media files
+            then applies to all selected media files
             Visualises changes before proceeding
         '''
         if self.handler.can_handle(tag_holder_path):
@@ -241,6 +249,7 @@ class BaseTagProcessor:
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
                     tag_field = None, ignore_case = False, find_str = None, replace_str = None):
+
         ''' RegExp-based replace in specified fields
             Visualises changes before proceeding
         '''
@@ -279,6 +288,9 @@ class BaseTagProcessor:
                     include = '*', exclude = '', sort = 'n',
                     filter_dirs = True, filter_files = True,
                     quiet = False, target_dir = None):
+
+        ''' Detauches art from selected media files
+        '''
 
         fcnt = 0
         pass_filter = lambda fpath: self.handler.can_handle(fpath)

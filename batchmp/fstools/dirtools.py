@@ -10,6 +10,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 import os, sys
 from collections import namedtuple
 from distutils.util import strtobool
@@ -17,6 +18,8 @@ from batchmp.fstools.fsutils import DWalker, FSH
 
 
 class DHandler:
+    ''' FS Directory level utilities
+    '''
     @staticmethod
     def print_dir(src_dir, *,
                         start_level = 0, end_level = sys.maxsize,
@@ -101,6 +104,8 @@ class DHandler:
 
     @staticmethod
     def get_user_input(quiet = False):
+        ''' Displays confirmation promt and gathers users' input
+        '''
         answer = input('\nProceed? [y/n]: ')
         try:
             answer = True if strtobool(answer) else False
@@ -128,6 +133,9 @@ class DHandler:
                                 flatten = False, ensure_uniq = False,
                                 preformatter = None, formatter = None, reset_formatters = None,
                                 display_current = True):
+
+        ''' Displays targeted changes and gets users' confirmation on futher processing
+        '''
 
         if display_current:
             print(before_msg)
@@ -163,6 +171,9 @@ class DHandler:
                                 filter_dirs = True, filter_files = True,
                                 remove_folders = True, remove_non_empty_folders = False,
                                 display_current = True, quiet = False):
+
+        ''' Flatten all folders below target level, moving the files up at the target level
+        '''
 
         if end_level < target_level:
             end_level = target_level
@@ -211,6 +222,7 @@ class DHandler:
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
                             formatter = None, quiet = False):
+
         """ Renames directory entries via applying formatter function supplied by the caller
         """
         if not formatter:
@@ -257,6 +269,7 @@ class DHandler:
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
                             formatter = None, quiet = False):
+
         """ Removes entries with formatter function supplied by the caller
         """
         if not formatter:
@@ -292,12 +305,6 @@ class DHandler:
         # print summary
         if not quiet:
             print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
-
-
-
-
-
-
 
 
 

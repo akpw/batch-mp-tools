@@ -10,7 +10,9 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 from enum import Enum, IntEnum
+
 
 class FFmpegCommands:
     ''' Common FFmpeg commands / options
@@ -39,6 +41,8 @@ class FFmpegCommands:
 
 
 class FFmpegBitMaskOptions(IntEnum):
+    ''' FFmpeg commands / options bitmasks
+    '''
     MAP_ALL_STREAMS = (1<<0)
     COPY_CODECS = (1<<1)
 
@@ -49,7 +53,6 @@ class FFmpegBitMaskOptions(IntEnum):
     CONVERT_COPY_VBR_QUALITY = (1<<10)
     CONVERT_LOSSLESS = (1<<11)
     CONVERT_CHANGE_CONTAINER = (1<<12)
-
 
     @classmethod
     def ff_global_options(cls, ff_gbm_options):

@@ -10,10 +10,12 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
+
 import os, sys, fnmatch, shutil, tempfile
 import hashlib
 from collections import namedtuple
 from contextlib import contextmanager
+
 
 @contextmanager
 def temp_dir():
@@ -27,7 +29,7 @@ def temp_dir():
         shutil.rmtree(tmp_dir)
 
 class FSH:
-    ''' FS helper
+    ''' FS helper utilities
     '''
     @staticmethod
     def full_path(path):
@@ -200,7 +202,7 @@ class UniqueDirNamesChecker:
 
 class DWalker(object):
     ''' Walks content of a directory, generating
-        a sequence of structured elements (FSEntry)
+        a sequence of structured FS elements (FSEntry)
     '''
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'

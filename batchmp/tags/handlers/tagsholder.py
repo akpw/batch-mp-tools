@@ -13,6 +13,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 
+
 import os
 from string import Template
 from batchmp.commons.descriptors import (
@@ -21,6 +22,7 @@ from batchmp.commons.descriptors import (
         FunctionPropertyDescriptor,
         BooleanPropertyDescriptor,
         WeakMethodPropertyDescriptor)
+
 
 # Tag Field Descriptors
 class TaggableMediaFieldDescriptor(PropertyDescriptor):
@@ -51,8 +53,9 @@ class ArtFieldDescriptor(LazyFunctionPropertyDescriptor):
     pass
 
 class TagHolder:
-    ''' Abstract Tag Handler
-        Defines supported tags & the protocol
+    ''' Tag Holder
+            Defines supported tags & the protocol
+            Supports tag templates processing
     '''
     title = ExpandableMediaFieldDescriptor()
     album = ExpandableMediaFieldDescriptor()
@@ -138,6 +141,8 @@ class TagHolder:
 
     @classmethod
     def non_taggable_fields(cls):
+        ''' generates names of non-writable tag fields
+        '''
         for c in cls.__mro__:
             for field, descr in vars(c).items():
                 if isinstance(descr, NonTaggableMediaFieldDescriptor):
@@ -145,26 +150,29 @@ class TagHolder:
 
     @classmethod
     def fields(cls):
+        ''' generates names of all tag fields
+        '''
         yield from cls.taggable_fields
         yield from cls.non_taggable_fields
 
     def copy_tags(self, tag_holder = None):
-            ''' copies tags from passed tag_holder object
-            '''
-            if not tag_holder:
-                return
+        ''' Copies tags from passed tag_holder object
+            Supports tag templates processing
+        '''
+        if not tag_holder:
+            return
 
-            fields = self.fields if tag_holder.copy_non_taggable else self.taggable_fields
+        fields = self.fields if tag_holder.copy_non_taggable else self.taggable_fields
 
-            if tag_holder.template_processor_method:
-                self.template_processor_method = tag_holder.template_processor_method
+        if tag_holder.template_processor_method:
+            self.template_processor_method = tag_holder.template_processor_method
 
-            for field in fields():
-                value = getattr(tag_holder, field)
-                if (value is not None) or \
-                            (tag_holder.copy_empty_vals) or \
-                                (tag_holder.nullable_fields and (field in tag_holder.nullable_fields)):
-                    setattr(self, field, value)
+        for field in fields():
+            value = getattr(tag_holder, field)
+            if (value is not None) or \
+                        (tag_holder.copy_empty_vals) or \
+                            (tag_holder.nullable_fields and (field in tag_holder.nullable_fields)):
+                setattr(self, field, value)
 
     def clear_tags(self, reset_art = False):
         ''' clears writable tags values
@@ -175,13 +183,16 @@ class TagHolder:
                 del self.art
 
     def reset_tags(self):
+        ''' resets a tag holder to its initial state
+        '''
         self.template_processor_method = None
         self.filepath = None
         self.clear_tags(reset_art = True)
 
-
     # Internal Helpers
     def _process_value(self, value):
+        ''' templates processing
+        '''
         if not self.process_templates:
             return value
 
@@ -191,11 +202,15 @@ class TagHolder:
             return self._expand_templates(value)
 
     def _expand_templates(self, value):
+        ''' expands template values
+        '''
         template = Template(value)
         return template.safe_substitute(self._substitute_dictionary)
 
     @property
     def _substitute_dictionary(self):
+        ''' internal property for template value substitution
+        '''
         sd = {}
         sd['title'] = self.title if self.title else ''
         sd['album'] = self.album if self.album else ''
