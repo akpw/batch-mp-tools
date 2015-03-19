@@ -63,6 +63,8 @@ class DHandler:
         if show_size:
             print('Total size: {}'.format(FSH.file_size(total_size)))
 
+        return fcnt, dcnt
+
     @staticmethod
     def dir_stats(src_dir, *,
                         start_level = 0, end_level = sys.maxsize, flatten = False,
@@ -140,15 +142,18 @@ class DHandler:
             print()
 
         print(after_msg)
-        DHandler.print_dir(src_dir = src_dir,
+        fcnt, dcnt = DHandler.print_dir(src_dir = src_dir,
                                 end_level = target_end_level,
                                 sort = sort, nested_indent = nested_indent,
                                 include = include, exclude = exclude,
                                 filter_dirs = filter_dirs, filter_files = filter_files,
                                 flatten = flatten, ensure_uniq = ensure_uniq,
                                 formatter = formatter)
-
-        return DHandler.get_user_input()
+        if fcnt == dcnt == 0:
+            print ('Nothing to process')
+            return False
+        else:
+            return DHandler.get_user_input()
 
     @staticmethod
     def flatten_folders(src_dir, *,
