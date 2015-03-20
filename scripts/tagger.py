@@ -29,16 +29,17 @@
           .. set        Sets tags in media files, including artwork, e.g:
                                 $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
                             Supports expandable templates. To specify a template value,
-                            use the long tag name preceded by $:
+                            use the long tag field name preceded by $:
                                 $ tagger set --title '$title, $track of $tracktotal'
                             In addition to tag fields templates, file names are also supported:
                                 $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Removes tags from media files
           .. index      Indexes Track / Track Total tags
-          .. replace    RegExp-based replace in tags (title, artist, ...)
-                            e.g., to remove the first three characters in title:
+          .. remove     Removes tags from media files
+          .. replace    RegExp-based replace in specified tags
+                          e.g., to remove the first three characters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
+          .. capitalize Capitalizes words in specified tags
           .. detauch    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
@@ -59,7 +60,7 @@
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
-        {print, set, copy, remove, index, replace, detauch}
+        {print, set, copy, index, remove, replace, capitalize, detauch}
 """
 import os
 from argparse import ArgumentParser
@@ -73,13 +74,14 @@ from functools import partial
 class TaggerArgParser(BMPBaseArgParser):
     ''' Tagger CLI commands parsing
     '''
-    SUPPORTED_REPLACE_FIELDS = ['title', 'album', 'artist', 'albumartist', 'composer', 'comments', 'lyrics']
+    SUPPORTED_TEXTUAL_TAGGABLE_FIELDS = [field for field in sorted(TagHolder.textual_fields())]
+    SUPPORTED_TAGGABLE_FIELDS = [field for field in sorted(TagHolder.taggable_fields())]
 
     @staticmethod
     def parse_commands(parser):
         ''' parses Tagger commands
         '''
-        def add_show_other_tags_mode(parser):
+        def add_arg_diff_tags_only_mode(parser):
             parser.add_argument('-do', '--diff-only', dest = 'diff_tags_only',
                     help ='Show only changed tags in the confirmation propmt',
                     action = 'store_true')
@@ -159,24 +161,16 @@ class TaggerArgParser(BMPBaseArgParser):
         set_tags_parser.add_argument('-lr', '--lyrics', dest='lyrics',
                 help = "Sets the Lyrics tag",
                 type = str)
-        BMPBaseArgParser.add_display_curent_state(set_tags_parser)
-        add_show_other_tags_mode(set_tags_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(set_tags_parser)
+        add_arg_diff_tags_only_mode(set_tags_parser)
 
          # Copy Tags
         copy_tags_parser = subparsers.add_parser('copy', description = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
                 type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
-        BMPBaseArgParser.add_display_curent_state(copy_tags_parser)
-        add_show_other_tags_mode(copy_tags_parser)
-
-         # Remove Tags
-        remove_tags_parser = subparsers.add_parser('remove', description = 'Remove tags from media files')
-        remove_tags_parser.add_argument('-tf', '--tag-fields', dest='removable_fields',
-                help = "Comma-separated list of tag fields to remove",
-                type = str)
-        BMPBaseArgParser.add_display_curent_state(remove_tags_parser)
-        add_show_other_tags_mode(remove_tags_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(copy_tags_parser)
+        add_arg_diff_tags_only_mode(copy_tags_parser)
 
         # Index
         index_parser = subparsers.add_parser('index', description = 'Index Tracks for selected media files')
@@ -184,14 +178,23 @@ class TaggerArgParser(BMPBaseArgParser):
                 help = 'A number from which the indexing starts, 1 by default',
                 type = int,
                 default = 1)
-        BMPBaseArgParser.add_display_curent_state(index_parser)
-        add_show_other_tags_mode(index_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(index_parser)
+        add_arg_diff_tags_only_mode(index_parser)
+
+         # Remove Tags
+        remove_tags_parser = subparsers.add_parser('remove', description = 'Remove tags from media files')
+        remove_tags_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
+                help = "Comma-separated list of tag fields to remove. " \
+                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TAGGABLE_FIELDS)),
+                type = str)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(remove_tags_parser)
+        add_arg_diff_tags_only_mode(remove_tags_parser)
 
          # Replace Tags
         replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in specified tag fields')
-        replace_parser.add_argument('-tf', '--tag-field', dest='tag_field',
-                help = "A tag field in which to replace. " \
-                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)),
+        replace_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
+                help = "Comma-separated list of tag fields in which to replace. " \
+                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
                 type = str,
                 required=True)
         replace_parser.add_argument('-fs', '--find-string', dest='find_str',
@@ -206,8 +209,18 @@ class TaggerArgParser(BMPBaseArgParser):
         replace_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
-        BMPBaseArgParser.add_display_curent_state(replace_parser)
-        add_show_other_tags_mode(replace_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(replace_parser)
+        add_arg_diff_tags_only_mode(replace_parser)
+
+         # Capitalize Tags
+        capitalize_parser = subparsers.add_parser('capitalize', description = 'Capitalize words in specified tag fields')
+        capitalize_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
+                help = "Comma-separated list of tag fields in which to capitalize words. " \
+                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
+                type = str,
+                required=True)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(capitalize_parser)
+        add_arg_diff_tags_only_mode(capitalize_parser)
 
         # Detauch Art
         detauch_parser = subparsers.add_parser('detauch', description = 'Detauches art into specified target directory')
@@ -221,33 +234,36 @@ class TaggerArgParser(BMPBaseArgParser):
     def check_args(args, parser):
         BMPBaseArgParser.check_args(args, parser)
 
+        def parse_tag_fields(fields, supported_fields):
+            fields = [r.strip() for r in fields.split(',')]
+            for tag_field in fields:
+                if tag_field not in supported_fields:
+                    parser.error('The tag field "{0}" is not supported\n\t' \
+                                'Supported tag fields: {1}'.format(tag_field, ', '.join(supported_fields)))
+            return fields
+
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
             args['show_size'] = False
             args['show_stats'] = False
             args['full_format'] = False
 
-        if args['sub_cmd'] == 'replace':
-            if args['tag_field'] not in TaggerArgParser.SUPPORTED_REPLACE_FIELDS:
-                parser.error('tagger replace: the field "{0}" is not supported\n\t' \
-                             'Supported tag fields: {1}'.format(
-                                    args['tag_field'], ', '.join(TaggerArgParser.SUPPORTED_REPLACE_FIELDS)))
-
         if args['sub_cmd'] == 'index':
             if args['start_from'] < 1:
                 parser.error('Track indexing should start from 1, or a larger int number')
 
+        if args['sub_cmd'] == 'remove':
+            if args['tag_fields'] is not None:
+                args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
+                                                      TaggerArgParser.SUPPORTED_TAGGABLE_FIELDS)
+
+        if args['sub_cmd'] in ('replace', 'capitalize'):
+            args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
+                                                      TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)
+
         if args['sub_cmd'] == 'detauch':
             if args['target_dir'] is None:
                 args['target_dir'] = args['dir']
-
-        if args['sub_cmd'] == 'remove':
-            if args['removable_fields'] is not None:
-                args['removable_fields'] = [r.strip() for r in args['removable_fields'].split(',')]
-                taggable_fields = [field for field in TagHolder.taggable_fields()]
-                for removable_field in args['removable_fields']:
-                    if removable_field not in (taggable_fields):
-                        parser.error('The tag field "{}" is not supported'.format(removable_field))
 
 class TagsDispatcher:
     ''' Tagger CLI Commands Dispatcher
@@ -313,17 +329,6 @@ class TagsDispatcher:
                 diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
-    def remove_tags(args):
-        BaseTagProcessor().remove_tags(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                nullable_fields = args['removable_fields'],
-                diff_tags_only = args['diff_tags_only'])
-
-    @staticmethod
     def index(args):
         BaseTagProcessor().index(src_dir = args['dir'],
                 sort = args['sort'], nested_indent = args['nested_indent'],
@@ -334,15 +339,37 @@ class TagsDispatcher:
                 diff_tags_only = args['diff_tags_only'], start_from = args['start_from'])
 
     @staticmethod
-    def replace_tags(args):
-        BaseTagProcessor().replace_tag(args['dir'],
+    def remove_tags(args):
+        BaseTagProcessor().remove_tags(src_dir = args['dir'],
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 display_current = args['display_current'], quiet = args['quiet'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
-                tag_field = args['tag_field'], ignore_case = args['ignore_case'],
+                tag_fields = args['tag_fields'],
+                diff_tags_only = args['diff_tags_only'])
+
+    @staticmethod
+    def replace_tags(args):
+        BaseTagProcessor().replace_tags(args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                display_current = args['display_current'], quiet = args['quiet'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                tag_fields = args['tag_fields'], ignore_case = args['ignore_case'],
                 find_str = args['find_str'], replace_str = args['replace_str'],
+                diff_tags_only = args['diff_tags_only'])
+
+    @staticmethod
+    def capitalize_tags(args):
+        BaseTagProcessor().capitalize_tags(args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                display_current = args['display_current'], quiet = args['quiet'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                tag_fields = args['tag_fields'],
                 diff_tags_only = args['diff_tags_only'])
 
     @staticmethod
@@ -364,14 +391,16 @@ class TagsDispatcher:
             TagsDispatcher.print_dir(args)
         elif args['sub_cmd'] == 'set':
             TagsDispatcher.set_tags(args)
-        elif args['sub_cmd'] == 'index':
-            TagsDispatcher.index(args)
         elif args['sub_cmd'] == 'copy':
             TagsDispatcher.copy_tags(args)
+        elif args['sub_cmd'] == 'index':
+            TagsDispatcher.index(args)
         elif args['sub_cmd'] == 'remove':
             TagsDispatcher.remove_tags(args)
         elif args['sub_cmd'] == 'replace':
             TagsDispatcher.replace_tags(args)
+        elif args['sub_cmd'] == 'capitalize':
+            TagsDispatcher.capitalize_tags(args)
         elif args['sub_cmd'] == 'detauch':
             TagsDispatcher.detauch_art(args)
 

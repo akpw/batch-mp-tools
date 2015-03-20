@@ -14,7 +14,7 @@
 ## limitations under the License.
 
 
-import sys, os, re
+import sys, os, re, string
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
 from batchmp.fstools.rename import DirsIndexInfo
@@ -137,6 +137,30 @@ class BaseTagProcessor:
                     tag_holder = tag_holder,
                     tag_holder_builder = tag_holder_builder)
 
+    def copy_tags(self, src_dir, *, end_level = sys.maxsize,
+                        include = '*', exclude = '',
+                        sort = 'n', nested_indent = '\t',
+                        filter_dirs = True, filter_files = True,
+                        display_current = True, quiet = False, diff_tags_only = False,
+                        tag_holder_path):
+
+        ''' Copies metadata (including artwork) from a tag_holder file
+            then applies to all selected media files
+            Visualises changes before proceeding
+        '''
+        if self.handler.can_handle(tag_holder_path):
+            tag_holder = TagHolder()
+            tag_holder.copy_tags(self.handler.tag_holder)
+            self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude,
+                        sort = sort, nested_indent = nested_indent,
+                        filter_dirs = filter_dirs, filter_files = filter_files,
+                        quiet = quiet, display_current = display_current,
+                        diff_tags_only = diff_tags_only,
+                        tag_holder = tag_holder)
+        else:
+            print('Can not handle tags holder: {}'.format(tag_holder_path))
+
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
                             sort = 'n', nested_indent = '\t',
@@ -197,19 +221,19 @@ class BaseTagProcessor:
                         sort = 'n', nested_indent = '\t',
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False,
-                        nullable_fields = None,
+                        tag_fields = None,
                         diff_tags_only = False):
 
         ''' Removes metadata info from selected media files
             Can remove all metadata, or metadata from specified fields
             Visualises targeted changes before actual processing
         '''
-        if nullable_fields is None:
+        if tag_fields is None:
             # remove all tags
             tag_holder = TagHolder(copy_empty_vals = True)
         else:
             # remove specified tags
-            tag_holder = TagHolder(nullable_fields = nullable_fields)
+            tag_holder = TagHolder(nullable_fields = tag_fields)
 
         self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude,
@@ -219,42 +243,18 @@ class BaseTagProcessor:
                         diff_tags_only = diff_tags_only,
                         tag_holder = tag_holder)
 
-    def copy_tags(self, src_dir, *, end_level = sys.maxsize,
-                        include = '*', exclude = '',
-                        sort = 'n', nested_indent = '\t',
-                        filter_dirs = True, filter_files = True,
-                        display_current = True, quiet = False, diff_tags_only = False,
-                        tag_holder_path):
-
-        ''' Copies metadata (including artwork) from a tag_holder file
-            then applies to all selected media files
-            Visualises changes before proceeding
-        '''
-        if self.handler.can_handle(tag_holder_path):
-            tag_holder = TagHolder()
-            tag_holder.copy_tags(self.handler.tag_holder)
-            self.set_tags_visual(src_dir, end_level = end_level,
-                        include = include, exclude = exclude,
-                        sort = sort, nested_indent = nested_indent,
-                        filter_dirs = filter_dirs, filter_files = filter_files,
-                        quiet = quiet, display_current = display_current,
-                        diff_tags_only = diff_tags_only,
-                        tag_holder = tag_holder)
-        else:
-            print('Can not handle tags holder: {}'.format(tag_holder_path))
-
-    def replace_tag(self, src_dir, *, end_level = sys.maxsize,
+    def replace_tags(self, src_dir, *, end_level = sys.maxsize,
                     include = '*', exclude = '',
                     sort = 'n', nested_indent = '\t',
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
-                    tag_field = None, ignore_case = False, find_str = None, replace_str = None):
+                    tag_fields = None, ignore_case = False, find_str = None, replace_str = None):
 
         ''' RegExp-based replace in specified fields
             Visualises changes before proceeding
         '''
 
-        if not (tag_field and find_str):
+        if not (tag_fields and find_str):
             return
 
         flags = re.UNICODE
@@ -272,9 +272,39 @@ class BaseTagProcessor:
             return value
 
         tag_holder = TagHolder(process_templates = False)
-        setattr(tag_holder, tag_field, '${}'.format(tag_field))
+        for tag_field in tag_fields:
+            setattr(tag_holder, tag_field, '${}'.format(tag_field))
         tag_holder.template_processor_method = replace_transform
 
+        self.set_tags_visual(src_dir, end_level = end_level,
+                        include = include, exclude = exclude,
+                        sort = sort, nested_indent = nested_indent,
+                        filter_dirs = filter_dirs, filter_files = filter_files,
+                        quiet = quiet, diff_tags_only = diff_tags_only,
+                        display_current = display_current,
+                        tag_holder = tag_holder)
+
+    def capitalize_tags(self, src_dir, *, end_level = sys.maxsize,
+                    include = '*', exclude = '',
+                    sort = 'n', nested_indent = '\t',
+                    filter_dirs = True, filter_files = True,
+                    display_current = True, quiet = False, diff_tags_only = False,
+                    tag_fields = None):
+
+        ''' Capitalizes words in specified fields
+            Visualises changes before proceeding
+        '''
+
+        if not tag_fields:
+            return
+
+        def capitalize_transform(value):
+            return string.capwords(value)
+
+        tag_holder = TagHolder(process_templates = False)
+        for tag_field in tag_fields:
+            setattr(tag_holder, tag_field, '${}'.format(tag_field))
+        tag_holder.template_processor_method = capitalize_transform
 
         self.set_tags_visual(src_dir, end_level = end_level,
                         include = include, exclude = exclude,

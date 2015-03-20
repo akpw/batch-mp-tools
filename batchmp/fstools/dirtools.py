@@ -221,7 +221,7 @@ class DHandler:
                             start_level = 0, end_level = sys.maxsize,
                             include = '*', exclude = '',
                             filter_dirs = True, filter_files = True,
-                            formatter = None, quiet = False):
+                            formatter = None, quiet = False, check_unique = True):
 
         """ Renames directory entries via applying formatter function supplied by the caller
         """
@@ -251,12 +251,12 @@ class DHandler:
 
             elif entry.type == DWalker.ENTRY_TYPE_FILE:
                 # for files, just rename
-                if FSH.move_FS_entry(entry.realpath, target_path):
+                if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
                     fcnt += 1
 
         #rename the dirs
         for dir_entry in reversed(dir_entries):
-            if FSH.move_FS_entry(dir_entry.orig_path, dir_entry.target_path):
+            if FSH.move_FS_entry(dir_entry.orig_path, dir_entry.target_path, check_unique = check_unique):
                 dcnt += 1
 
         # print summary

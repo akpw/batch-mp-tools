@@ -11,7 +11,7 @@
 ## GNU General Public License for more details.
 
 
-import os, re, datetime
+import os, re, datetime, string
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
@@ -135,6 +135,40 @@ class Renamer(object):
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_index_transform, quiet = quiet)
+
+    @staticmethod
+    def capitalize(src_dir,
+                    end_level = 0,
+                    sort = 'n', nested_indent = '\t',
+                    include = '*', exclude = '',
+                    filter_dirs = True, filter_files = True,
+                    include_dirs = False, include_files = True,
+                    display_current = True, quiet = False):
+        ''' capitalizes names of FS entries
+        '''
+
+        def capitalize_transform(entry):
+            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+                return entry.basename
+            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+                return entry.basename
+            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+                return entry.basename
+
+            return string.capwords(entry.basename)
+
+        # visualise changes and proceed if confirmed
+        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
+                                    sort = sort, nested_indent = nested_indent,
+                                    orig_end_level = end_level, target_end_level = end_level,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    formatter = capitalize_transform, display_current = display_current)
+        if proceed:
+            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
+                                    include = include, exclude = exclude,
+                                    filter_dirs = filter_dirs, filter_files = filter_files,
+                                    formatter = capitalize_transform, quiet = quiet, check_unique = False)
 
 
     @staticmethod

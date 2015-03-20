@@ -33,10 +33,9 @@ A rainy-weekends project under occasional development :)
 ###renamer
     Batch renaming of files and directories
       . supports source directory / source file modes
-      . visualises original / targeted folders structure before actual rename action
+      . visualises original / targeted folders structure before actual processing
       . supports recursion to specified end_level
-      . supports flattening folders beyond end_level
-      . can print directory from given a start_level to specified end_level
+      . supports flattening folders beyond specified end_level
       . allows for include / exclude patterns (Unix style)
       . allows global include/exclude of directories and folders
       . display sorting:
@@ -45,12 +44,13 @@ A rainy-weekends project under occasional development :)
           .. print      Prints source directory
           .. flatten    Flatten all folders below target level, moving the files up
                             at the target level. By default, deletes all empty flattened folders
-          .. replace    RegExp-based replace in files and directories
-          .. index      Adds index to files and directories
-          .. add_date   Adds date to files and directories
-          .. add_text   Adds text to files and directories
-          .. remove     Removes n characters from files and directories
-          .. delete     Delete selected files
+          .. index      Adds index to files and directories names
+          .. add_date   Adds date to files and directories names
+          .. add_text   Adds text to files and directories names
+          .. remove     Removes n characters from files and directories names
+          .. replace    RegExp-based replace in files and directories names
+          .. capitalize Capitalizes words in files / directories names
+          .. delete     Delete selected files and directories
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
         [-d, --dir]                 Source directory (default is the current directory)
@@ -70,7 +70,7 @@ A rainy-weekends project under occasional development :)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (renamer {command} -h for additional help)
-        {print, flatten, replace, index, add_date, add_text, remove, delete}
+        {print, flatten, index, add_date, add_text, remove, replace, capitalize, delete}
 
 ###tagger
     Batch management of media files metadata (tags & artwork)
@@ -89,16 +89,17 @@ A rainy-weekends project under occasional development :)
           .. set        Sets tags in media files, including artwork, e.g:
                                 $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
                             Supports expandable templates. To specify a template value,
-                            use the long tag name preceded by $:
+                            use the long tag field name preceded by $:
                                 $ tagger set --title '$title, $track of $tracktotal'
                             In addition to tag fields templates, file names are also supported:
                                 $ tagger set --title '$filename'...
           .. copy       Copies tags from a specified media file
-          .. remove     Removes tags from media files
           .. index      Indexes Track / Track Total tags
-          .. replace    RegExp-based replace in tags (title, artist, ...)
-                            e.g., to remove the first three characters in title:
+          .. remove     Removes tags from media files
+          .. replace    RegExp-based replace in specified tags
+                          e.g., to remove the first three characters in title:
                                 $ tagger replace -tf 'title' -fs '^[\s\S]{0,3}' -rs ''
+          .. capitalize Capitalizes words in specified tags
           .. detauch    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
@@ -119,7 +120,7 @@ A rainy-weekends project under occasional development :)
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (tagger {command} -h for additional help)
-        {print, set, copy, remove, index, replace, detauch}
+        {print, set, copy, index, remove, replace, capitalize, detauch}
 
 ###bmfp
     Batch processing of media files

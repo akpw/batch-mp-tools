@@ -15,7 +15,7 @@
 
 """ Batch renaming of files and directories
       . supports source directory / source file modes
-      . visualises original / targeted folders structure before actual rename action
+      . visualises original / targeted folders structure before actual processing
       . supports recursion to specified end_level
       . supports flattening folders beyond specified end_level
       . allows for include / exclude patterns (Unix style)
@@ -26,11 +26,12 @@
           .. print      Prints source directory
           .. flatten    Flatten all folders below target level, moving the files up
                             at the target level. By default, deletes all empty flattened folders
-          .. replace    RegExp-based replace in files and directories
-          .. index      Adds index to files and directories
-          .. add_date   Adds date to files and directories
-          .. add_text   Adds text to files and directories
-          .. remove     Removes n characters from files and directories
+          .. index      Adds index to files and directories names
+          .. add_date   Adds date to files and directories names
+          .. add_text   Adds text to files and directories names
+          .. remove     Removes n characters from files and directories names
+          .. replace    RegExp-based replace in files and directories names
+          .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
@@ -51,7 +52,7 @@
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands (renamer {command} -h for additional help)
-        {print, flatten, replace, index, add_date, add_text, remove, delete}
+        {print, flatten, index, add_date, add_text, remove, replace, capitalize, delete}
 """
 import sys
 from argparse import ArgumentParser
@@ -105,10 +106,10 @@ class RenameArgParser(BMPBaseArgParser):
                 type=str,
                 choices = ['de', 'le', 'da'],
                 default = 'de')
-        BMPBaseArgParser.add_display_curent_state(flatten_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(flatten_parser)
 
         # Add index
-        add_index_parser = subparsers.add_parser('index', description = 'Adds index to files and directories')
+        add_index_parser = subparsers.add_parser('index', description = 'Adds index to files and directories names')
         add_index_parser.add_argument('-as', '--as-suffix', dest = 'as_suffix',
                 help = 'Add index at the end of file names',
                 action = 'store_true')
@@ -125,10 +126,10 @@ class RenameArgParser(BMPBaseArgParser):
                 type = int,
                 default = 2)
         add_include_mode_group(add_index_parser)
-        BMPBaseArgParser.add_display_curent_state(add_index_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(add_index_parser)
 
         # Add Date
-        add_date_parser = subparsers.add_parser('add_date', description = 'Adds date to files and directories')
+        add_date_parser = subparsers.add_parser('add_date', description = 'Adds date to files and directories names')
         add_date_parser.add_argument('-ap', '--as-prefix', dest = 'as_prefix',
                 help = 'Add date as a prefix to file names',
                 action = 'store_true')
@@ -141,10 +142,10 @@ class RenameArgParser(BMPBaseArgParser):
                 type = str,
                 default = '%Y-%m-%d')
         add_include_mode_group(add_date_parser)
-        BMPBaseArgParser.add_display_curent_state(add_date_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(add_date_parser)
 
         # Add Text
-        add_text_parser = subparsers.add_parser('add_text', description = 'Adds text to files and directories')
+        add_text_parser = subparsers.add_parser('add_text', description = 'Adds text to files and directories names')
         add_text_parser.add_argument('-ap', '--asprefix', dest = 'as_prefix',
                 help = 'Add text as a prefix to file names',
                 action = 'store_true')
@@ -157,10 +158,10 @@ class RenameArgParser(BMPBaseArgParser):
                 type = str,
                 required = True)
         add_include_mode_group(add_text_parser)
-        BMPBaseArgParser.add_display_curent_state(add_text_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(add_text_parser)
 
         # Remove chars
-        remove_chars_parser = subparsers.add_parser('remove', description = 'Removes n characters from files and directories')
+        remove_chars_parser = subparsers.add_parser('remove', description = 'Removes n characters from files and directories names')
         remove_chars_parser.add_argument('-nc', '--num-chars', dest = 'num_chars',
                 help = "Number of characters to remove",
                 type = int,
@@ -169,10 +170,10 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Removes text from tail',
                 action = 'store_true')
         add_include_mode_group(remove_chars_parser)
-        BMPBaseArgParser.add_display_curent_state(remove_chars_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(remove_chars_parser)
 
         # Replace
-        replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in files and directories')
+        replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in files and directories names')
         replace_parser.add_argument('-fs', '--find-string', dest = 'find_str',
                 help = "Find pattern to look for",
                 type = str,
@@ -186,14 +187,19 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Case insensitive',
                 action = 'store_true')
         add_include_mode_group(replace_parser)
-        BMPBaseArgParser.add_display_curent_state(replace_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(replace_parser)
+
+        # Capitalize
+        capitalize_parser = subparsers.add_parser('capitalize', description = 'Capitalizes words in files / directories names')
+        add_include_mode_group(capitalize_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(capitalize_parser)
 
         # Delete
         delete_parser = subparsers.add_parser('delete', description = 'Delete selected files and directories')
         delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',
                 help = 'Delete all non-media files only',
                 action = 'store_true')
-        BMPBaseArgParser.add_display_curent_state(delete_parser)
+        BMPBaseArgParser.add_arg_display_curent_state_mode(delete_parser)
         add_include_mode_group(delete_parser)
 
     @staticmethod
@@ -313,6 +319,16 @@ class RenameDispatcher:
                 display_current = args['display_current'], quiet = args['quiet'])
 
     @staticmethod
+    def capitalize(args):
+        Renamer.capitalize(src_dir = args['dir'],
+                sort = args['sort'], nested_indent = args['nested_indent'],
+                end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
+                display_current = args['display_current'], quiet = args['quiet'])
+
+    @staticmethod
     def delete(args):
         Renamer.delete(src_dir = args['dir'],
                 non_media_files_only = args['non_media_files_only'],
@@ -342,6 +358,8 @@ class RenameDispatcher:
             RenameDispatcher.remove(args)
         elif args['sub_cmd'] == 'replace':
             RenameDispatcher.replace(args)
+        elif args['sub_cmd'] == 'capitalize':
+            RenameDispatcher.capitalize(args)
         elif args['sub_cmd'] == 'delete':
             RenameDispatcher.delete(args)
 

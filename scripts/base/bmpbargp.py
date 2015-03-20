@@ -87,7 +87,7 @@ class BMPBaseArgParser:
 
     # Processing mode for relevant commands
     @staticmethod
-    def add_display_curent_state(parser):
+    def add_arg_display_curent_state_mode(parser):
         parser.add_argument('-dc', '--display-current', dest = 'display_current',
                 help ='Unless in quiet mode, display current (pre-processing) state in the confirmation propmt',
                 action = 'store_true')

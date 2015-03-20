@@ -34,7 +34,7 @@ class ExpandableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
             value = instance._process_value(value)
         super().__set__(instance, value)
 
-class NullableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
+class NullableMediaFieldDescriptor(PropertyDescriptor):
     def __set__(self, instance, value):
         if value is not None:
             if not isinstance(value, list):
@@ -84,8 +84,8 @@ class TagHolder:
     bitdepth = NonTaggableMediaFieldDescriptor()
     format = NonTaggableMediaFieldDescriptor()
 
+    # additional non-tag properties
     deferred_art_method = WeakMethodPropertyDescriptor()
-
     filepath = PropertyDescriptor()
     template_processor_method = FunctionPropertyDescriptor()
     nullable_fields = NullableMediaFieldDescriptor()
@@ -146,6 +146,13 @@ class TagHolder:
         for c in cls.__mro__:
             for field, descr in vars(c).items():
                 if isinstance(descr, NonTaggableMediaFieldDescriptor):
+                    yield field
+
+    @classmethod
+    def textual_fields(cls):
+        for c in cls.__mro__:
+            for field, descr in vars(c).items():
+                if isinstance(descr, ExpandableMediaFieldDescriptor):
                     yield field
 
     @classmethod
