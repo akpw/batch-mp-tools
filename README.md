@@ -1,11 +1,8 @@
 
-#Description
-Python CLI tools for batch processing of media files
-
-
 **Status:**
 A rainy-weekends project under occasional development :)
 
+#Description
 
 The project consists of three main tools.
 
