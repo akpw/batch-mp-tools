@@ -14,6 +14,7 @@ The project is written in Python 3.4, and currently available as a command line 
 
 
 ##Blogs
+- [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
 
