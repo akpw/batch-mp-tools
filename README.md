@@ -7,6 +7,14 @@ Python CLI tools for batch processing of media files
 A rainy-weekends project under occasional development :)
 
 
+The project consists of three main tools.
+Renamer primarily takes care of shaping up files names, supporting various batch rename operations as well as flattening folders and cleaning up non-relevant files.
+
+Tagger manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc.
+
+BMFP is all about effecient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detauching individual audio / video streams, etc. As processing media files can typically be resouce-consuming, BMFP is designed to take advantage of nowdays common multi-core processors, breaking up jobs into individual tasks that are then run a separate processes on separate CPU cores.
+
+
 ##Blogs
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
@@ -153,7 +161,6 @@ A rainy-weekends project under occasional development :)
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
-        [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
         [-ma, --map-all]            Force including all streams from the input file
