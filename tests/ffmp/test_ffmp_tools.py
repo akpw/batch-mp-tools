@@ -29,6 +29,7 @@ from batchmp.ffmptools.ffcommands.segment import Segmenter
 class FFMPTests(FFMPTest):
     def setUp(self):
         super(FFMPTests, self).setUp()
+        self.serial_exec_mode = True if os.name == 'nt' else False
 
     def tearDown(self):
         # cleanup
@@ -44,7 +45,8 @@ class FFMPTests(FFMPTest):
 
         hpass, lpass, num_passes = 200, 0, 2
         Denoiser().apply_af_filters(self.src_dir, exclude = 'bmfp*',
-                                    highpass=hpass, lowpass=lpass, num_passes=num_passes)
+                                    highpass=hpass, lowpass=lpass, num_passes=num_passes,
+                                    serial_exec = self.serial_exec_mode)
 
         # check that the original files were replaced with their denoised versions
         denoised_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
@@ -61,6 +63,7 @@ class FFMPTests(FFMPTest):
         hpass, lpass, num_passes = 200, 0, 4
         Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_a',   filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
+                                    serial_exec = self.serial_exec_mode,
                                     preserve_metadata = True,
                                     ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
@@ -79,6 +82,7 @@ class FFMPTests(FFMPTest):
         hpass, lpass, num_passes = 200, 0, 4
         Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_v',   filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
+                                    serial_exec = self.serial_exec_mode,
                                     preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
@@ -93,7 +97,9 @@ class FFMPTests(FFMPTest):
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
 
         Convertor().convert(self.src_dir, include = 'bmfp_a',  filter_files = False,
-                            target_format = 'mp3', convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
+                            target_format = 'mp3',
+                            convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
+                            serial_exec = self.serial_exec_mode,
                             preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
@@ -109,7 +115,9 @@ class FFMPTests(FFMPTest):
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
 
         Convertor().convert(self.src_dir, include = 'bmfp_v',  filter_files = False,
-                            target_format = 'mp4', convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
+                            target_format = 'mp4',
+                            convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
+                            serial_exec = self.serial_exec_mode,
                             preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
@@ -127,7 +135,7 @@ class FFMPTests(FFMPTest):
 
         Fragmenter().fragment(self.src_dir, include = 'bmfp_a', filter_files = False,
                                 fragment_starttime = 0, fragment_duration = 1,
-                                serial_exec = False,
+                                serial_exec = self.serial_exec_mode,
                                 preserve_metadata = True,
                                 ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
@@ -145,7 +153,8 @@ class FFMPTests(FFMPTest):
 
         Fragmenter().fragment(self.src_dir, include = 'bmfp_v', filter_files = False,
                               fragment_starttime = 0, fragment_duration = 1,
-                              serial_exec = False, preserve_metadata = True)
+                              serial_exec = self.serial_exec_mode,
+                              preserve_metadata = True)
 
         processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
@@ -161,7 +170,7 @@ class FFMPTests(FFMPTest):
 
         Segmenter().segment(self.src_dir, include = 'bmfp_a', filter_files = False,
                                 segment_size_MB = 0.0, segment_length_secs = 1,
-                                serial_exec = False,
+                                serial_exec = self.serial_exec_mode,
                                 preserve_metadata = True,
                                 ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
 
@@ -180,7 +189,8 @@ class FFMPTests(FFMPTest):
 
         Segmenter().segment(self.src_dir, include = 'bmfp_v', filter_files = False,
                               segment_size_MB = 0.05, segment_length_secs = 0.0,
-                              serial_exec = False, preserve_metadata = True)
+                              serial_exec = self.serial_exec_mode,
+                              preserve_metadata = True)
 
         src_dir = self.src_dir + '/bmfp_v'
         processed_media_entries = self._media_entries(src_dir, end_level = 0, include = '*_0.*')

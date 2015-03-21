@@ -76,6 +76,7 @@ class BMFPArgParser(BMPBaseArgParser):
     def parse_commands(parser):
         ''' parses BMFP parsing
         '''
+
         # BFMP Global options
         ffmpeg_group = parser.add_argument_group('FFmpeg General Options')
         ffmpeg_group.add_argument("-ma", "--map-all", dest='all_streams',

@@ -12,7 +12,7 @@
 
 
 import sys, datetime, math
-from batchmp.ffmptools.ffutils import FFH, timed
+from batchmp.ffmptools.ffutils import FFH, timed, FFmpegNotInstalled
 from abc import ABCMeta, abstractmethod
 
 
@@ -21,9 +21,8 @@ class FFMPRunner(metaclass = ABCMeta):
     '''
     def __init__(self):
         if not FFH.ffmpeg_installed():
-            raise utils.FFmpegNotInstalled('\n\tLooks like ffmpeg is not installed' \
-                                           '\n\You can download it here:' \
-                                           ' http://www.ffmpeg.org/download.html\n')
+            raise FFmpegNotInstalled
+
     @abstractmethod
     def run(self, *args, **kwargs):
         pass

@@ -18,10 +18,56 @@ from collections import namedtuple
 import batchmp.fstools.fsutils as fsutils
 
 
-class FFmpegNotInstalled(Exception):
-    pass
+
 class CmdProcessingError(Exception):
     pass
+
+
+class FFmpegNotInstalled(Exception):
+    def __init__(self, message = None):
+        super().__init__(message if message is not None else self.default_message)
+
+    @property
+    def default_message(self):
+        windows_instructions =  '''
+        Installing FFmpeg on Windows:
+            http://www.renevolution.com/how-to-get-ffmpeg-for-windows/
+            http://www.wikihow.com/Install-FFmpeg-on-Windows
+                                '''
+        macos_instructions =    '''
+        Installing FFmpeg on Mac OS X:
+            http://www.renevolution.com/how-to-install-ffmpeg-on-mac-os-x/
+                                '''
+        linux_instructions =    '''
+        Installing FFmpeg on Ubuntu and Debian:
+            $ sudo apt-get update
+            $ sudo apt-get install ffmpeg
+
+        Installing FFmpeg on CentOS/RHEL and Fedora:
+            enable atrpms repository, then:
+            # yum install ffmpeg
+                                '''
+        install_instructions = ''
+
+        if sys.platform == 'linux':
+            install_instructions = linux_instructions
+        elif sys.platform == 'darwin':
+            install_instructions = macos_instructions
+        elif sys.platform == 'win32':
+            install_instructions = windows_instructions
+
+        return  '''
+
+        Looks like FFmpeg is not installed
+
+        For full Batch Media File Processing functionalty,
+
+        please install FFmpeg and enable it in the command line
+
+        You can download FFmpeg from here:
+            http://www.ffmpeg.org/download.html
+        {0}
+        '''.format(install_instructions)
 
 
 class FFH:
@@ -33,13 +79,7 @@ class FFH:
 
     @staticmethod
     def ffmpeg_installed():
-        """ Checks if ffmpeg is installed
-            P.S. / TBD
-                Not likely to work well for Windows. Rather needs to use smth like
-                winreq module (https://docs.python.org/2/library/_winreg.html)
-                for checking the registry:
-                    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\\Uninstall
-                .. or smth along these lines
+        """ Checks if ffmpeg is installed and in system PATH
         """
         ffmpeg_app_name = 'ffmpeg' if os.name != 'nt' else 'ffmpeg.exe'
         for path in os.environ['PATH'].split(os.pathsep):
@@ -191,3 +231,6 @@ def run_cmd(cmd, shell = False):
         raise CmdProcessingError(output)
     return output
 
+
+if __name__ == '__main__':
+    raise FFmpegNotInstalled
