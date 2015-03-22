@@ -59,7 +59,7 @@ class FSTests(FSTest):
                                 as_prefix = True, join_str = ' ',
                                 include_dirs = True, min_digits = 2, quiet = True)
 
-        cmd = "find {} | grep '/\d\d ' | grep -v 'test_' | grep -v '.DS_Store' | wc -l".format(self.src_dir)
+        cmd = "find {} | grep '[0-9][0-9] ' | grep -v 'test_' | grep -v '.DS_Store' | wc -l".format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
         self.assertTrue(fcnt == 23)
@@ -74,7 +74,7 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = True, include_files = True, quiet = True)
 
-        cmd = "find {} -type f | grep 'st_\d' | wc -l".format(self.src_dir)
+        cmd = "find {} -type f | grep 'st_[0-9]' | wc -l".format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
         self.assertTrue(fcnt == 14)
@@ -103,7 +103,7 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = True)
 
-        cmd = 'find {} -type f | grep "_\d\d\d\d-\d\d-\d\d" | wc -l'.format(self.src_dir)
+        cmd = 'find {} -type f | grep "_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
         self.assertTrue(fcnt == 30)
