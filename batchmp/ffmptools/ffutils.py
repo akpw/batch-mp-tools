@@ -60,7 +60,7 @@ class FFmpegNotInstalled(Exception):
 
         Looks like FFmpeg is not installed
 
-        For full Batch Media File Processing functionalty,
+        For full Batch Media Tools Processing functionalty,
 
         please install FFmpeg and enable it in the command line
 

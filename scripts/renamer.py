@@ -57,6 +57,8 @@
 import sys
 from argparse import ArgumentParser
 from scripts.base.bmpbargp import BMPBaseArgParser
+
+from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
 
@@ -230,6 +232,11 @@ class RenameArgParser(BMPBaseArgParser):
                 print ('Target Level should be greater than or equal to the End Level Global Option\n'
                            '... Adjusting End Level to: {}'.format(args['target_level']))
                 args['end_level'] = args['target_level']
+
+        elif args['sub_cmd'] == 'delete':
+            if args['non_media_files_only']:
+                if not FFH.ffmpeg_installed():
+                    print(FFmpegNotInstalled().default_message)
 
 
 class RenameDispatcher:
