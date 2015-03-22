@@ -34,10 +34,11 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_fs_flatten_folders(self):
         DHandler.flatten_folders(src_dir = self.src_dir,
-                                target_level = 0, include = '*', filter_dirs = False, quiet = True)
+                                target_level = 0,
+                                quiet = True)
 
-        fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir)
-        self.assertTrue(fcnt == 30 and dcnt == 0)
+        fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir, include = '[!.]*')
+        self.assertTrue(fcnt == 29 and dcnt == 0)
         self.resetDataFromBackup(quiet=True)
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
@@ -74,7 +75,7 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = True, include_files = True, quiet = True)
 
-        cmd = "find {} -type f | grep 'st_[0-9]' | wc -l".format(self.src_dir)
+        cmd = 'find {} -type f | grep "st_[0-9]" | grep -v ".DS_Store" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
         self.assertTrue(fcnt == 14)
@@ -89,10 +90,10 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = True)
 
-        cmd = "find {} -type f | grep 'The ' | wc -l".format(self.src_dir)
+        cmd = 'find {} -type f | grep "The " | grep -v ".DS_Store" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
-        self.assertTrue(fcnt == 30)
+        self.assertTrue(fcnt == 29)
         self.resetDataFromBackup(quiet=True)
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
@@ -103,10 +104,10 @@ class FSTests(FSTest):
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True, quiet = True)
 
-        cmd = 'find {} -type f | grep "_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" | wc -l'.format(self.src_dir)
+        cmd = 'find {} -type f | grep "_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" | grep -v ".DS_Store" |  wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
-        self.assertTrue(fcnt == 30)
+        self.assertTrue(fcnt == 29)
         self.resetDataFromBackup(quiet=True)
 
 
