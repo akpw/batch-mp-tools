@@ -4,13 +4,23 @@ A rainy weekends project under occasional development :)
 
 #Description
 
-The project consists of three main tools:
+Batch management of media files, starting from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
+
+The project consists of three main tools, sharing the same concept of visualising targeted changes (whenever possible) before actual processing.
 
 [Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as flattening folders and cleaning up non-relevant files.
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc.
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores.
+
+All three tools share the core concept of various transformations applied to generated stream of file systems entries. Consequently all of them also share the same set of global options, such as recursive processing, files / folders filtering, etc. A quick way to check on that is to run: 
+    ```$ renamer -h```
+    ```$ tagger -h```
+    ```$ bmfp -h```
+
+This will display detailed information about the global options, as well as revealing specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
+    ```$ renamer index -h```
 
 
 ##Blogs
@@ -25,17 +35,17 @@ The project consists of three main tools:
 ##Install
 **Standard install**
 - from [pypi](https://pypi.python.org/pypi/batchmp):
-    ```pip install batchmp```
+    ```$ pip install batchmp```
 - from source repository:
-    ```pip install git+https://github.com/akpw/batch-mp-tools.git```
+    ```$ pip install git+https://github.com/akpw/batch-mp-tools.git```
 - Or, clone the repo and run:
-```python setup.py install```
+```$ python setup.py install```
 
 **Development version**
-- Clone the repo, then run: ```python setup.py develop```
+- Clone the repo, then run: ```$ python setup.py develop```
 
 **Running Tests**
-- Run via: ```python setup.py test```
+- Run via: ```$ python setup.py test```
 
 
 ##CLI Commands
