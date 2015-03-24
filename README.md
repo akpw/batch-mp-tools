@@ -24,8 +24,10 @@ The project consists of three main tools:
 
 ##Install
 **Standard install**
-- via [pip](https://pip.pypa.io/en/latest/):
-```pip install git+https://github.com/akpw/batch-mp-tools.git```
+- from [pypi](https://pypi.python.org/pypi/batchmp):
+    ```pip install batchmp```
+- from source repository:
+    ```pip install git+https://github.com/akpw/batch-mp-tools.git```
 - Or, clone the repo and run:
 ```python setup.py install```
 
