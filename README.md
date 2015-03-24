@@ -16,10 +16,13 @@ The project consists of three main tools, sharing the same concept of visualisin
 
 All three tools share the core concept of various transformations applied to generated stream of file systems entries. Consequently all of them also share the same set of global options, such as recursive processing, files / folders filtering, etc. A quick way to check on that is to run: 
     ```$ renamer -h```
+    
     ```$ tagger -h```
+    
     ```$ bmfp -h```
 
-This will display detailed information about the global options, as well as revealing specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
+Along with displaying detailed information about the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
+
     ```$ renamer index -h```
 
 
