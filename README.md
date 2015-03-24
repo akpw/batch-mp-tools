@@ -24,7 +24,9 @@ All three tools share the core concept of various transformations applied to gen
 ````
 
 Along with displaying detailed information about the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
-    ```$ renamer index -h```
+```
+    $ renamer index -h
+```
 
 
 ##Blogs
