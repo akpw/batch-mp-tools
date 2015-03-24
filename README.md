@@ -23,7 +23,7 @@ All three tools share the core concept of various transformations applied to gen
     $ bmfp -h
 ````
 
-Along with displaying detailed information about the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
+Along with displaying detailed information on the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
 ```
     $ renamer index -h
 ```
