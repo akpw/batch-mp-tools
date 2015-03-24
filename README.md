@@ -6,7 +6,7 @@ A rainy weekends project under occasional development :)
 
 Batch management of media files, starting from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
 
-The project is written in [Python 3.4.x](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualising targeted changes (whenever possible) before actual processing.
+The project is written in [Python 3.4.x](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualizing targeted changes (whenever possible) before actual processing.
 
 [Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as flattening folders and cleaning up non-relevant files.
 
