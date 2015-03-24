@@ -67,7 +67,7 @@ class FSTests(FSTest):
         cmd = "find {} | grep '[0-9][0-9] ' | grep -v 'test_' | grep -v '.DS_Store' | wc -l".format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
-        self.assertTrue(fcnt == 23)
+        self.assertTrue(fcnt == 22)
 
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
@@ -120,7 +120,7 @@ class FSTests(FSTest):
         cmd = 'find {} -maxdepth 2 | grep -v ".DS_Store" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
 
-        self.assertTrue(fcnt == 7)
+        self.assertTrue(fcnt == 6)
 
 
 
