@@ -15,11 +15,11 @@ The project consists of three main tools, sharing the same concept of visualisin
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores.
 
 All three tools share the core concept of various transformations applied to generated stream of file systems entries. Consequently all of them also share the same set of global options, such as recursive processing, files / folders filtering, etc. A quick way to check on that is to run: 
-    ``` $ renamer -h
+    ```` $ renamer -h
     
         $ tagger -h
     
-        $ bmfp -h```
+        $ bmfp -h````
 
 Along with displaying detailed information about the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
     ```$ renamer index -h```
