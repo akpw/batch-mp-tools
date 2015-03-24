@@ -1,6 +1,6 @@
 
 **Status:**
-A rainy-weekends project under occasional development :)
+A rainy weekends project under occasional development :)
 
 #Description
 
@@ -10,7 +10,7 @@ The project is written in Python 3.4, and currently available as a command line 
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc.
 
-[BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about effecient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detauching individual audio / video streams, etc. As processing media files can typically be resouce-consuming, BMFP is designed to take advantage of nowdays common multi-core processors, breaking up jobs into individual tasks that are then run a separate processes on separate CPU cores.
+[BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores.
 
 
 ##Blogs

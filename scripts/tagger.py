@@ -377,7 +377,7 @@ class TagsDispatcher:
         BaseTagProcessor().detauch_art(args['dir'],
                 sort = args['sort'],
                 end_level = args['end_level'],
-                display_current = args['display_current'], quiet = args['quiet'],
+                quiet = args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'])
