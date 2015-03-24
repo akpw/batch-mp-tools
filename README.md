@@ -4,7 +4,7 @@ A rainy weekends project under occasional development :)
 
 #Description
 
-The project is written in Python 3.4, and currently available as a command line utility. It consists of three main tools:
+The project consists of three main tools:
 
 [Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as flattening folders and cleaning up non-relevant files.
 
