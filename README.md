@@ -83,7 +83,7 @@ For example, to convert the file from previous example from M4A to FLAC:
 ````
     $ bmfp -r -in '*BWV816 1*' -ad -pm convert -la -tf FLAC
 ````
-The ```-pm``` switch forces preserving all metadata information, while ````-la``` explicitly tells BMFP to try a lossless conversion.
+The ```-pm``` switch forces preserving all metadata information, while ```-la``` explicitly tells BMFP to try a lossless conversion. 
 
 To check on the result, lets's just use the tagger abilities to print media files info:
 ````
