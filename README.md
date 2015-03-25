@@ -165,7 +165,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-      Commands (run `$ renamer {command} -h` for additional help)
+      Commands (run $ renamer {command} -h for additional help)
         {print, flatten, index, add_date, add_text, remove, replace, capitalize, delete}
 
 ###tagger
@@ -215,7 +215,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-      Commands (run `$ tagger {command} -h` for additional help)
+      Commands (run $ tagger {command} -h for additional help)
         {print, set, copy, index, remove, replace, capitalize, detauch}
 
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
@@ -261,7 +261,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
-      Commands: (run **$ bmfp {command} -h** for additional help)
+      Commands: (run $ bmfp {command} -h for additional help)
         {convert, denoise, fragment, segment, ...}
 
 ##Installing Development version
