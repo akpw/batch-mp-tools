@@ -261,7 +261,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
-      Commands: (run '$ bmfp {command} -h' for additional help)
+      Commands: (run `$ bmfp {command} -h` for additional help)
         {convert, denoise, fragment, segment, ...}
 
 ##Installing Development version
