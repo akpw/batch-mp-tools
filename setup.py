@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version='0.62',
+    version='0.64',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -51,7 +51,6 @@ setup(
         'Topic :: Multimedia :: Sound/Audio',
         'Topic :: Multimedia :: Sound/Audio :: Analysis',
         'Topic :: Multimedia :: Sound/Audio :: Conversion',
-        'Topic :: Multimedia :: Sound/Audio :: Noise reduction',
         'Topic :: Multimedia :: Video',
         'Topic :: Multimedia :: Video :: Conversion',
         'Topic :: Software Development :: Libraries',

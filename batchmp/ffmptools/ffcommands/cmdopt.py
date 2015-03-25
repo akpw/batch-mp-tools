@@ -27,7 +27,8 @@ class FFmpegCommands:
 
     # Conversion options
     CONVERT_COPY_VBR_QUALITY = ' -q:v 0 -q:a 0'
-    CONVERT_LOSSLESS = ' -q:v 0 -acodec alac'
+    CONVERT_LOSSLESS_ALAC = ' -q:v 0 -acodec alac'
+    CONVERT_LOSSLESS_FLAC = ' -q:v 0 -acodec flac'
     CONVERT_CHANGE_CONTAINER = ' -c copy -copyts'
 
     # Log level
@@ -49,10 +50,6 @@ class FFmpegBitMaskOptions(IntEnum):
     DISABLE_VIDEO = (1<<5)
     DISABLE_AUDIO = (1<<6)
     DISABLE_SUBTITLES = (1<<7)
-
-    CONVERT_COPY_VBR_QUALITY = (1<<10)
-    CONVERT_LOSSLESS = (1<<11)
-    CONVERT_CHANGE_CONTAINER = (1<<12)
 
     @classmethod
     def ff_global_options(cls, ff_gbm_options):
@@ -77,21 +74,14 @@ class FFmpegBitMaskOptions(IntEnum):
         elif bm_option == FFmpegBitMaskOptions.DISABLE_SUBTITLES:
             return FFmpegCommands.DISABLE_SUBTITLES
 
-        elif bm_option == FFmpegBitMaskOptions.CONVERT_COPY_VBR_QUALITY:
-            return FFmpegCommands.CONVERT_COPY_VBR_QUALITY
-        elif bm_option == FFmpegBitMaskOptions.CONVERT_LOSSLESS:
-            return FFmpegCommands.CONVERT_LOSSLESS
-        elif bm_option == FFmpegBitMaskOptions.CONVERT_CHANGE_CONTAINER:
-            return FFmpegCommands.CONVERT_CHANGE_CONTAINER
-
         else:
             return ''
 
 # Quick dev test
 if __name__ == '__main__':
-    copy_codecs = False
+    copy_codecs = True
     options = 0
-    options |= FFmpegBitMaskOptions.CONVERT_LOSSLESS
+    options |= FFmpegBitMaskOptions.DISABLE_SUBTITLES
     if copy_codecs:
         options |= FFmpegBitMaskOptions.COPY_CODECS
     options |= FFmpegBitMaskOptions.DISABLE_VIDEO

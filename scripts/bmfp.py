@@ -68,7 +68,6 @@ from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from scripts.base.bmpbargp import BMPBaseArgParser
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
-
 class BMFPArgParser(BMPBaseArgParser):
     ''' BMFP commands parsing
     '''
@@ -120,15 +119,15 @@ class BMFPArgParser(BMPBaseArgParser):
                 required = True)
         group = convert_parser.add_argument_group('Conversion Options')
         group.add_argument('-co', '--convert-options', dest='convert_options',
-                help = 'FFmpeg conversion options. When specified, overrides all other conversion option switches',
+                help = 'FFmpeg conversion options. When specified, override all other conversion option switches',
                 type = str,
                 default = FFmpegCommands.CONVERT_COPY_VBR_QUALITY)
+        group.add_argument('-cc', '--change-container', dest='change_container',
+                help = 'Changes media container without actual re-encoding of contained streams. When specified, ' \
+                       'takes priority over all other option switches except for explicit "--convert-options"',
+                action='store_true')
         group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
                 help = 'For media formats with support for lossless audio, tries a lossless conversion',
-                action='store_true')
-        group.add_argument('-cc', '--change-container', dest='change_container',
-                help = 'Changes media container without actual re-encoding of contained streams'
-                       'Takes priority over all other option switches, except for explicit "--convert-options"',
                 action='store_true')
 
         # Denoise
@@ -215,9 +214,16 @@ class BMFPArgParser(BMPBaseArgParser):
 
         elif args['sub_cmd'] == 'convert':
             # Convert attributes check
+            args['target_format'] = args['target_format'].lower()
+            if not args['target_format'].startswith('.'):
+                args['target_format'] = '.{}'.format(args['target_format'])
+
             if args['convert_options'] == FFmpegCommands.CONVERT_COPY_VBR_QUALITY: #default
                 if args['lossless_audio']:
-                    args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS
+                    if args['target_format'] == '.flac':
+                        args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS_FLAC
+                    elif args['target_format'] == '.m4a':
+                        args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS_ALAC
 
                 if args['change_container']:
                     args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
