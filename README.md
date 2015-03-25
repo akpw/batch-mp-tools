@@ -30,7 +30,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
 ````
-    $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal' --artist '$albumartist'
+    $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal'
     Targeted after processing:
     /Desktop/_test/Gould
       |-/1
@@ -50,23 +50,10 @@ An important detail here, by default Renamer is visualizing the targeted changes
     
     Proceed? [y/n]: n
 ````
-The examples both above use ```-r``` for recursion into nested folders and ```-in``` to select relevant media files, while the ```-ad```` switch tells to accept all directores without filtering by the ````-in``` pattern.
+The examples both above show some of the global options:  ```-r``` for recursion into nested folders and ```-in``` to select relevant media files, while the ```-ad``` switch tells to accept all directores without filtering them by the ```-in``` pattern. As all three tools share the core concept of various transformations applied to generated stream of file systems entries, the good news is they also share the same set of global options. A quick way to check on that is to run: ```$renamer -h```,  ```$ tagger -h```, or ```$ bmfp -h``` that will show all global options along with the set of specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command: ```$ renamer index -h```
+
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
-
-All three tools share the core concept of various transformations applied to generated stream of file systems entries. Consequently all of them also share the same set of global options, such as recursive processing, files / folders filtering, etc. A quick way to check on that is to run: 
-```` 
-    $ renamer -h
-    
-    $ tagger -h
-    
-    $ bmfp -h
-````
-
-Along with displaying detailed information on the global options, that will  also reveal specific commands available for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn about the renamer index command:
-```
-    $ renamer index -h
-```
 
 
 ##Blogs
