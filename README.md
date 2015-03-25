@@ -28,10 +28,29 @@ The project is written in [Python 3.4.x](https://www.python.org/download/release
 An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
 
 
-[Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, this will set the title tag in each media file to its file name followed by the respective values of track and tracktotal tags.
+[Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
 ````
-    $ tagger -r set --title '$filename, $track of $tracktotal'
+    $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal' --artist '$albumartist'
+    Targeted after processing:
+    /Desktop/_test/Gould
+      |-/1
+      |-/2
+        |- Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande.m4a
+        	Title: Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande, 1 of 26
+        	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+        	Artist: Glenn Gould
+        	Album Artist: Glenn Gould
+        	Genre: Classical
+        	Composer: Johann Sebastian Bach (1685-1750)
+        	Year: 1994
+        	Track: 1/26
+        	Disk: 2/2
+      |-/Art
+    1 files, 3 folders  
+    
+    Proceed? [y/n]: n
 ````
+The examples both above use ```-r``` for recursion into nested folders and ```-in``` to select relevant media files, while the ```-ad```` switch tells to accept all directores without filtering by the ````-in``` pattern.
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
 
