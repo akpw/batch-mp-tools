@@ -64,7 +64,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
     
     Proceed? [y/n]: n
 ````
-The commands above show some of the available global options:  ```-r``` for recursion into nested folders and ```-in``` to select relevant media files. The ```-ad``` switch force looking in all sub-directores, without filtering them by the ```-in``` pattern. 
+The commands above show some of the available global options:  ```-r``` for recursion into nested folders and ```-in``` to select media files (just one here, for the sake of output brevity). The ```-ad``` switch force looking in all sub-directores, without filtering them by the ```-in``` pattern. 
 As all three tools share the core concept of various transformations applied to generated stream of file systems entries, they also share the same set of global options. A quick way to check on that is to run: 
 ```
     $ renamer -h
@@ -124,7 +124,7 @@ To check on the result, lets's just use the tagger abilities to print media file
 I will follow up with more examples and common use-cases in future blogs.
 
 
-##CLI Commands
+##Full description of CLI Commands 
 ###renamer
     Batch renaming of files and directories
       . supports source directory / source file modes
