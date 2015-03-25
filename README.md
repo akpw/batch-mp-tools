@@ -64,11 +64,13 @@ That will show all global options along with specific commands for each tool. Ge
 
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
-For example, to run a lossless conversion from M4A to FLAC:
+For example, to convert the file from previous example from M4A to FLAC:
 ````
     $ bmfp -r -in '*BWV816 1*' -ad -pm convert -la -tf FLAC
 ````
-To check the result, lets's use the tagger abilities to print media files info:
+The ```-pm``` switch forces preserving all metadata information, while ````-la``` explicitly tells BMFP to try a lossless conversion.
+
+To check on the result, lets's just use the tagger abilities to print media files info:
 ````
     $ tagger -r -in '*BWV816 1*' -ad print -st -ss -h
     /Users/AKPower/Desktop/_test/Gould
@@ -80,7 +82,7 @@ To check the result, lets's use the tagger abilities to print media files info:
         	Artist: Bach, Johann Sebastian
         	Album Artist: Glenn Gould
         	Genre: Classical
-        	Composer: Johann Sebastian Bach (1685-1750)/Johann Sebastian Bach
+        	Composer: Johann Sebastian Bach (1685-1750)
         	Year: 1994
         	Track: 1/26
         	Disk: 2/2
@@ -93,7 +95,7 @@ To check the result, lets's use the tagger abilities to print media files info:
           	Artist: Bach, Johann Sebastian
           	Album Artist: Glenn Gould
           	Genre: Classical
-          	Composer: Johann Sebastian Bach (1685-1750)/Johann Sebastian Bach
+          	Composer: Johann Sebastian Bach (1685-1750)
           	Year: 1994
           	Track: 1/26
           	Disk: 2/2
@@ -103,7 +105,6 @@ To check the result, lets's use the tagger abilities to print media files info:
     2 files, 4 folders
     Total size: 15.2MB
 ````
-
 
 ##Blogs
 - [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
