@@ -3,7 +3,7 @@
 A rainy weekends project under occasional development :)
 
 ##Requirements
-- [Python 3.4.x](https://www.python.org/download/releases/3.4.1/)
+- [Python 3.4.x](https://www.python.org/download/releases/3.4.1/) or later
 
 ##Install
 - from [pypi](https://pypi.python.org/pypi/batchmp):
