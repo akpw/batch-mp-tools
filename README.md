@@ -25,7 +25,8 @@ The project is written in [Python 3.4.x](https://www.python.org/download/release
     
     Proceed? [y/n]:    
 ````
-An important detail here, be default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
+An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
+
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, this will set the title tag in each media file to its file name followed by the respective values of track and tracktotal tags.
 ````
