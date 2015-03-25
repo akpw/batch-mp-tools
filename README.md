@@ -6,10 +6,7 @@ A rainy weekends project under occasional development :)
 - [Python 3.4.x](https://www.python.org/download/releases/3.4.1/) or later
 
 **Install:**
-- from [pypi](https://pypi.python.org/pypi/batchmp):
-```
-    $ pip install batchmp
-```
+- from [pypi](https://pypi.python.org/pypi/batchmp): ```$ pip install batchmp```
 - latest from source repository:
 ```
     $ pip install git+https://github.com/akpw/batch-mp-tools.git
