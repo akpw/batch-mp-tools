@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version='0.64',
+    version='0.65',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -38,7 +38,7 @@ setup(
     ]},
     zip_safe=True,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.4',
