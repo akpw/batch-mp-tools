@@ -26,6 +26,7 @@
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 """
+import scripts.base.vchk
 import os, sys, datetime
 from argparse import ArgumentParser
 from distutils.util import strtobool
@@ -93,16 +94,32 @@ class BMPBaseArgParser:
                 action = 'store_true')
 
     @staticmethod
-    def parse_global_options(parser):
+    def add_arg_misc_group(parser):
+        misc_group = parser.add_argument_group('Miscellaneous')
+        misc_group.add_argument('-s', '--sort', dest = 'sort',
+                    help = "Sorting for files ('na', i.e. by name ascending by default)",
+                    type = str,
+                    choices = ['na', 'nd', 'sa', 'sd'],
+                    default = 'na')
+        misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
+                    help = "Indent for printing  nested directories",
+                    type = str,
+                    default = '  ')
+        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
+                    help = "Disable visualising changes & displaying info messages during processing",
+                    action = 'store_true')
+
+    @classmethod
+    def parse_global_options(cls, parser):
         ''' Parses global options
         '''
         source_mode_group = parser.add_argument_group('Input source mode')
         source_mode_group.add_argument("-d", "--dir", dest = "dir",
-                    type = lambda d: BMPBaseArgParser.is_valid_dir_path(parser, d),
+                    type = lambda d: cls.is_valid_dir_path(parser, d),
                     help = "Source directory (default is current directory)",
                     default = os.curdir)
         source_mode_group.add_argument("-f", "--file", dest = "file",
-                    type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f),
+                    type = lambda f: cls.is_valid_file_path(parser, f),
                     help = "File to process")
 
         recursive_mode_group = parser.add_argument_group('Recursion mode')
@@ -130,31 +147,19 @@ class BMPBaseArgParser:
                     help = "Disable Include/Exclude patterns on files",
                     action = 'store_true')
 
-        misc_group = parser.add_argument_group('Miscellaneous')
-        misc_group.add_argument('-s', '--sort', dest = 'sort',
-                    help = "Sorting for files ('na', i.e. by name ascending by default)",
-                    type = str,
-                    choices = ['na', 'nd', 'sa', 'sd'],
-                    default = 'na')
-        misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
-                    help = "Indent for printing  nested directories",
-                    type = str,
-                    default = '  ')
-        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
-                    help = "Disable visualising changes & displaying info messages during processing",
-                    action = 'store_true')
+        # Add Default Miscellaneous Group
+        cls.add_arg_misc_group(parser)
 
-    @staticmethod
-    def parse_commands(parser):
+    @classmethod
+    def parse_commands(cls, parser):
         ''' Specific commands parsing
         '''
         pass
 
-    @staticmethod
-    def check_args(args, parser):
+    @classmethod
+    def check_args(cls, args, parser):
         ''' Validation of supplied CLI arguments
         '''
-
         # if input source is a file, need to adjust
         if args['file']:
             args['dir'] = os.path.dirname(args['file'])

@@ -61,18 +61,25 @@
 """
 import sys
 from datetime import timedelta
+from scripts.base.bmpbs import BMPBaseArgParser
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
-from scripts.base.bmpbargp import BMPBaseArgParser
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 class BMFPArgParser(BMPBaseArgParser):
     ''' BMFP commands parsing
     '''
     @staticmethod
-    def parse_commands(parser):
+    def add_arg_misc_group(parser):
+        misc_group = parser.add_argument_group('Miscellaneous')
+        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
+                    help = "Disable visualising changes & displaying info messages during processing",
+                    action = 'store_true')
+
+    @classmethod
+    def parse_commands(cls, parser):
         ''' parses BMFP parsing
         '''
 
@@ -151,11 +158,11 @@ class BMFPArgParser(BMPBaseArgParser):
         group = fragment_parser.add_argument_group('Fragment parameters')
         group.add_argument('-fs', '--starttime', dest='fragment_starttime',
                 help = 'Fragment start time, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
+                type = lambda f: cls.is_timedelta(parser, f),
                 required = True)
         group.add_argument('-fd', '--duration', dest='fragment_duration',
                 help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
+                type = lambda f: cls.is_timedelta(parser, f),
                 default = timedelta(days = 380))
         fragment_parser.add_argument("-ro", "--replace-original", dest='replace_original',
                     help = "Replace original file with the fragment",
@@ -170,7 +177,7 @@ class BMFPArgParser(BMPBaseArgParser):
                 default = 0.0)
         segment_group.add_argument('-sd', '--duration', dest='segment_duration',
                 help = 'Maximum media duration, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: BMPBaseArgParser.is_timedelta(parser, f),
+                type = lambda f: cls.is_timedelta(parser, f),
                 default = timedelta(0))
         segment_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
                     help = "Reset timestamps at the begin of each segment, so that it "
@@ -180,8 +187,8 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
 
-    @staticmethod
-    def check_args(args, parser):
+    @classmethod
+    def check_args(cls, args, parser):
         ''' Validation of supplied BMFP CLI arguments
         '''
         if not args['sub_cmd']:
@@ -189,7 +196,7 @@ class BMFPArgParser(BMPBaseArgParser):
             sys.exit(1)
 
         # Global options check
-        BMPBaseArgParser.check_args(args, parser)
+        super().check_args(args, parser)
 
         # Compile FF global options
         ff_global_options = 0
@@ -284,7 +291,7 @@ class BMFPDispatcher:
     def dispatch():
         ''' Dispatches BMFP commands
         '''
-        args = BMFPArgParser().parse_options(script_name = 'bmfp')
+        args = BMFPArgParser.parse_options(script_name = 'bmfp')
 
         if args['sub_cmd'] == 'convert':
             BMFPDispatcher.convert(args)
@@ -299,8 +306,3 @@ def main():
     ''' BMFP entry point
     '''
     BMFPDispatcher.dispatch()
-
-if __name__ == '__main__':
-    main()
-
-

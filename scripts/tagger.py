@@ -64,11 +64,11 @@
 """
 import os
 from argparse import ArgumentParser
-from scripts.base.bmpbargp import BMPBaseArgParser
+from functools import partial
+from scripts.base.bmpbs import BMPBaseArgParser
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
-from functools import partial
 
 
 class TaggerArgParser(BMPBaseArgParser):
@@ -77,8 +77,8 @@ class TaggerArgParser(BMPBaseArgParser):
     SUPPORTED_TEXTUAL_TAGGABLE_FIELDS = [field for field in sorted(TagHolder.textual_fields())]
     SUPPORTED_TAGGABLE_FIELDS = [field for field in sorted(TagHolder.taggable_fields())]
 
-    @staticmethod
-    def parse_commands(parser):
+    @classmethod
+    def parse_commands(cls, parser):
         ''' parses Tagger commands
         '''
         def add_arg_diff_tags_only_mode(parser):
@@ -145,13 +145,13 @@ class TaggerArgParser(BMPBaseArgParser):
                 type = str)
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
                 help = "Sets Artwork: /Path_to_PNG_or_JPEG",
-                type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
+                type = lambda f: cls.is_valid_file_path(parser, f))
         set_tags_parser.add_argument('-bm', '--bpm', dest='bpm',
                 help = "Sets the BPM tag",
                 type = str)
         set_tags_parser.add_argument('-cmp', '--compilaton', dest='compilaton',
                 help = "Sets the Compilaton tag",
-                type = lambda f: BMPBaseArgParser.is_boolean(parser, f))
+                type = lambda f: cls.is_boolean(parser, f))
         set_tags_parser.add_argument('-grp', '--grouping', dest='grouping',
                 help = "Sets the Grouping tag",
                 type = str)
@@ -161,15 +161,15 @@ class TaggerArgParser(BMPBaseArgParser):
         set_tags_parser.add_argument('-lr', '--lyrics', dest='lyrics',
                 help = "Sets the Lyrics tag",
                 type = str)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(set_tags_parser)
+        cls.add_arg_display_curent_state_mode(set_tags_parser)
         add_arg_diff_tags_only_mode(set_tags_parser)
 
          # Copy Tags
         copy_tags_parser = subparsers.add_parser('copy', description = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
-                type = lambda f: BMPBaseArgParser.is_valid_file_path(parser, f))
-        BMPBaseArgParser.add_arg_display_curent_state_mode(copy_tags_parser)
+                type = lambda f: cls.is_valid_file_path(parser, f))
+        cls.add_arg_display_curent_state_mode(copy_tags_parser)
         add_arg_diff_tags_only_mode(copy_tags_parser)
 
         # Index
@@ -178,23 +178,23 @@ class TaggerArgParser(BMPBaseArgParser):
                 help = 'A number from which the indexing starts, 1 by default',
                 type = int,
                 default = 1)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(index_parser)
+        cls.add_arg_display_curent_state_mode(index_parser)
         add_arg_diff_tags_only_mode(index_parser)
 
          # Remove Tags
         remove_tags_parser = subparsers.add_parser('remove', description = 'Remove tags from media files')
         remove_tags_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
                 help = "Comma-separated list of tag fields to remove. " \
-                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TAGGABLE_FIELDS)),
+                        "Supported tag fields: {}".format(', '.join(cls.SUPPORTED_TAGGABLE_FIELDS)),
                 type = str)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(remove_tags_parser)
+        cls.add_arg_display_curent_state_mode(remove_tags_parser)
         add_arg_diff_tags_only_mode(remove_tags_parser)
 
          # Replace Tags
         replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in specified tag fields')
         replace_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
                 help = "Comma-separated list of tag fields in which to replace. " \
-                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
+                        "Supported tag fields: {}".format(', '.join(cls.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
                 type = str,
                 required=True)
         replace_parser.add_argument('-fs', '--find-string', dest='find_str',
@@ -209,30 +209,30 @@ class TaggerArgParser(BMPBaseArgParser):
         replace_parser.add_argument('-ic', '--ignorecase', dest='ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
-        BMPBaseArgParser.add_arg_display_curent_state_mode(replace_parser)
+        cls.add_arg_display_curent_state_mode(replace_parser)
         add_arg_diff_tags_only_mode(replace_parser)
 
          # Capitalize Tags
         capitalize_parser = subparsers.add_parser('capitalize', description = 'Capitalize words in specified tag fields')
         capitalize_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
                 help = "Comma-separated list of tag fields in which to capitalize words. " \
-                        "Supported tag fields: {}".format(', '.join(TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
+                        "Supported tag fields: {}".format(', '.join(cls.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)),
                 type = str,
                 required=True)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(capitalize_parser)
+        cls.add_arg_display_curent_state_mode(capitalize_parser)
         add_arg_diff_tags_only_mode(capitalize_parser)
 
         # Detauch Art
         detauch_parser = subparsers.add_parser('detauch', description = 'Detauches art into specified target directory')
         detauch_parser.add_argument("-td", "--target_dir", dest = "target_dir",
-            type = lambda fpath: BMPBaseArgParser.expanded_path(fpath),
+            type = lambda fpath: cls.expanded_path(fpath),
             default = None,
             help = "Target directory for detauching art. When omitted, detauched art will be stored in "
                         "the top-level media files source directory")
 
-    @staticmethod
-    def check_args(args, parser):
-        BMPBaseArgParser.check_args(args, parser)
+    @classmethod
+    def check_args(cls, args, parser):
+        super().check_args(args, parser)
 
         def parse_tag_fields(fields, supported_fields):
             fields = [r.strip() for r in fields.split(',')]
@@ -255,15 +255,16 @@ class TaggerArgParser(BMPBaseArgParser):
         if args['sub_cmd'] == 'remove':
             if args['tag_fields'] is not None:
                 args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
-                                                      TaggerArgParser.SUPPORTED_TAGGABLE_FIELDS)
+                                                      cls.SUPPORTED_TAGGABLE_FIELDS)
 
         if args['sub_cmd'] in ('replace', 'capitalize'):
             args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
-                                                      TaggerArgParser.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)
+                                                      cls.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)
 
         if args['sub_cmd'] == 'detauch':
             if args['target_dir'] is None:
                 args['target_dir'] = args['dir']
+
 
 class TagsDispatcher:
     ''' Tagger CLI Commands Dispatcher
@@ -278,7 +279,6 @@ class TagsDispatcher:
                 flatten = False, ensure_uniq = False,
                 show_size = args['show_size'], show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
-
 
     @staticmethod
     def set_tags(args):
@@ -386,7 +386,8 @@ class TagsDispatcher:
     def dispatch():
         ''' Dispatches Tagger commands
         '''
-        args = TaggerArgParser().parse_options(script_name = 'tagger')
+        args = TaggerArgParser.parse_options(script_name = 'tagger')
+
         if args['sub_cmd'] == 'print':
             TagsDispatcher.print_dir(args)
         elif args['sub_cmd'] == 'set':
@@ -408,7 +409,4 @@ def main():
     ''' Tagger entry point
     '''
     TagsDispatcher.dispatch()
-
-if __name__ == '__main__':
-    main()
 

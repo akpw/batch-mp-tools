@@ -56,8 +56,7 @@
 """
 import sys
 from argparse import ArgumentParser
-from scripts.base.bmpbargp import BMPBaseArgParser
-
+from scripts.base.bmpbs import BMPBaseArgParser
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
@@ -66,8 +65,8 @@ from batchmp.fstools.rename import Renamer
 class RenameArgParser(BMPBaseArgParser):
     ''' Renamer commands parsing
     '''
-    @staticmethod
-    def parse_commands(parser):
+    @classmethod
+    def parse_commands(cls, parser):
         ''' parses Renamer commands
         '''
         # Commands
@@ -108,7 +107,7 @@ class RenameArgParser(BMPBaseArgParser):
                 type=str,
                 choices = ['de', 'le', 'da'],
                 default = 'de')
-        BMPBaseArgParser.add_arg_display_curent_state_mode(flatten_parser)
+        cls.add_arg_display_curent_state_mode(flatten_parser)
 
         # Add index
         add_index_parser = subparsers.add_parser('index', description = 'Adds index to files and directories names')
@@ -128,7 +127,7 @@ class RenameArgParser(BMPBaseArgParser):
                 type = int,
                 default = 2)
         add_include_mode_group(add_index_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(add_index_parser)
+        cls.add_arg_display_curent_state_mode(add_index_parser)
 
         # Add Date
         add_date_parser = subparsers.add_parser('add_date', description = 'Adds date to files and directories names')
@@ -144,7 +143,7 @@ class RenameArgParser(BMPBaseArgParser):
                 type = str,
                 default = '%Y-%m-%d')
         add_include_mode_group(add_date_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(add_date_parser)
+        cls.add_arg_display_curent_state_mode(add_date_parser)
 
         # Add Text
         add_text_parser = subparsers.add_parser('add_text', description = 'Adds text to files and directories names')
@@ -160,7 +159,7 @@ class RenameArgParser(BMPBaseArgParser):
                 type = str,
                 required = True)
         add_include_mode_group(add_text_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(add_text_parser)
+        cls.add_arg_display_curent_state_mode(add_text_parser)
 
         # Remove chars
         remove_chars_parser = subparsers.add_parser('remove', description = 'Removes n characters from files and directories names')
@@ -172,7 +171,7 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Removes text from tail',
                 action = 'store_true')
         add_include_mode_group(remove_chars_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(remove_chars_parser)
+        cls.add_arg_display_curent_state_mode(remove_chars_parser)
 
         # Replace
         replace_parser = subparsers.add_parser('replace', description = 'RegExp-based replace in files and directories names')
@@ -189,26 +188,26 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'Case insensitive',
                 action = 'store_true')
         add_include_mode_group(replace_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(replace_parser)
+        cls.add_arg_display_curent_state_mode(replace_parser)
 
         # Capitalize
         capitalize_parser = subparsers.add_parser('capitalize', description = 'Capitalizes words in files / directories names')
         add_include_mode_group(capitalize_parser)
-        BMPBaseArgParser.add_arg_display_curent_state_mode(capitalize_parser)
+        cls.add_arg_display_curent_state_mode(capitalize_parser)
 
         # Delete
         delete_parser = subparsers.add_parser('delete', description = 'Delete selected files and directories')
         delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',
                 help = 'Delete all non-media files only',
                 action = 'store_true')
-        BMPBaseArgParser.add_arg_display_curent_state_mode(delete_parser)
+        cls.add_arg_display_curent_state_mode(delete_parser)
         add_include_mode_group(delete_parser)
 
-    @staticmethod
-    def check_args(args, parser):
+    @classmethod
+    def check_args(cls, args, parser):
         ''' Validation of supplied Renamer CLI arguments
         '''
-        BMPBaseArgParser.check_args(args, parser)
+        super().check_args(args, parser)
 
         if not args['sub_cmd']:
             args['sub_cmd'] = 'print'
@@ -350,7 +349,8 @@ class RenameDispatcher:
     def dispatch():
         ''' Dispatches Renamer commands
         '''
-        args = RenameArgParser().parse_options(script_name = 'renamer')
+        args = RenameArgParser.parse_options(script_name = 'renamer')
+
         if args['sub_cmd'] == 'print':
             RenameDispatcher.print_dir(args)
         elif args['sub_cmd'] == 'flatten':
@@ -374,7 +374,3 @@ def main():
     ''' Renamer entry point
     '''
     RenameDispatcher.dispatch()
-
-if __name__ == '__main__':
-    main()
-
