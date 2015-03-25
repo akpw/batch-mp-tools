@@ -94,7 +94,7 @@ To check on the result, lets's just use the tagger abilities to print media file
         |-  7.4MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.flac
         	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
         	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-        	Artist: Bach, Johann Sebastian
+        	Artist: Glenn Gould
         	Album Artist: Glenn Gould
         	Genre: Classical
         	Composer: Johann Sebastian Bach (1685-1750)
@@ -107,7 +107,7 @@ To check on the result, lets's just use the tagger abilities to print media file
           |-  7.9MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.m4a
           	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
           	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-          	Artist: Bach, Johann Sebastian
+          	Artist: Glenn Gould
           	Album Artist: Glenn Gould
           	Genre: Classical
           	Composer: Johann Sebastian Bach (1685-1750)
