@@ -120,6 +120,7 @@ To check on the result, lets's just use the tagger abilities to print media file
     2 files, 4 folders
     Total size: 15.2MB
 ````
+From a brief glance, looks OK and the tags seem to be preserved as well. As a default behaviour, BMFP also backed up the original file and replace it with the converted one.
 
 I will follow up with more examples and common use-cases in future blogs.
 
