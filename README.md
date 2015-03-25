@@ -7,7 +7,7 @@ A rainy weekends project under occasional development :)
 
 ####Install:
 - from [pypi](https://pypi.python.org/pypi/batchmp): `$ pip install batchmp`
-- latest from source repository: ` $ pip install git+https://github.com/akpw/batch-mp-tools.git`
+- latest from source repository: `$ pip install git+https://github.com/akpw/batch-mp-tools.git`
 
 ####Blogs:
 - [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
@@ -20,7 +20,7 @@ Batch management of media files, starting from base properties such as file name
 The project is written in [Python 3.4](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualizing targeted changes (whenever possible) before actual processing.
 
 [Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as indexing, flattening folders, and cleaning up non-relevant files. For example, to index M4A files in all sub-directories of the current folder:
-````
+```
     $ renamer -r -in '*.m4a' -ad index
     /Desktop/_test/Gould
       |-/1
@@ -35,34 +35,34 @@ The project is written in [Python 3.4](https://www.python.org/download/releases/
     6 files, 3 folders
     
     Proceed? [y/n]:    
-````
+```
 An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
 
 
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
-````
+```
     $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal'
     Targeted after processing:
     /Desktop/_test/Gould
       |-/1
       |-/2
         |- Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande.m4a
-        	Title: Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande, 1 of 26
-        	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-        	Artist: Glenn Gould
-        	Album Artist: Glenn Gould
-        	Genre: Classical
-        	Composer: Johann Sebastian Bach (1685-1750)
-        	Year: 1994
-        	Track: 1/26
-        	Disk: 2/2
+            Title: Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande, 1 of 26
+            Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+            Artist: Glenn Gould
+            Album Artist: Glenn Gould
+            Genre: Classical
+            Composer: Johann Sebastian Bach (1685-1750)
+            Year: 1994
+            Track: 1/26
+            Disk: 2/2
       |-/Art
     1 files, 3 folders  
     
     Proceed? [y/n]: n
-````
-The commands above show some of the available global options:  ```-r``` for recursion into nested folders and ```-in``` to select media files (just one here, for the sake of output brevity). The ```-ad``` switch force looking in all sub-directores, without filtering them by the ```-in``` pattern. 
+```
+The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files (just one here, for the sake of output brevity). The `-ad` switch force looking in all sub-directores, without filtering them by the `-in` pattern. 
 As all three tools share the core concept of various transformations applied to generated stream of file systems entries, they also share the same set of global options. A quick way to check on that is to run: 
 ```
     $ renamer -h
@@ -79,46 +79,46 @@ That will show all global options along with specific commands for each tool. Ge
 [BMFP](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. **BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**. 
 
 For example, to convert the file from previous example from M4A to FLAC:
-````
+```
     $ bmfp -r -in '*BWV816 1*' -ad -pm convert -la -tf FLAC
-````
-The ```-pm``` switch forces preserving all metadata information, while ```-la``` explicitly tells BMFP to try a lossless conversion. 
+```
+The `-pm` switch forces preserving all metadata information, while `-la` explicitly tells BMFP to try a lossless conversion. 
 
 To check on the result, lets's just use the tagger abilities to print media files info:
-````
+```
     $ tagger -r -in '*BWV816 1*' -ad print -st -ss -h
     /Users/AKPower/Desktop/_test/Gould
       |-/1
       |-/2
         |-  7.4MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.flac
-        	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
-        	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-        	Artist: Glenn Gould
-        	Album Artist: Glenn Gould
-        	Genre: Classical
-        	Composer: Johann Sebastian Bach (1685-1750)
-        	Year: 1994
-        	Track: 1/26
-        	Disk: 2/2
-        	Format: FLAC
-        	Duration: 0:01:48, Bit rate: 548kb/s, Sample rate: 44100Hz, Bit depth: 16
+            Title: French Suite 5 in G major, BWV 816 - 1 Allemande
+            Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+            Artist: Glenn Gould
+            Album Artist: Glenn Gould
+            Genre: Classical
+            Composer: Johann Sebastian Bach (1685-1750)
+            Year: 1994
+            Track: 1/26
+            Disk: 2/2
+            Format: FLAC
+            Duration: 0:01:48, Bit rate: 548kb/s, Sample rate: 44100Hz, Bit depth: 16
         |-/_backup_15Mar25_094341
           |-  7.9MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.m4a
-          	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
-          	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-          	Artist: Glenn Gould
-          	Album Artist: Glenn Gould
-          	Genre: Classical
-          	Composer: Johann Sebastian Bach (1685-1750)
-          	Year: 1994
-          	Track: 1/26
-          	Disk: 2/2
-          	Format: ALAC
-          	Duration: 0:01:48, Bit rate: 579kb/s, Sample rate: 44100Hz, Bit depth: 16
+              Title: French Suite 5 in G major, BWV 816 - 1 Allemande
+              Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+              Artist: Glenn Gould
+              Album Artist: Glenn Gould
+              Genre: Classical
+              Composer: Johann Sebastian Bach (1685-1750)
+              Year: 1994
+              Track: 1/26
+              Disk: 2/2
+              Format: ALAC
+              Duration: 0:01:48, Bit rate: 579kb/s, Sample rate: 44100Hz, Bit depth: 16
       |-/Art
     2 files, 4 folders
     Total size: 15.2MB
-````
+```
 From a brief glance, looks OK and the tags seem to be preserved as well. As a default behaviour, BMFP also backed up the original file and replace it with the converted one.
 
 I will follow up with more examples and common use-cases in future blogs.
@@ -265,10 +265,10 @@ I will follow up with more examples and common use-cases in future blogs.
         {convert, denoise, fragment, segment, ...}
 
 ##Installing Development version
-- Clone the repo, then run: ```$ python setup.py develop```
+- Clone the repo, then run: `$ python setup.py develop`
 
 **Running Tests**
-- Run via: ```$ python setup.py test```
+- Run via: `$ python setup.py test`
 
 
 
