@@ -2,9 +2,15 @@
 **Status:**
 A rainy weekends project under occasional development :)
 
-
 ##Requirements
 - [Python 3.4.x](https://www.python.org/download/releases/3.4.1/)
+
+##Install
+**Standard install**
+- from [pypi](https://pypi.python.org/pypi/batchmp):
+    ```$ pip install batchmp```
+- latest from source repository:
+    ```$ pip install git+https://github.com/akpw/batch-mp-tools.git```
 
 ##Blogs
 - [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
@@ -119,16 +125,7 @@ To check on the result, lets's just use the tagger abilities to print media file
 I will follow up with more examples and common use-cases in future blogs.
 
 
-##Install
-**Standard install**
-- from [pypi](https://pypi.python.org/pypi/batchmp):
-    ```$ pip install batchmp```
-- from source repository:
-    ```$ pip install git+https://github.com/akpw/batch-mp-tools.git```
-- Or, clone the repo and run:
-```$ python setup.py install```
-
-**Development version**
+##Install Development version
 - Clone the repo, then run: ```$ python setup.py develop```
 
 **Running Tests**
