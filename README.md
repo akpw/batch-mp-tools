@@ -50,14 +50,17 @@ An important detail here, by default Renamer is visualizing the targeted changes
     
     Proceed? [y/n]: n
 ````
-The examples above show some of the available global options:  ```-r``` for recursion into nested folders and ```-in``` to select relevant media files. The ```-ad``` switch force looking in all sub-directores, without filtering them by the ```-in``` pattern. 
+The commands above show some of the available global options:  ```-r``` for recursion into nested folders and ```-in``` to select relevant media files. The ```-ad``` switch force looking in all sub-directores, without filtering them by the ```-in``` pattern. 
 As all three tools share the core concept of various transformations applied to generated stream of file systems entries, they also share the same set of global options. A quick way to check on that is to run: 
 ```
-    $renamer -h
+    $ renamer -h
     $ tagger -h
     $ bmfp -h
 ``` 
-That will show all global options along with the set of specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the renamer index command: ```$ renamer index -h```
+That will show all global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the renamer index command: 
+```
+    $ renamer index -h
+```
 
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
