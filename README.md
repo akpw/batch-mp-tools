@@ -8,10 +8,24 @@ Batch management of media files, starting from base properties such as file name
 
 The project is written in [Python 3.4.x](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualizing targeted changes (whenever possible) before actual processing.
 
-[Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as indexing, flattening folders, and cleaning up non-relevant files. For example, to  index M4A files in all sub-directories of the current folder:
+[Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as indexing, flattening folders, and cleaning up non-relevant files. For example, to index M4A files in all sub-directories of the current folder:
 ````
     $ renamer -r -in '*.m4a' -ad index
+    /Desktop/_test/Gould
+      |-/1
+        |- 01 Glenn Gould French Suite 1 In D, BWV812 1 Allemande.m4a
+        |- 02 Glenn Gould French Suite 1 In D, BWV812 2 Courante.m4a
+        |- 03 Glenn Gould French Suite 1 In D, BWV812 3 Sarabande.m4a
+      |-/2
+        |- 01 Bach, Johann Sebastian French Suite 5 In G Major, BWV816 1 Allemande.m4a
+        |- 02 Bach, Johann Sebastian French Suite 5 In G Major, BWV816 2 Courante.m4a
+        |- 03 Bach, Johann Sebastian French Suite 5 In G Major, BWV816 3 Sarabande.m4a
+      |-/_Art
+    6 files, 3 folders
+    
+    Proceed? [y/n]:    
 ````
+An important detail here, be default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, this will set the title tag in each media file to its file name followed by the respective values of track and tracktotal tags.
 ````
