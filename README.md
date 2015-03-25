@@ -64,6 +64,45 @@ That will show all global options along with specific commands for each tool. Ge
 
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
+For example, to run a lossless conversion from M4A to FLAC:
+````
+    $ bmfp -r -in '*BWV816 1*' -ad -pm convert -la -tf FLAC
+````
+To check the result, lets's use the tagger abilities to print media files info:
+````
+    $ tagger -r -in '*BWV816 1*' -ad print -st -ss -h
+    /Users/AKPower/Desktop/_test/Gould
+      |-/1
+      |-/2
+        |-  7.4MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.flac
+        	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
+        	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+        	Artist: Bach, Johann Sebastian
+        	Album Artist: Glenn Gould
+        	Genre: Classical
+        	Composer: Johann Sebastian Bach (1685-1750)/Johann Sebastian Bach
+        	Year: 1994
+        	Track: 1/26
+        	Disk: 2/2
+        	Format: FLAC
+        	Duration: 0:01:48, Bit rate: 548kb/s, Sample rate: 44100Hz, Bit depth: 16
+        |-/_backup_15Mar25_094341
+          |-  7.9MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.m4a
+          	Title: French Suite 5 in G major, BWV 816 - 1 Allemande
+          	Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+          	Artist: Bach, Johann Sebastian
+          	Album Artist: Glenn Gould
+          	Genre: Classical
+          	Composer: Johann Sebastian Bach (1685-1750)/Johann Sebastian Bach
+          	Year: 1994
+          	Track: 1/26
+          	Disk: 2/2
+          	Format: ALAC
+          	Duration: 0:01:48, Bit rate: 579kb/s, Sample rate: 44100Hz, Bit depth: 16
+      |-/Art
+    2 files, 4 folders
+    Total size: 15.2MB
+````
 
 
 ##Blogs
