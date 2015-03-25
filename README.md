@@ -2,10 +2,10 @@
 **Status:**
 A rainy weekends project under occasional development :)
 
-##Requirements
+**Requirements:**
 - [Python 3.4.x](https://www.python.org/download/releases/3.4.1/) or later
 
-##Install
+**Install:**
 - from [pypi](https://pypi.python.org/pypi/batchmp):
 ```
     $ pip install batchmp
@@ -15,11 +15,11 @@ A rainy weekends project under occasional development :)
     $ pip install git+https://github.com/akpw/batch-mp-tools.git
 ```
 
-##Blogs
+**Blogs:**
 - [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
-#Description
+##Description
 
 Batch management of media files, starting from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
 
