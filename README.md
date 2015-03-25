@@ -8,9 +8,15 @@ Batch management of media files, starting from base properties such as file name
 
 The project is written in [Python 3.4.x](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualizing targeted changes (whenever possible) before actual processing.
 
-[Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as flattening folders and cleaning up non-relevant files.
+[Renamer](https://github.com/akpw/batch-mp-tools#renamer) primarily takes care of shaping up files names, supporting various batch rename operations as well as indexing, flattening folders, and cleaning up non-relevant files. For example, to  index M4A files in all sub-directories of the current folder:
+````
+    $ renamer -r -in '*.m4a' -ad index
+````
 
-[Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc.
+[Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as template processing, regexp-based replace in selected tags, etc. For example, this will set the title tag in each media file to its file name followed by the respective values of track and tracktotal tags.
+````
+    $ tagger -r set --title '$filename, $track of $tracktotal'
+````
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
 
