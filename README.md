@@ -104,17 +104,17 @@ To check on the result, lets's just use the tagger abilities to print media file
             Duration: 0:01:48, Bit rate: 548kb/s, Sample rate: 44100Hz, Bit depth: 16
         |-/_backup_15Mar25_094341
           |-  7.9MB Bach, Johann Sebastian French Suite 5 in G major, BWV816 1 Allemande.m4a
-            Title: French Suite 5 in G major, BWV 816 - 1 Allemande
-            Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
-            Artist: Glenn Gould
-            Album Artist: Glenn Gould
-            Genre: Classical
-            Composer: Johann Sebastian Bach (1685-1750)
-            Year: 1994
-            Track: 1/26
-            Disk: 2/2
-            Format: ALAC
-            Duration: 0:01:48, Bit rate: 579kb/s, Sample rate: 44100Hz, Bit depth: 16
+              Title: French Suite 5 in G major, BWV 816 - 1 Allemande
+              Album: Bach French Suites BWV 812-817 Vol. II; Glenn Gould
+              Artist: Glenn Gould
+              Album Artist: Glenn Gould
+              Genre: Classical
+              Composer: Johann Sebastian Bach (1685-1750)
+              Year: 1994
+              Track: 1/26
+              Disk: 2/2
+              Format: ALAC
+              Duration: 0:01:48, Bit rate: 579kb/s, Sample rate: 44100Hz, Bit depth: 16
       |-/Art
     2 files, 4 folders
     Total size: 15.2MB
