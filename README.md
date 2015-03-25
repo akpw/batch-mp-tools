@@ -7,9 +7,13 @@ A rainy weekends project under occasional development :)
 
 ##Install
 - from [pypi](https://pypi.python.org/pypi/batchmp):
-    ```$ pip install batchmp```
+```
+    $ pip install batchmp
+```
 - latest from source repository:
-    ```$ pip install git+https://github.com/akpw/batch-mp-tools.git```
+```
+    $ pip install git+https://github.com/akpw/batch-mp-tools.git
+```
 
 ##Blogs
 - [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
