@@ -2,6 +2,14 @@
 **Status:**
 A rainy weekends project under occasional development :)
 
+
+##Requirements
+- [Python 3.4.x](https://www.python.org/download/releases/3.4.1/)
+
+##Blogs
+- [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
+- [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
+
 #Description
 
 Batch management of media files, starting from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
@@ -26,6 +34,7 @@ The project is written in [Python 3.4.x](https://www.python.org/download/release
     Proceed? [y/n]:    
 ````
 An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
+
 
 
 [Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While being simple at its core, Tagger also provides support for advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
@@ -61,6 +70,7 @@ That will show all global options along with specific commands for each tool. Ge
 ```
     $ renamer index -h
 ```
+
 
 
 [BMFP](https://github.com/akpw/batch-mp-tools#bmfp) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, breaking up jobs into individual tasks that are then run as separate processes on individual CPU cores. BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line. 
@@ -106,13 +116,7 @@ To check on the result, lets's just use the tagger abilities to print media file
     Total size: 15.2MB
 ````
 
-##Blogs
-- [The Batch-MP-Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
-- [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
-
-
-##Requirements
-- [Python 3.4.x](https://www.python.org/download/releases/3.4.1/)
+I will follow up with more examples and common use-cases in future blogs.
 
 
 ##Install
