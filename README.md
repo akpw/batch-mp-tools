@@ -124,13 +124,6 @@ To check on the result, lets's just use the tagger abilities to print media file
 I will follow up with more examples and common use-cases in future blogs.
 
 
-##Install Development version
-- Clone the repo, then run: ```$ python setup.py develop```
-
-**Running Tests**
-- Run via: ```$ python setup.py test```
-
-
 ##CLI Commands
 ###renamer
     Batch renaming of files and directories
@@ -270,6 +263,13 @@ I will follow up with more examples and common use-cases in future blogs.
 
       Commands: (bmfp {command} -h for additional help)
         {convert, denoise, fragment, segment, ...}
+
+##Installing Development version
+- Clone the repo, then run: ```$ python setup.py develop```
+
+**Running Tests**
+- Run via: ```$ python setup.py test```
+
 
 
 
