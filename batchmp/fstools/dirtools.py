@@ -24,7 +24,7 @@ class DHandler:
     def print_dir(src_dir, *,
                         start_level = 0, end_level = sys.maxsize,
                         include = '*', exclude = '',
-                        sort = 'n', nested_indent = '\t',
+                        sort = 'n', nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         flatten = False, ensure_uniq = False,
                         show_size = False, formatter = None):
@@ -127,7 +127,7 @@ class DHandler:
                                 after_msg = 'Targeted after processing:',
                                 orig_end_level = sys.maxsize, target_end_level = 0,
                                 include = '*', exclude = '',
-                                sort = 'n', nested_indent = '\t',
+                                sort = 'n', nested_indent = None,
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True,
                                 flatten = False, ensure_uniq = False,
@@ -166,7 +166,7 @@ class DHandler:
     @staticmethod
     def flatten_folders(src_dir, *,
                                 target_level = sys.maxsize, end_level = sys.maxsize,
-                                sort = 'n', nested_indent = '\t',
+                                sort = 'n', nested_indent = None,
                                 include = '*', exclude = '',
                                 filter_dirs = True, filter_files = True,
                                 remove_folders = True, remove_non_empty_folders = False,

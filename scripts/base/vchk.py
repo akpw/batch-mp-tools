@@ -21,7 +21,6 @@ import sys
 def check_version():
     if sys.version_info.major < 3:
         print('''
-
             Batch Media Processing Tools require Python version 3.4 or later.
 
             You can create an isolated Python 3.4 environment using the virtualenv tool

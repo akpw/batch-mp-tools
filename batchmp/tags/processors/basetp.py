@@ -37,7 +37,7 @@ class BaseTagProcessor:
 
     def print_dir(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
-                            sort = 'n', nested_indent = '\t',
+                            sort = 'n', nested_indent = DWalker.DEFAULT_NESTED_INDENT,
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
                             show_size = False, format = None, show_stats = False):
@@ -86,7 +86,7 @@ class BaseTagProcessor:
 
     def set_tags_visual(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
-                            sort = 'n', nested_indent = '\t',
+                            sort = 'n', nested_indent = None,
                             filter_dirs = True, filter_files = True,
                             display_current = True, diff_tags_only = False,
                             quiet = False,
@@ -139,7 +139,7 @@ class BaseTagProcessor:
 
     def copy_tags(self, src_dir, *, end_level = sys.maxsize,
                         include = '*', exclude = '',
-                        sort = 'n', nested_indent = '\t',
+                        sort = 'n', nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False, diff_tags_only = False,
                         tag_holder_path):
@@ -163,7 +163,7 @@ class BaseTagProcessor:
 
     def index(self, src_dir, *, end_level = sys.maxsize,
                             include = '*', exclude = '',
-                            sort = 'n', nested_indent = '\t',
+                            sort = 'n', nested_indent = None,
                             filter_dirs = True, filter_files = True,
                             display_current = True, quiet = False,
                             diff_tags_only = False, start_from = 1):
@@ -218,7 +218,7 @@ class BaseTagProcessor:
 
     def remove_tags(self, src_dir, *, end_level = sys.maxsize,
                         include = '*', exclude = '',
-                        sort = 'n', nested_indent = '\t',
+                        sort = 'n', nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False,
                         tag_fields = None,
@@ -245,7 +245,7 @@ class BaseTagProcessor:
 
     def replace_tags(self, src_dir, *, end_level = sys.maxsize,
                     include = '*', exclude = '',
-                    sort = 'n', nested_indent = '\t',
+                    sort = 'n', nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
                     tag_fields = None, ignore_case = False, find_str = None, replace_str = None):
@@ -286,7 +286,7 @@ class BaseTagProcessor:
 
     def capitalize_tags(self, src_dir, *, end_level = sys.maxsize,
                     include = '*', exclude = '',
-                    sort = 'n', nested_indent = '\t',
+                    sort = 'n', nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
                     tag_fields = None):

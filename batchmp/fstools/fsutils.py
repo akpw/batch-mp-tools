@@ -200,13 +200,14 @@ class UniqueDirNamesChecker:
         return self._uname_gen.send(fname)
 
 
-class DWalker(object):
+class DWalker:
     ''' Walks content of a directory, generating
         a sequence of structured FS elements (FSEntry)
     '''
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
     ENTRY_TYPE_FILE = 'F'
+    DEFAULT_NESTED_INDENT = '  '
 
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
@@ -214,7 +215,7 @@ class DWalker(object):
     def entries(src_dir, *,
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '',
-                    sort = 'n', nested_indent = '\t',
+                    sort = 'n', nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
         ''' generates a sequence of FSEntries elements
@@ -226,6 +227,9 @@ class DWalker(object):
                 'na' / 'nd': by name / by name descending
                 'sa' / 'sd': by size / by size descending
         '''
+
+        if nested_indent is None:
+            nested_indent = DWalker.DEFAULT_NESTED_INDENT
 
         # sorting
         reversed = True if sort.endswith('d') else False
@@ -334,7 +338,7 @@ class DWalker(object):
 
     @staticmethod
     def file_entries(src_dir, *,
-                     sort = 'n', nested_indent = '\t',
+                     sort = 'n', nested_indent = None,
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,
@@ -359,7 +363,7 @@ class DWalker(object):
 
     @staticmethod
     def dir_entries(src_dir, *,
-                    sort = 'n', nested_indent = '\t',
+                    sort = 'n', nested_indent = None,
                     start_level = 0, end_level = sys.maxsize,
                     include = '*', exclude = '',
                     filter_dirs = True, filter_files = True,

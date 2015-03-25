@@ -27,6 +27,8 @@ class OutputFormatType(IntEnum):
 class TagOutputFormatter:
     ''' Generates output for printing tags
     '''
+    DEFAULT_TAG_INDENT = '    '
+
     COMPACT_FIELDS = ['title', 'album', 'artist', 'albumartist', 'genre', 'composer', 'year', 'track', 'tracktotal', 'disc', 'disctotal']
     EXTENDED_FIELDS = ['encoder', 'bpm', 'comp', 'grouping', 'comments', 'lyrics', 'art']
 
@@ -87,7 +89,7 @@ class TagOutputFormatter:
     # Helpers
     @staticmethod
     def _formatter(entry, tag_holder, show_extended = False, show_stats = False, diff_fields = None):
-        indent = entry.indent[:-3] + '\t'
+        indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
         media_str = ''
 
         if diff_fields is not None:
