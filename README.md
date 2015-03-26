@@ -86,13 +86,14 @@ An important detail here, by default Renamer is visualizing the targeted changes
 The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files (just one here, for the sake of output brevity). The `-ad` switch force looking in all sub-directores, without filtering them by the `-in` pattern.
 
 
-[**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, automatically breaking up jobs into individual tasks that are then run as separate processes on CPU cores. **BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**.
+[**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on CPU cores. 
+**BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**. It can be thought of as a batch FFmpeg runner, intended to make common uses of FFmpeg extremely easy while also not restricting its full power.
 
-For example, to convert the file from previous example from M4A to FLAC:
+For example, to convert all files from the above example from M4A to FLAC:
 ```
-    $ bmfp -r -in '*BWV816 1*' -ad -pm convert -la -tf FLAC
+    $ bmfp -r -pm convert -la -tf FLAC
 ```
-The `-pm` switch forces preserving all metadata information, while `-la` explicitly tells BMFP to try a lossless conversion.
+The `-pm` switch here forces preserving all metadata information, while `-la` explicitly tells BMFP to do a lossless conversion.
 
 To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
