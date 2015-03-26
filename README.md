@@ -17,19 +17,19 @@ A rainy weekends project under occasional development :)
 
 Batch management of media files, from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
 
-The project is written in [Python 3.4](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, which share the core concept of various transformations applied to generated stream of selected file system entries. Consequently, all three tools share the same set of global options. A quick way to check on that is to run:
+The project is written in [Python 3.4](https://www.python.org/download/releases/3.4.1/) and currently consists of three main command-line utilities. All three share the core concept of various transformations applied to generated stream of selected file system entries, and consequently they also share the same set of global options. A quick way to check on that is to run:
 ```
     $ renamer -h
     $ tagger -h
     $ bmfp -h
 ```
-That will show the global options along with specific commands for each utility. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `renamer index` command:
+That will show the global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `renamer index` command:
 ```
     $ renamer index -h
 ```
-By default the tools also share the same default behavior of visualizing targeted changes (whenever possible) before actual processing.
+By default the tools always visualize targeted changes (whenever possible) before actual processing.
 
-A little bit more details on each tool:
+A little bit more details on each utility:
 
 [**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files. 
 At its simplest, Renamer can be used to print the content of current directory:
