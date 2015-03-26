@@ -24,11 +24,10 @@ At its simplest, Renamer can be used to print the content of current directory:
 ```
     $ renamer
 ```
-A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level in your current directory:
+Without any command arguments, renamer uses `print` as its default command. A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level in your current directory:
 ```
     $ renamer print -sl 7
 ```
-
 Or, how about multi-level indexing of all M4A files in all sub-directories of the current folder:
 ```
     $ renamer -r -in '*.m4a' -ad index
