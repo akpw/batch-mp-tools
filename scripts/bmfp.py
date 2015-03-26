@@ -291,7 +291,15 @@ class BMFPDispatcher:
     def dispatch():
         ''' Dispatches BMFP commands
         '''
-        args = BMFPArgParser.parse_options(script_name = 'bmfp')
+        args = BMFPArgParser.parse_options(script_name = 'bmfp', description = \
+                        '''
+                        BMFP allows for efficient media processing,
+                        such as conversion between various formats,
+                        segmenting / fragmenting media files, denoising audio,
+                        detaching individual audio / video streams, etc.
+                        BMFP is built on top of FFmpeg (http://ffmpeg.org/),
+                        which needs to be installed and available in the command line.
+                        ''')
 
         if args['sub_cmd'] == 'convert':
             BMFPDispatcher.convert(args)

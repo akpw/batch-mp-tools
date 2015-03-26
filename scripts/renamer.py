@@ -349,7 +349,16 @@ class RenameDispatcher:
     def dispatch():
         ''' Dispatches Renamer commands
         '''
-        args = RenameArgParser.parse_options(script_name = 'renamer')
+        args = RenameArgParser.parse_options(script_name = 'renamer',
+                                             description = \
+                        '''
+                        Renamer is a multi-platform batch rename tool. In addition to common
+                        operations such as regexp-based replace, adding text / dates, etc.
+                        it also supports multi-level indexing across nested directories,
+                        flattening folders, and cleaning up non-media files.
+                        As default behavior, Renamer visualises targeted changes and ask
+                        for confirmation before actually doing anything.
+                        ''')
 
         if args['sub_cmd'] == 'print':
             RenameDispatcher.print_dir(args)

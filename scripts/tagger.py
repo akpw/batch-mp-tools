@@ -386,7 +386,16 @@ class TagsDispatcher:
     def dispatch():
         ''' Dispatches Tagger commands
         '''
-        args = TaggerArgParser.parse_options(script_name = 'tagger')
+        args = TaggerArgParser.parse_options(script_name = 'tagger',
+                                             description = \
+                        '''
+                        Tagger manages media metadata, such as tags and artwork.
+                        It can read and write media metadata across many different formats,
+                        with support for advanced metadata manipulation such as regexp-based replace in tags,
+                        template processing, etc.
+                        As default behavior, Tagger first visualises targeted changes and ask for confirmation
+                        before actually doing anything.
+                        ''')
 
         if args['sub_cmd'] == 'print':
             TagsDispatcher.print_dir(args)
