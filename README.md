@@ -93,7 +93,7 @@ For example, to convert all files from the above example from M4A to FLAC:
 ```
     $ bmfp -r -pm convert -la -tf FLAC
 ```
-The `-pm` switch here forces preserving all metadata information, while `-la` explicitly tells BMFP to do a lossless conversion.
+The `-pm` switch here forces preserving **all** metadata information, while `-la` explicitly tells BMFP to do a lossless conversion.
 
 To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
