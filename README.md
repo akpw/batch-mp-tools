@@ -24,7 +24,7 @@ At its simplest, Renamer can be used to print the content of current directory:
 ```
     $ renamer
 ```
-Without any command arguments, renamer uses `print` as its default command. A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level in your current directory:
+Without command arguments, renamer uses `print` as the default command. A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level in your current directory:
 ```
     $ renamer print -sl 7
 ```
