@@ -61,7 +61,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 
 
 
-[**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While easy to use, Tagger also supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
+[**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While easy to use, Tagger also supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file names followed by the values of track and tracktotal tags:
 ```
     $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal'
     Targeted after processing:
