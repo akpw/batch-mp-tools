@@ -49,7 +49,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 
 
 
-[Tagger](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While easy to use, Tagger also supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
+[**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While easy to use, Tagger also supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file name followed by the values of track and tracktotal tags:
 ```
     $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal'
     Targeted after processing:
@@ -86,7 +86,7 @@ That will show all global options along with specific commands for each tool. Ge
 
 
 
-[BMFP](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, automatically breaking up jobs into individual tasks that are then run as separate processes on CPU cores. **BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**.
+[**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming BMFP is designed to take advantage of multi-core processors, automatically breaking up jobs into individual tasks that are then run as separate processes on CPU cores. **BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**.
 
 For example, to convert the file from previous example from M4A to FLAC:
 ```
