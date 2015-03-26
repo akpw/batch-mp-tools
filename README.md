@@ -20,8 +20,16 @@ Batch management of media files, from base properties such as file names through
 The project is written in [Python 3.4](https://www.python.org/download/releases/3.4.1/), and currently available as a command line utility. It  consists of three main tools, sharing the same concept of visualizing targeted changes (whenever possible) before actual processing.
 
 [Renamer](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files. 
+At its simplest, Renamer can be used to print the content of current directory:
+```
+    $ renamer
+```
+A little bit more advanced, if you'd like to see what's lurking at the 7th nested folder level within your current directory:
+```
+    $ renamer print -sl 7
+```
 
-For example, to index all M4A files in all sub-directories of the current folder:
+Or, how about indexing all M4A files in all sub-directories of the current folder:
 ```
     $ renamer -r -in '*.m4a' -ad index
     /Desktop/_test/Gould
