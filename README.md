@@ -15,7 +15,7 @@ A rainy weekends project under occasional development :)
 
 ##Description
 
-Batch management of media files, from base properties such as file names through tags / artwork metadata to various manipulation of the media content.
+Batch management of media files, from base properties such as file names through tags / artwork metadata to advanced operations on the media content.
 
 The project is written in [Python 3.4](https://www.python.org/download/releases/3.4.1/) and currently consists of three main command-line utilities. All three share the core concept of various transformations applied to generated stream of selected file system entries, and consequently they also share the same set of global options. A quick way to check on that is to run:
 ```
@@ -32,7 +32,7 @@ By default the tools always visualize targeted changes (whenever possible) befor
 A little bit more details on each utility:
 
 [**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
-At its simplest, Renamer can be used to print the content of current directory:
+At its simplest, Renamer can be used to print out the content of current directory:
 ```
     $ renamer
 ```
@@ -138,12 +138,10 @@ I will follow up with more examples and common use-cases in future blogs.
 ##Full description of CLI Commands
 ###renamer
     Batch renaming of files and directories
-      . supports source directory / source file modes
       . visualises original / targeted folders structure before actual processing
-      . supports recursion to specified end_level
-      . supports flattening folders beyond specified end_level
+      . supports recursion (also can go down to explicitly specified end_level)
+      . supports flattening folders beyond specified target_level
       . allows for include / exclude patterns (Unix style)
-      . allows global include/exclude of directories and folders
       . display sorting:
           .. by size/date, ascending/descending
       . action commands:
@@ -239,9 +237,6 @@ I will follow up with more examples and common use-cases in future blogs.
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
     Batch processing of media files
       . Uses multiprocessing to utilize available CPU cores
-      . supports source directory / source file modes
-      . supports recursion to specified end_level
-      . allows for include / exclude patterns (Unix style)
       . action commands:
           .. convert        Converts media to specified format
           .. segment        Splits media files into segments
@@ -269,7 +264,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
       Miscellaneous:
-        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 
       FFmpeg General Options:
         [-ma, --map-all]            Force including all streams from the input file
