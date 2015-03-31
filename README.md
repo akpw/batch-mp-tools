@@ -139,7 +139,7 @@ I will follow up with more examples and common use-cases in future blogs.
 ###renamer
     Batch renaming of files and directories
       . visualises original / targeted folders structure before actual processing
-      . supports recursion (can go down to specified end_level)
+      . supports recursion (also can go down to explicitly specified end_level)
       . supports flattening folders beyond specified target_level
       . allows for include / exclude patterns (Unix style)
       . display sorting:
