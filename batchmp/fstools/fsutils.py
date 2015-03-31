@@ -28,6 +28,27 @@ def temp_dir():
         # remove tmp dir
         shutil.rmtree(tmp_dir)
 
+
+class UniqueDirNamesChecker:
+    ''' Unique file names Helper
+    '''
+    def __init__(self, src_dir, *, unique_fnames = None):
+        self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
+
+        # init the generator function with file names from given source directory
+        fnames = [fname for fname in os.listdir(src_dir)
+                                            if os.path.isfile(os.path.join(src_dir, fname))]
+        for fname in fnames:
+            next(self._uname_gen)
+            self._uname_gen.send(fname)
+
+    def unique_name(self, fname):
+        ''' Returns unique file name
+        '''
+        next(self._uname_gen)
+        return self._uname_gen.send(fname)
+
+
 class FSH:
     ''' FS helper utilities
     '''
@@ -180,24 +201,6 @@ class FSH:
 
         elif os.path.isdir(entry_path):
             shutil.rmtree(entry_path, onerror = onerror)
-
-class UniqueDirNamesChecker:
-    ''' Produces a unique name for file in a directory
-    '''
-    def __init__(self, src_dir, *, unique_fnames = None):
-        self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
-
-        fnames = [fname for fname in os.listdir(src_dir)
-                                            if os.path.isfile(os.path.join(src_dir, fname))]
-
-        # init the generator function with existing file names from the dir
-        for fname in fnames:
-            next(self._uname_gen)
-            self._uname_gen.send(fname)
-
-    def unique_name(self, fname):
-        next(self._uname_gen)
-        return self._uname_gen.send(fname)
 
 
 class DWalker:
