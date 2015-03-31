@@ -96,7 +96,8 @@ class FSH:
 
     @staticmethod
     def unique_fnames():
-        ''' generates unique file names
+        ''' default unique file names generator method,
+            via appending a simple numbering pattern to file names
         '''
         unique_names = {}
         while True:
