@@ -20,6 +20,8 @@
       . allows for include / exclude patterns (Unix style)
       . action commands:
           .. convert        Converts media to specified format
+                                For example, to convert all files in current directory
+                                    $ bmfp -pm convert -la -tf FLAC
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
@@ -30,21 +32,24 @@
           .. adjust volume  TDB: Adjust audio volume
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
 
-      Global Options (bmfp -h for additional help)
+      Recursion mode:
         [-r, --recursive]           Recurse into nested folders
         [-el, --end-level]          End level for recursion into nested folders
 
+      Filter files or folders:
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
+      Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
-        [-q, --quiet]               Do not visualise changes / show messages during processing
 
+      FFmpeg General Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
         [-vn, --no-video]           Exclude video streams from the output
@@ -52,12 +57,14 @@
         [-sn, --no-subs]            Exclude subtitles streams from the output
         [-fo, --ffmpeg-options]     Additional FFmpeg options
 
+      FFmpeg Commands Execution:
         [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
-      Commands: (bmfp {command} -h for additional help)
+      Commands:
         {convert, denoise, fragment, segment, ...}
+        $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import sys
 from datetime import timedelta

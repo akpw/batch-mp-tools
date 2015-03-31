@@ -110,7 +110,7 @@ class Segmenter(FFMPRunner):
         return os.path.getsize(fpath) / 1024**2
 
     def segment(self, src_dir,
-                    end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                    end_level = sys.maxsize, include = None, exclude = None, sort = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
                     ff_global_options = None, ff_other_options = None,
@@ -134,7 +134,7 @@ class Segmenter(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                end_level = sys.maxsize, include = None, exclude = None, sort = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
                 ff_global_options = None, ff_other_options = None,

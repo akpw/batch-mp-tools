@@ -43,24 +43,28 @@
           .. detauch    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
 
-      Global Options (tagger -h for additional help)
+      Recursion mode:
         [-r, --recursive]           Recurse into nested folders
         [-el, --end-level]          End level for recursion into nested folders
 
+      Filter files or folders:
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
+      Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-      Commands (tagger {command} -h for additional help)
+      Commands:
         {print, set, copy, index, remove, replace, capitalize, detauch}
+        $ tagger {command} -h #run this for detailed help on individual commands
 """
 import os
 from argparse import ArgumentParser

@@ -31,7 +31,7 @@ By default the tools always visualize targeted changes (whenever possible) befor
 
 A little bit more details on each utility:
 
-[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files. 
+[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
 At its simplest, Renamer can be used to print the content of current directory:
 ```
     $ renamer
@@ -86,7 +86,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files (just one here, for the sake of output brevity). The `-ad` switch force looking in all sub-directores, without filtering them by the `-in` pattern.
 
 
-[**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on CPU cores. 
+[**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on CPU cores.
 **BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**. BMFP can be thought of as a batch FFmpeg runner, intended to make common uses of FFmpeg extremely easy while not restricting its full power.
 
 For example, to convert all files from the above example from M4A to FLAC:
@@ -159,24 +159,28 @@ I will follow up with more examples and common use-cases in future blogs.
           .. delete     Delete selected files and directories
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
 
-      Global Options (renamer -h for additional help)
+      Recursion mode:
         [-r, --recursive]           Recurse into nested folders
         [-el, --end-level]          End level for recursion into nested folders
 
+      Filter files or folders:
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
+      Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-      Commands (run $ renamer {command} -h for additional help)
+      Commands:
         {print, flatten, index, add_date, add_text, remove, replace, capitalize, delete}
+        $ renamer {command} -h  #run this for detailed help on individual commands
 
 ###tagger
     Batch management of media files metadata (tags & artwork)
@@ -209,24 +213,28 @@ I will follow up with more examples and common use-cases in future blogs.
           .. detauch    Extracts artwork
 
     Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
 
-      Global Options (tagger -h for additional help)
+      Recursion mode:
         [-r, --recursive]           Recurse into nested folders
         [-el, --end-level]          End level for recursion into nested folders
 
+      Filter files or folders:
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
+      Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
-      Commands (run $ tagger {command} -h for additional help)
+      Commands:
         {print, set, copy, index, remove, replace, capitalize, detauch}
+        $ tagger {command} -h #run this for detailed help on individual commands
 
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
     Batch processing of media files
@@ -246,20 +254,24 @@ I will follow up with more examples and common use-cases in future blogs.
           .. adjust volume  TDB: Adjust audio volume
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+      Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
 
-      Global Options (bmfp -h for additional help)
+      Recursion mode:
         [-r, --recursive]           Recurse into nested folders
         [-el, --end-level]          End level for recursion into nested folders
 
+      Filter files or folders:
         [-in, --include]            Include names pattern (Unix style)
         [-ex, --exclude]            Exclude names pattern (Unix style)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
-        [-q, --quiet]               Do not visualise changes / show messages during processing
+      Miscellaneous:
+        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
 
+      FFmpeg General Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
         [-vn, --no-video]           Exclude video streams from the output
@@ -267,12 +279,14 @@ I will follow up with more examples and common use-cases in future blogs.
         [-sn, --no-subs]            Exclude subtitles streams from the output
         [-fo, --ffmpeg-options]     Additional FFmpeg options
 
+      FFmpeg Commands Execution:
         [-pm, --preserve-meta]      Preserve metadata of processed files
         [-se, --serial-exec]        Run all task's commands in a single process
         [-nb, --no-backup]          Do not backup the original file
 
-      Commands: (run $ bmfp {command} -h for additional help)
+      Commands:
         {convert, denoise, fragment, segment, ...}
+        $ bmfp {command} -h  #run this for detailed help on individual commands
 
 ##Installing Development version
 - Clone the repo, then run: `$ python setup.py develop`

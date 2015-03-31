@@ -93,7 +93,7 @@ class FragmenterTask(Task):
 
 class Fragmenter(FFMPRunner):
     def fragment(self, src_dir,
-                    end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                    end_level = sys.maxsize, include = None, exclude = None, sort = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     fragment_starttime = None, fragment_duration = None,
                     backup = True, replace_original = False,
@@ -118,7 +118,7 @@ class Fragmenter(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                end_level = sys.maxsize, include = None, exclude = None, sort = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 fragment_starttime = None, fragment_duration = None,
                 backup = True, replace_original = False,

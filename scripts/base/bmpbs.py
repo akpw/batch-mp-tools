@@ -30,7 +30,7 @@ import scripts.base.vchk
 import os, sys, datetime
 from argparse import ArgumentParser
 from distutils.util import strtobool
-from batchmp.fstools.fsutils import FSH
+from batchmp.fstools.fsutils import FSH, DWalker
 
 
 class BMPBaseArgParser:
@@ -100,7 +100,7 @@ class BMPBaseArgParser:
                     help = "Sorting for files ('na', i.e. by name ascending by default)",
                     type = str,
                     choices = ['na', 'nd', 'sa', 'sd'],
-                    default = 'na')
+                    default = DWalker.DEFAULT_SORT)
         misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
                     help = "Indent for printing  nested directories",
                     type = str,
@@ -135,11 +135,11 @@ class BMPBaseArgParser:
         include_mode_group.add_argument("-in", "--include",
                     help = "Include names pattern",
                     type = str,
-                    default = '*')
+                    default = DWalker.DEFAULT_INCLUDE)
         include_mode_group.add_argument("-ex", "--exclude",
                     help = "Exclude names pattern",
                     type = str,
-                    default = '')
+                    default = DWalker.DEFAULT_EXCLUDE)
         include_mode_group.add_argument("-ad", "--all-dirs", dest = "all_dirs",
                     help = "Disable Include/Exclude patterns on directories",
                     action = 'store_true')
@@ -164,7 +164,7 @@ class BMPBaseArgParser:
         if args['file']:
             args['dir'] = os.path.dirname(args['file'])
             args['include'] = os.path.basename(args['file'])
-            args['exclude'] = ''
+            args['exclude'] = DWalker.DEFAULT_EXCLUDE
             args['end_level'] = 0
             args['all_files'] = False
             args['all_dirs'] = False

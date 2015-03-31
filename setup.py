@@ -14,14 +14,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version='0.65',
+    version='0.67',
 
     url='https://github.com/akpw/batch-mp-tools',
 
     author='Arseniy Kuznetsov',
     author_email='k.arseniy@gmail.com',
 
-    description=('CLI tools for batch media processing'),
+    description=('Command-line tools for batch media processing'),
     license='GNU General Public License v2 (GPLv2)',
 
     packages=find_packages(exclude=['test*']),

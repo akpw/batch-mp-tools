@@ -67,8 +67,8 @@ class Renamer(object):
     def add_index(src_dir, as_prefix = False, join_str = '_',
                             start_from = 1, min_digits = 1,
                             end_level = 0,
-                            sort = 'n', nested_indent = None,
-                            include = '*', exclude = '',
+                            sort = None, nested_indent = None,
+                            include = None, exclude = None,
                             filter_dirs = True, filter_files = True,
                             include_dirs = False, include_files = True,
                             display_current = True, quiet = False):
@@ -139,8 +139,8 @@ class Renamer(object):
     @staticmethod
     def capitalize(src_dir,
                     end_level = 0,
-                    sort = 'n', nested_indent = None,
-                    include = '*', exclude = '',
+                    sort = None, nested_indent = None,
+                    include = None, exclude = None,
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True,
                     display_current = True, quiet = False):
@@ -174,8 +174,8 @@ class Renamer(object):
     @staticmethod
     def add_date(src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
                                 end_level = 0,
-                                sort = 'n', nested_indent = None,
-                                include = '*', exclude = '',
+                                sort = None, nested_indent = None,
+                                include = None, exclude = None,
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True,
                                 display_current = True, quiet = False):
@@ -215,8 +215,8 @@ class Renamer(object):
     def add_text(src_dir, text,
                     as_prefix = False, join_str = ' ',
                     end_level = 0,
-                    sort = 'n', nested_indent = None,
-                    include = '*', exclude = '',
+                    sort = None, nested_indent = None,
+                    include = None, exclude = None,
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True,
                     display_current = True, quiet = False):
@@ -254,9 +254,9 @@ class Renamer(object):
 
     @staticmethod
     def remove_n_characters(src_dir,
-                            sort = 'n', nested_indent = None,
+                            sort = None, nested_indent = None,
                             num_chars = 0, from_head = True,
-                            end_level = 0, include = '*', exclude = '',
+                            end_level = 0, include = None, exclude = None,
                             filter_dirs = True, filter_files = True,
                             include_dirs = False, include_files = True,
                             display_current = True, quiet = False):
@@ -296,8 +296,8 @@ class Renamer(object):
     def replace(src_dir,
                     find_str, replace_str, case_insensitive=False,
                     end_level = 0,
-                    sort = 'n', nested_indent = None,
-                    include = '*', exclude = '',
+                    sort = None, nested_indent = None,
+                    include = None, exclude = None,
                     filter_dirs = True, filter_files = True,
                     include_dirs = False, include_files = True,
                     display_current = True, quiet = False):
@@ -344,8 +344,8 @@ class Renamer(object):
     def delete(src_dir, *,
                 non_media_files_only = True,
                 end_level = 0,
-                sort = 'n', nested_indent = None,
-                include = '*', exclude = '',
+                sort = None, nested_indent = None,
+                include = None, exclude = None,
                 filter_dirs = True, filter_files = True,
                 include_dirs = False, include_files = True,
                 display_current = True, quiet = False):

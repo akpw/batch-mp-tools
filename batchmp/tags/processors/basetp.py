@@ -36,8 +36,8 @@ class BaseTagProcessor:
         return self._handler
 
     def print_dir(self, src_dir, *, end_level = sys.maxsize,
-                            include = '*', exclude = '',
-                            sort = 'n', nested_indent = DWalker.DEFAULT_NESTED_INDENT,
+                            include = None, exclude = None,
+                            sort = None, nested_indent = DWalker.DEFAULT_NESTED_INDENT,
                             filter_dirs = True, filter_files = True,
                             flatten = False, ensure_uniq = False,
                             show_size = False, format = None, show_stats = False):
@@ -57,7 +57,7 @@ class BaseTagProcessor:
                             show_size = show_size, formatter = formatter)
 
     def set_tags(self, src_dir, *, end_level = sys.maxsize,
-                            include = '*', exclude = '', sort = 'n',
+                            include = None, exclude = None, sort = None,
                             filter_dirs = True, filter_files = True, quiet = False,
                             tag_holder = None, tag_holder_builder = None):
 
@@ -85,8 +85,8 @@ class BaseTagProcessor:
             print('Set tags in {0} entries'.format(fcnt))
 
     def set_tags_visual(self, src_dir, *, end_level = sys.maxsize,
-                            include = '*', exclude = '',
-                            sort = 'n', nested_indent = None,
+                            include = None, exclude = None,
+                            sort = None, nested_indent = None,
                             filter_dirs = True, filter_files = True,
                             display_current = True, diff_tags_only = False,
                             quiet = False,
@@ -138,8 +138,8 @@ class BaseTagProcessor:
                     tag_holder_builder = tag_holder_builder)
 
     def copy_tags(self, src_dir, *, end_level = sys.maxsize,
-                        include = '*', exclude = '',
-                        sort = 'n', nested_indent = None,
+                        include = None, exclude = None,
+                        sort = None, nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False, diff_tags_only = False,
                         tag_holder_path):
@@ -162,8 +162,8 @@ class BaseTagProcessor:
             print('Can not handle tags holder: {}'.format(tag_holder_path))
 
     def index(self, src_dir, *, end_level = sys.maxsize,
-                            include = '*', exclude = '',
-                            sort = 'n', nested_indent = None,
+                            include = None, exclude = None,
+                            sort = None, nested_indent = None,
                             filter_dirs = True, filter_files = True,
                             display_current = True, quiet = False,
                             diff_tags_only = False, start_from = 1):
@@ -217,8 +217,8 @@ class BaseTagProcessor:
                         reset_tag_holder_builder = reset_tag_holder_builder)
 
     def remove_tags(self, src_dir, *, end_level = sys.maxsize,
-                        include = '*', exclude = '',
-                        sort = 'n', nested_indent = None,
+                        include = None, exclude = None,
+                        sort = None, nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         display_current = True, quiet = False,
                         tag_fields = None,
@@ -244,8 +244,8 @@ class BaseTagProcessor:
                         tag_holder = tag_holder)
 
     def replace_tags(self, src_dir, *, end_level = sys.maxsize,
-                    include = '*', exclude = '',
-                    sort = 'n', nested_indent = None,
+                    include = None, exclude = None,
+                    sort = None, nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
                     tag_fields = None, ignore_case = False, find_str = None, replace_str = None):
@@ -285,8 +285,8 @@ class BaseTagProcessor:
                         tag_holder = tag_holder)
 
     def capitalize_tags(self, src_dir, *, end_level = sys.maxsize,
-                    include = '*', exclude = '',
-                    sort = 'n', nested_indent = None,
+                    include = None, exclude = None,
+                    sort = None, nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     display_current = True, quiet = False, diff_tags_only = False,
                     tag_fields = None):
@@ -315,7 +315,7 @@ class BaseTagProcessor:
                         tag_holder = tag_holder)
 
     def detauch_art(self, src_dir, *, end_level = sys.maxsize,
-                    include = '*', exclude = '', sort = 'n',
+                    include = None, exclude = None, sort = None,
                     filter_dirs = True, filter_files = True,
                     quiet = False, target_dir = None):
 

@@ -207,15 +207,19 @@ class DWalker:
     ENTRY_TYPE_ROOT = 'R'
     ENTRY_TYPE_DIR = 'D'
     ENTRY_TYPE_FILE = 'F'
+
     DEFAULT_NESTED_INDENT = '  '
+    DEFAULT_INCLUDE = '*'
+    DEFAULT_EXCLUDE = ''
+    DEFAULT_SORT = 'n'
 
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
     @staticmethod
     def entries(src_dir, *,
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '',
-                    sort = 'n', nested_indent = None,
+                    include = None, exclude = None,
+                    sort = None, nested_indent = None,
                     filter_dirs = True, filter_files = True,
                     flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
         ''' generates a sequence of FSEntries elements
@@ -230,6 +234,13 @@ class DWalker:
 
         if nested_indent is None:
             nested_indent = DWalker.DEFAULT_NESTED_INDENT
+        if include is None:
+            include = DWalker.DEFAULT_INCLUDE
+        if exclude is None:
+            exclude = DWalker.DEFAULT_EXCLUDE
+        if sort is None:
+            sort = DWalker.DEFAULT_SORT
+
 
         # sorting
         reversed = True if sort.endswith('d') else False
@@ -338,9 +349,9 @@ class DWalker:
 
     @staticmethod
     def file_entries(src_dir, *,
-                     sort = 'n', nested_indent = None,
+                    sort = None, nested_indent = None,
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '',
+                    include = None, exclude = None,
                     filter_dirs = True, filter_files = True,
                     pass_filter = None):
 
@@ -363,9 +374,9 @@ class DWalker:
 
     @staticmethod
     def dir_entries(src_dir, *,
-                    sort = 'n', nested_indent = None,
+                    sort = None, nested_indent = None,
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '',
+                    include = None, exclude = None,
                     filter_dirs = True, filter_files = True,
                     pass_filter = None):
 

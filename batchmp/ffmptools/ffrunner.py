@@ -37,8 +37,8 @@ class FFMPRunner(metaclass = ABCMeta):
         print('Cumulative FFmpeg CPU Cores time: {}'.format(str(ctd).rstrip('0')))
 
     # Internal helpers
-    def _prepare_files(self, src_dir, *,  end_level = sys.maxsize, sort = 'n',
-                         include = '*', exclude = '', filter_dirs = True, filter_files = True,
+    def _prepare_files(self, src_dir, *,  end_level = sys.maxsize, sort = None,
+                         include = None, exclude = None, filter_dirs = True, filter_files = True,
                          backup = True, pass_filter = None):
 
         media_files = [fpath for fpath in FFH.media_files(src_dir,

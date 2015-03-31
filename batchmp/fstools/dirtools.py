@@ -23,8 +23,8 @@ class DHandler:
     @staticmethod
     def print_dir(src_dir, *,
                         start_level = 0, end_level = sys.maxsize,
-                        include = '*', exclude = '',
-                        sort = 'n', nested_indent = None,
+                        include = None, exclude = None,
+                        sort = None, nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         flatten = False, ensure_uniq = False,
                         show_size = False, formatter = None):
@@ -71,7 +71,7 @@ class DHandler:
     @staticmethod
     def dir_stats(src_dir, *,
                         start_level = 0, end_level = sys.maxsize, flatten = False,
-                        include = '*', exclude = '',
+                        include = None, exclude = None,
                         filter_dirs = True, filter_files = True,
                         include_size = False,
                         file_pass_filter = None, dir_pass_filter = None):
@@ -126,8 +126,8 @@ class DHandler:
                                 before_msg = 'Current source directory:',
                                 after_msg = 'Targeted after processing:',
                                 orig_end_level = sys.maxsize, target_end_level = 0,
-                                include = '*', exclude = '',
-                                sort = 'n', nested_indent = None,
+                                include = None, exclude = None,
+                                sort = None, nested_indent = None,
                                 filter_dirs = True, filter_files = True,
                                 include_dirs = False, include_files = True,
                                 flatten = False, ensure_uniq = False,
@@ -166,8 +166,8 @@ class DHandler:
     @staticmethod
     def flatten_folders(src_dir, *,
                                 target_level = sys.maxsize, end_level = sys.maxsize,
-                                sort = 'n', nested_indent = None,
-                                include = '*', exclude = '',
+                                sort = None, nested_indent = None,
+                                include = None, exclude = None,
                                 filter_dirs = True, filter_files = True,
                                 remove_folders = True, remove_non_empty_folders = False,
                                 display_current = True, quiet = False):
@@ -219,7 +219,7 @@ class DHandler:
     @staticmethod
     def rename_entries(src_dir, *,
                             start_level = 0, end_level = sys.maxsize,
-                            include = '*', exclude = '',
+                            include = None, exclude = None,
                             filter_dirs = True, filter_files = True,
                             formatter = None, quiet = False, check_unique = True):
 
@@ -266,7 +266,7 @@ class DHandler:
     @staticmethod
     def remove_entries(src_dir, *,
                             start_level = 0, end_level = sys.maxsize,
-                            include = '*', exclude = '',
+                            include = None, exclude = None,
                             filter_dirs = True, filter_files = True,
                             formatter = None, quiet = False):
 

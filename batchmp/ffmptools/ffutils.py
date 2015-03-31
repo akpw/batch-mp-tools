@@ -162,7 +162,7 @@ class FFH:
     @staticmethod
     def media_files(src_dir,
                     start_level = 0, end_level = sys.maxsize,
-                    include = '*', exclude = '', sort = 'n',
+                    include = None, exclude = None, sort = None,
                     filter_dirs = True, filter_files = True, pass_filter = None):
         """ Return a generator of media files that are supported by FFmpeg
         """

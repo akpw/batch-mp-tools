@@ -107,7 +107,7 @@ class DenoiserTask(Task):
 
 class Denoiser(FFMPRunner):
     def apply_af_filters(self, src_dir,
-                            end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                            end_level = sys.maxsize, include = None, exclude = None, sort = None,
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                             num_passes = 1, highpass = None, lowpass = None, backup=True,
                             ff_global_options = None, ff_other_options = None,
@@ -131,7 +131,7 @@ class Denoiser(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = '*', exclude = '', sort = 'n',
+                end_level = sys.maxsize, include = None, exclude = None, sort = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 num_passes = 1, highpass = None, lowpass = None, backup=True,
                 ff_global_options = None, ff_other_options = None,
