@@ -47,7 +47,7 @@
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
 
       Miscellaneous:
-        [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
+        [-q, --quiet]               Do not visualise changes / show messages during processing
 
       FFmpeg General Options:
         [-ma, --map-all]            Force including all streams from the input file

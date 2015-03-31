@@ -211,7 +211,7 @@ class DWalker:
     DEFAULT_NESTED_INDENT = '  '
     DEFAULT_INCLUDE = '*'
     DEFAULT_EXCLUDE = ''
-    DEFAULT_SORT = 'n'
+    DEFAULT_SORT = 'na'
 
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
