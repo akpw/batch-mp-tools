@@ -121,7 +121,7 @@ class RenameArgParser(BMPBaseArgParser):
                 default = 1)
         add_index_parser.add_argument('-sq', '--sequential', dest = 'sequential',
                 help = 'Index selected files sequentially. ' \
-                       'If omitted, the files will be instead indexed per their respective parent directory (multi-level indexing)',
+                       'If omitted, the files will instead be indexed per their respective parent directory (multi-level indexing)',
                 action = 'store_true')
         add_index_parser.add_argument('-as', '--as-suffix', dest = 'as_suffix',
                 help = 'Add index at the end of file names',
