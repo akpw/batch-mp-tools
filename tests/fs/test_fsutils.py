@@ -58,16 +58,31 @@ class FSTests(FSTest):
         self.assertTrue(fcnt == 22)
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
-    def test_renamer_add_index(self):
+    def test_renamer_add_index_sequential(self):
+        Renamer.add_index(src_dir = self.src_dir, end_level = 5,
+                                sequential = True, join_str = ' ', as_prefix = True,
+                                min_digits = 2,
+                                include = 'last*', filter_dirs = False, quiet = True)
+
+        cmd = "find {} | grep '[0-9][0-9] last' | wc -l".format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+
+        self.assertTrue(fcnt == 7)
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_renamer_add_index_multilevel(self):
         Renamer.add_index(src_dir = self.src_dir, end_level = 5,
                                 include = '[!.]*', exclude='test_*',
                                 as_prefix = True, join_str = ' ',
-                                    include_dirs = True, min_digits = 2, quiet = True)
+                                    min_digits = 2, quiet = True)
 
-        cmd = "find {} | grep '[0-9][0-9] ' | grep -v 'test_' | grep -v '.DS_Store' | wc -l".format(self.src_dir)
+        cmd = 'find {} | grep "[0-9][0-9] " | grep -v "test_" | wc -l'.format(self.src_dir)
         fcnt = self.get_last_digit_from_shell_cmd(cmd)
+        self.assertTrue(fcnt == 15)
 
-        self.assertTrue(fcnt == 22)
+        cmd = 'find {} | grep "01 " | wc -l'.format(self.src_dir)
+        fcnt = self.get_last_digit_from_shell_cmd(cmd)
+        self.assertTrue(fcnt == 8)
 
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')

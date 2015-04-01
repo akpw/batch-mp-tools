@@ -115,6 +115,14 @@ class RenameArgParser(BMPBaseArgParser):
 
         # Add index
         add_index_parser = subparsers.add_parser('index', description = 'Adds index to files and directories names')
+        add_index_parser.add_argument('-sf', '--start-from', dest = 'start_from',
+                help = 'A number from which the indexing starts (1 by default)',
+                type = int,
+                default = 1)
+        add_index_parser.add_argument('-sq', '--sequential', dest = 'sequential',
+                help = 'Index selected files sequentially. ' \
+                       'If omitted, the files will be instead indexed per their respective parent directory (multi-level indexing)',
+                action = 'store_true')
         add_index_parser.add_argument('-as', '--as-suffix', dest = 'as_suffix',
                 help = 'Add index at the end of file names',
                 action = 'store_true')
@@ -122,10 +130,6 @@ class RenameArgParser(BMPBaseArgParser):
                 help = "Join string for appending indices (' ' by default)",
                 type = str,
                 default = ' ')
-        add_index_parser.add_argument('-sf', '--start-from', dest = 'start_from',
-                help = 'A number from which the indexing starts (1 by default)',
-                type = int,
-                default = 1)
         add_index_parser.add_argument('-md', '--min-digits', dest = 'min_digits',
                 help = 'Minimal number of digits for indexing (2 by default, and adding leading zeros as needed)',
                 type = int,
@@ -274,7 +278,7 @@ class RenameDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 as_prefix = not args['as_suffix'], join_str = args['join_str'],
                 start_from = args['start_from'], min_digits = args['min_digits'],
-                end_level = args['end_level'],
+                sequential = args['sequential'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],

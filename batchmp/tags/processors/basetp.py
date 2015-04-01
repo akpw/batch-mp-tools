@@ -179,7 +179,9 @@ class BaseTagProcessor:
             start_from = 1
 
         pass_filter = lambda fpath: self.handler.can_handle(fpath)
-        dir_info = DirsIndexInfo(start_from = start_from, file_pass_filter = pass_filter)
+        dir_info = DirsIndexInfo(start_from = start_from,
+                                        include = include, exclude = exclude,
+                                        file_pass_filter = pass_filter)
         for entry in DWalker.file_entries(src_dir,
                                             end_level = end_level,
                                             include = include, exclude = exclude, sort = sort,
