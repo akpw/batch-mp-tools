@@ -36,7 +36,7 @@ At its simplest, Renamer can be used to print out the content of current directo
 ```
     $ renamer
 ```
-Without command arguments, renamer uses `print` as the default command. A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level in your current directory:
+Without command arguments, renamer uses `print` as the default command. A little bit more advanced, if perhaps you'd like to see what's lurking at the 7th nested folder level:
 ```
     $ renamer print -sl 7
 ```
@@ -57,7 +57,7 @@ Or, how about multi-level indexing of all M4A files in all sub-directories of th
 
     Proceed? [y/n]:
 ```
-An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
+Sequential indexing is supported as well using the `-sq` switch.  An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
 
 
 
