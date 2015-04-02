@@ -97,7 +97,7 @@ The `-pm` switch here forces preserving *all* metadata information, while `-la` 
 
 To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
-    $ tagger -r -in '*BWV816 1*' print -st -ss -h
+    $ tagger -r -in '*BWV816 1*' print -st -ss
     /Users/AKPower/Desktop/_test/Gould
       |-/1
       |-/2
