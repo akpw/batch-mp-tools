@@ -23,9 +23,9 @@ The project is written in [Python 3.4](https://www.python.org/download/releases/
     $ tagger -h
     $ bmfp -h
 ```
-That will show the global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `renamer index` command:
+That will show the global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `tagger capitalize` command:
 ```
-    $ renamer index -h
+    $ tagger capitalize -h
 ```
 By default the tools always visualize targeted changes (whenever possible) before actual processing.
 
