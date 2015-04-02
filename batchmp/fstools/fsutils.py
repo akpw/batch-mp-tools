@@ -214,7 +214,7 @@ class DWalker:
 
     DEFAULT_NESTED_INDENT = '  '
     DEFAULT_INCLUDE = '*'
-    DEFAULT_EXCLUDE = ''
+    DEFAULT_EXCLUDE = '.*' #exclude hidden files
     DEFAULT_SORT = 'na'
 
     FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
@@ -245,20 +245,29 @@ class DWalker:
         if sort is None:
             sort = DWalker.DEFAULT_SORT
 
-
         # sorting
         reversed = True if sort.endswith('d') else False
         by_size = True if sort.startswith('s') else False
 
         # filtering
-        passed_filters = lambda s: fnmatch.fnmatch(s, include) and not fnmatch.fnmatch(s, exclude)
+        def include_match(fsname):
+            for include_pattern in include.split(';'):
+                if fnmatch.fnmatch(fsname, include_pattern):
+                    return True
+            return False
+
+        def exclude_match(fsname):
+            for exclude_pattern in exclude.split(';'):
+                if fnmatch.fnmatch(fsname, exclude_pattern):
+                    return True
+            return False
+
+        passed_filters = lambda fs_name: include_match(fs_name) and (not exclude_match(fs_name))
 
         for r, dnames, fnames in os.walk(src_dir):
             # remove non-matching subfolders
             if filter_dirs:
-                for dname in sorted(dnames):
-                    if not passed_filters(dname):
-                        dnames.remove(dname)
+                dnames[:] = [dname for dname in sorted(dnames, reverse = reversed) if passed_filters(dname)]
 
             # check the levels
             current_level = FSH.level_from_root(src_dir, r)
@@ -314,7 +323,7 @@ class DWalker:
                         unique_fname.send(fname)
 
             # dirs
-            for dname in sorted(dnames):
+            for dname in dnames[:]:
                 dpath = os.path.join(rpath, dname)
 
                 # check the current_level from root

@@ -42,8 +42,7 @@ class FSTests(FSTest):
     def test_fs_flatten_folders(self):
         DHandler.flatten_folders(src_dir = self.src_dir,
                                 target_level = 0,
-                                quiet = True)
-
+                                quiet = True, remove_non_empty_folders = True)
         fcnt, dcnt, _ = DHandler.dir_stats(src_dir = self.src_dir, exclude='.DS_Store')
         self.assertTrue(fcnt == 29 and dcnt == 0)
 

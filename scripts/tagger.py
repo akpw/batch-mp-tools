@@ -52,10 +52,10 @@
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
@@ -279,7 +279,7 @@ class TagsDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 flatten = False, ensure_uniq = False,
                 show_size = args['show_size'], show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
@@ -316,7 +316,7 @@ class TagsDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 tag_holder = tag_holder,
                 display_current = args['display_current'], quiet = args['quiet'],
                 diff_tags_only = args['diff_tags_only'])
@@ -327,7 +327,7 @@ class TagsDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 tag_holder_path = args['tagholder'],
                 display_current = args['display_current'], quiet = args['quiet'],
                 diff_tags_only = args['diff_tags_only'])
@@ -339,7 +339,7 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 diff_tags_only = args['diff_tags_only'], start_from = args['start_from'])
 
     @staticmethod
@@ -349,7 +349,7 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 tag_fields = args['tag_fields'],
                 diff_tags_only = args['diff_tags_only'])
 
@@ -360,7 +360,7 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 tag_fields = args['tag_fields'], ignore_case = args['ignore_case'],
                 find_str = args['find_str'], replace_str = args['replace_str'],
                 diff_tags_only = args['diff_tags_only'])
@@ -372,7 +372,7 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 tag_fields = args['tag_fields'],
                 diff_tags_only = args['diff_tags_only'])
 
@@ -383,7 +383,7 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 quiet = args['quiet'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'])
 
     @staticmethod

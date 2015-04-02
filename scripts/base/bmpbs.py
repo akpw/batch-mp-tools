@@ -133,15 +133,15 @@ class BMPBaseArgParser:
 
         include_mode_group = parser.add_argument_group('Filter files or folders')
         include_mode_group.add_argument("-in", "--include",
-                    help = "Include names pattern",
+                    help = "Include: Unix-style name patterns separated by ';'",
                     type = str,
                     default = DWalker.DEFAULT_INCLUDE)
         include_mode_group.add_argument("-ex", "--exclude",
-                    help = "Exclude names pattern",
+                    help = "Exclude: Unix-style name patterns separated by ';'",
                     type = str,
                     default = DWalker.DEFAULT_EXCLUDE)
-        include_mode_group.add_argument("-ad", "--all-dirs", dest = "all_dirs",
-                    help = "Disable Include/Exclude patterns on directories",
+        include_mode_group.add_argument("-fd", "--filter-dirs", dest = "filter_dirs",
+                    help = "Enable Include/Exclude patterns on directories",
                     action = 'store_true')
         include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
                     help = "Disable Include/Exclude patterns on files",
@@ -167,7 +167,7 @@ class BMPBaseArgParser:
             args['exclude'] = DWalker.DEFAULT_EXCLUDE
             args['end_level'] = 0
             args['all_files'] = False
-            args['all_dirs'] = False
+            args['filter_dirs'] = True
 
         # check recursion
         if args['recursive'] and args['end_level'] == 0:

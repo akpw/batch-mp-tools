@@ -44,10 +44,10 @@
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
@@ -255,7 +255,7 @@ class RenameDispatcher:
                 start_level = args['start_level'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 sort = args['sort'], nested_indent = args['nested_indent'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 show_size = args['show_size'])
 
     @staticmethod
@@ -268,7 +268,7 @@ class RenameDispatcher:
                 target_level = args['target_level'],
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 remove_folders = remove_folders, remove_non_empty_folders = remove_all_folders,
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -280,7 +280,7 @@ class RenameDispatcher:
                 start_from = args['start_from'], min_digits = args['min_digits'],
                 sequential = args['sequential'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -292,7 +292,7 @@ class RenameDispatcher:
                 format = args['format'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -304,7 +304,7 @@ class RenameDispatcher:
                 as_prefix = args['as_prefix'], join_str = args['join_str'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -315,7 +315,7 @@ class RenameDispatcher:
                 num_chars = args['num_chars'], from_head = not args['from_tail'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -328,7 +328,7 @@ class RenameDispatcher:
                 case_insensitive = args['ignore_case'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -338,7 +338,7 @@ class RenameDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 
@@ -349,7 +349,7 @@ class RenameDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
                 display_current = args['display_current'], quiet = args['quiet'])
 

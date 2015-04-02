@@ -42,7 +42,7 @@ Without command arguments, renamer uses `print` as the default command. A little
 ```
 Or, how about multi-level indexing of all M4A files in all sub-directories of the current folder:
 ```
-    $ renamer -r -in '*.m4a' -ad index
+    $ renamer -r -in '*.m4a' index
     /Desktop/_test/Gould
       |-/1
         |- 01 Glenn Gould French Suite 1 In D, BWV812 1 Allemande.m4a
@@ -63,7 +63,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 
 [**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any imaginable media formats. While easy to use, Tagger also supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file names followed by the values of track and tracktotal tags:
 ```
-    $ tagger -r -in '*BWV816 1*' -ad set --title '$filename, $track of $tracktotal'
+    $ tagger -r -in '*BWV816 1*' set --title '$filename, $track of $tracktotal'
     Targeted after processing:
     /Desktop/_test/Gould
       |-/1
@@ -83,7 +83,7 @@ An important detail here, by default Renamer is visualizing the targeted changes
 
     Proceed? [y/n]: n
 ```
-The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files (just one here, for the sake of output brevity). The `-ad` switch force looking in all sub-directores, without filtering them by the `-in` pattern.
+The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files (just one here, for the sake of output brevity).
 
 
 [**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on CPU cores.
@@ -97,7 +97,7 @@ The `-pm` switch here forces preserving *all* metadata information, while `-la` 
 
 To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
-    $ tagger -r -in '*BWV816 1*' -ad print -st -ss -h
+    $ tagger -r -in '*BWV816 1*' print -st -ss -h
     /Users/AKPower/Desktop/_test/Gould
       |-/1
       |-/2
@@ -166,10 +166,10 @@ I will follow up with more examples and common use-cases in future blogs.
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
@@ -220,10 +220,10 @@ I will follow up with more examples and common use-cases in future blogs.
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
@@ -258,10 +258,10 @@ I will follow up with more examples and common use-cases in future blogs.
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-q, --quiet]               Do not visualise changes / show messages during processing

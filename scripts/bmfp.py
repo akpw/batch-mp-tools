@@ -41,10 +41,10 @@
         [-el, --end-level]          End level for recursion into nested folders
 
       Filter files or folders:
-        [-in, --include]            Include names pattern (Unix style)
-        [-ex, --exclude]            Exclude names pattern (Unix style)
-        [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
-        [-af, --all-files]          Prevent using Include/Exclude patterns on files
+        [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+        [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
+        [-af, --all-files]          Disable Include/Exclude patterns on files
 
       Miscellaneous:
         [-q, --quiet]               Do not visualise changes / show messages during processing
@@ -251,7 +251,7 @@ class BMFPDispatcher:
         Convertor().convert(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
                 target_format = args['target_format'], convert_options = args['convert_options'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
@@ -262,7 +262,7 @@ class BMFPDispatcher:
         Denoiser().apply_af_filters(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
                 backup = not args['nobackup'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
@@ -273,7 +273,7 @@ class BMFPDispatcher:
         Fragmenter().fragment(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
@@ -286,7 +286,7 @@ class BMFPDispatcher:
         Segmenter().segment(src_dir = args['dir'],
                 sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
-                filter_dirs = not args['all_dirs'], filter_files = not args['all_files'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
