@@ -267,7 +267,9 @@ class DWalker:
         for r, dnames, fnames in os.walk(src_dir):
             # remove non-matching subfolders
             if filter_dirs:
-                dnames[:] = [dname for dname in sorted(dnames, reverse = reversed) if passed_filters(dname)]
+                dnames[:] = [dname for dname in dnames if passed_filters(dname)]
+
+            dnames.sort(reverse = reversed)
 
             # check the levels
             current_level = FSH.level_from_root(src_dir, r)
