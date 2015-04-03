@@ -93,7 +93,7 @@ class FragmenterTask(Task):
 
 class Fragmenter(FFMPRunner):
     def fragment(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                    end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     fragment_starttime = None, fragment_duration = None,
                     backup = True, replace_original = False,
@@ -102,7 +102,7 @@ class Fragmenter(FFMPRunner):
         ''' Fragment media file by specified starttime & duration
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude, quiet = quiet,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         fragment_starttime = fragment_starttime,
@@ -118,7 +118,7 @@ class Fragmenter(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 fragment_starttime = None, fragment_duration = None,
                 backup = True, replace_original = False,
@@ -132,7 +132,7 @@ class Fragmenter(FFMPRunner):
             return cpu_core_time
 
         media_files, backup_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files)
         if len(media_files) > 0:

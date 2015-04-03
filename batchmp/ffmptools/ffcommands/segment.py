@@ -110,7 +110,7 @@ class Segmenter(FFMPRunner):
         return os.path.getsize(fpath) / 1024**2
 
     def segment(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                    end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
                     ff_global_options = None, ff_other_options = None,
@@ -118,7 +118,7 @@ class Segmenter(FFMPRunner):
         ''' Segment media file by specified size | duration
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude, quiet = quiet,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         segment_size_MB = segment_size_MB,
@@ -134,7 +134,7 @@ class Segmenter(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
                 ff_global_options = None, ff_other_options = None,
@@ -157,7 +157,7 @@ class Segmenter(FFMPRunner):
 
 
         media_files, backup_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         pass_filter = pass_filter)

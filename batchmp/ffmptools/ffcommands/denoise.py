@@ -107,7 +107,7 @@ class DenoiserTask(Task):
 
 class Denoiser(FFMPRunner):
     def apply_af_filters(self, src_dir,
-                            end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                            end_level = sys.maxsize, include = None, exclude = None,
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                             num_passes = 1, highpass = None, lowpass = None, backup=True,
                             ff_global_options = None, ff_other_options = None,
@@ -117,7 +117,7 @@ class Denoiser(FFMPRunner):
             via filtering out highpass / low-pass frequencies
         '''
         cpu_core_time, total_elapsed = self.run(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         quiet = quiet, num_passes = num_passes, serial_exec = serial_exec,
@@ -131,7 +131,7 @@ class Denoiser(FFMPRunner):
 
     @timed
     def run(self, src_dir,
-                end_level = sys.maxsize, include = None, exclude = None, sort = None,
+                end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 num_passes = 1, highpass = None, lowpass = None, backup=True,
                 ff_global_options = None, ff_other_options = None,
@@ -146,7 +146,7 @@ class Denoiser(FFMPRunner):
             return cpu_core_time
 
         media_files, backup_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level, sort = sort,
+                                        end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files)
 

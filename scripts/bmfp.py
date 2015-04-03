@@ -249,7 +249,7 @@ class BMFPDispatcher:
     @staticmethod
     def convert(args):
         Convertor().convert(src_dir = args['dir'],
-                sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
+                end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 backup = not args['nobackup'], serial_exec = args['serial_exec'],
@@ -260,7 +260,7 @@ class BMFPDispatcher:
     @staticmethod
     def denoise(args):
         Denoiser().apply_af_filters(src_dir = args['dir'],
-                sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
+                end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
@@ -271,7 +271,7 @@ class BMFPDispatcher:
     @staticmethod
     def fragment(args):
         Fragmenter().fragment(src_dir = args['dir'],
-                sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
+                end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
@@ -284,7 +284,7 @@ class BMFPDispatcher:
     @staticmethod
     def segment(args):
         Segmenter().segment(src_dir = args['dir'],
-                sort = args['sort'], end_level = args['end_level'], quiet=args['quiet'],
+                end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 segment_size_MB = args['segment_filesize'],
