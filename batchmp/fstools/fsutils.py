@@ -286,7 +286,7 @@ class DWalker:
 
         passed_filters = lambda fs_name: include_match(fs_name) and (not exclude_match(fs_name))
 
-        # walks into given directory
+        # let's walk
         for r, dnames, fnames in os.walk(src_dir):
             # check the levels
             current_level = FSH.level_from_root(src_dir, r)
@@ -388,6 +388,8 @@ class DWalker:
                 if by_size:
                     sort_key = lambda entry: os.path.getsize(entry.realpath)
                 else:
+                    # for sorting need to still derive basename from realpath
+                    # as for flattened it might be different from basename
                     sort_key = lambda entry: os.path.basename(entry.realpath)
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
