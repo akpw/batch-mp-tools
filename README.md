@@ -87,7 +87,7 @@ The commands above show some of the available global options:  `-r` for recursio
 
 
 [**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on CPU cores.
-**BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**. BMFP can be thought of as a batch FFmpeg runner, intended to make common uses of FFmpeg extremely easy while not restricting its full power.
+**BMFP is built on top of [FFmpeg](http://ffmpeg.org/download.html), which needs to be installed and available in the command line**. BMFP can be thought of as a batch FFmpeg runner, intended to make common uses of FFmpeg easy while not restricting its full power.
 
 For example, to convert all files from the above example from M4A to FLAC:
 ```

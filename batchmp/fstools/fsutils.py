@@ -389,7 +389,7 @@ class DWalker:
                     sort_key = lambda entry: os.path.getsize(entry.realpath)
                 else:
                     # for sorting need to still derive basename from realpath
-                    # as for flattened it might be different from basename
+                    # as for flattened it might be different from entry.basename
                     sort_key = lambda entry: os.path.basename(entry.realpath)
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
