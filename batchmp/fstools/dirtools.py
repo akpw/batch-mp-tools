@@ -54,17 +54,20 @@ class DHandler:
                     fcnt += 1
                     if show_size:
                         fsize = os.path.getsize(entry.realpath)
-                        size = ' {} '.format(FSH.file_size(fsize))
+                        size = ' {} '.format(FSH.fs_size(fsize))
                         total_size += fsize
                 elif entry.type == DWalker.ENTRY_TYPE_DIR:
                     dcnt += 1
+                    if show_size:
+                        dsize = FSH.dir_size(entry.realpath)
+                        size = ' {} '.format(FSH.fs_size(dsize))
 
                 print('{0}{1}{2}'.format(entry.indent, size, formatted_output))
 
         # print summary
         print('{0} files, {1} folders'.format(fcnt, dcnt))
         if show_size:
-            print('Total size: {}'.format(FSH.file_size(total_size)))
+            print('Total selected files size: {}'.format(FSH.fs_size(total_size)))
 
         return fcnt, dcnt
 

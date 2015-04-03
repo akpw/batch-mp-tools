@@ -113,8 +113,8 @@ class FSH:
                     break
 
     @staticmethod
-    def file_size(size, kb_1024=False):
-        ''' human readable file size
+    def fs_size(size, kb_1024=False):
+        ''' human readable file system entry size
         '''
         if size < 0:
             raise ValueError('File size can not be negative')
@@ -129,6 +129,28 @@ class FSH:
                 else:
                     return '{0:.1f}{1}'.format(size, suffix)
         raise ValueError('File is way too large')
+
+    @staticmethod
+    def dir_size(dir_path):
+        ''' Calculates directory size in bytes
+        '''
+        total_size = 0
+        seen = set()
+        for r, _, fnames in os.walk(dir_path):
+            for fname in fnames:
+                fpath = os.path.join(r, fname)
+                try:
+                    stat = os.stat(fpath)
+                except OSError:
+                    continue
+
+                if stat.st_ino in seen:
+                    continue
+                else:
+                    seen.add(stat.st_ino)
+
+                total_size += stat.st_size
+        return total_size
 
     @staticmethod
     def file_md5(fpath, block_size=0, hex=False):
@@ -230,12 +252,12 @@ class DWalker:
             supports recursion to end_level
             supports slicing directory by folder levels
             supports flattening beyond end_level, with optional checking for unique file names
-            allows for include / exclude patterns (Unix style)
+            include / exclude patterns (Unix style)
             sorting:
                 'na' / 'nd': by name / by name descending
                 'sa' / 'sd': by size / by size descending
         '''
-
+        # check inputs
         if nested_indent is None:
             nested_indent = DWalker.DEFAULT_NESTED_INDENT
         if include is None:
@@ -264,13 +286,8 @@ class DWalker:
 
         passed_filters = lambda fs_name: include_match(fs_name) and (not exclude_match(fs_name))
 
+        # walks into given directory
         for r, dnames, fnames in os.walk(src_dir):
-            # remove non-matching subfolders
-            if filter_dirs:
-                dnames[:] = [dname for dname in dnames if passed_filters(dname)]
-
-            dnames.sort(reverse = reversed)
-
             # check the levels
             current_level = FSH.level_from_root(src_dir, r)
             if current_level < start_level:
@@ -282,37 +299,40 @@ class DWalker:
             current_indent  = '{0}{1}'.format(nested_indent * (current_level), '|- ')
             siblings_indent = '{0}{1}'.format(nested_indent * (current_level + 1), '|- ')
 
-            # yield current folder
+            # yield the current folder
             rpath = FSH.full_path(r)
-            basename = os.path.basename(rpath)
             if current_level == 0:
                 # src dir goes in full and without indent
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_ROOT,
-                                        basename, rpath, os.path.dirname(rpath) + os.path.sep)
+                                            os.path.basename(rpath), rpath,
+                                                os.path.dirname(rpath) + os.path.sep)
             else:
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
-                                        basename, rpath, current_indent[:-1] + os.path.sep)
+                                            os.path.basename(rpath), rpath,
+                                                current_indent[:-1] + os.path.sep)
             yield entry
 
-            # filter non-matching files
+            ## Files processing ##
+            # filter non-matching
             if filter_files:
-                fnames = (fname for fname in fnames if passed_filters(fname))
+                fnames = [fname for fname in fnames if passed_filters(fname)]
 
-            # files sort key
-            if by_size:
-                sort_key = lambda fname: os.path.getsize(os.path.join(rpath,fname))
-            else:
-                sort_key = lambda fname: fname
-
-            # process files
-            # if flattening, need to postpone yielding
-            # and check for file name uniqueness, if required
+            # flattening folders?
             flattening = flatten and (current_level == end_level)
             if flattening:
+                # need to postpone yielding / check for file name uniqueness
                 flattens = []
-                unique_fname = unique_fnames()
+                if ensure_uniq:
+                    unique_fname = unique_fnames()
+            else:
+                # OK to sort now
+                if by_size:
+                    sort_key = lambda fname: os.path.getsize(os.path.join(rpath,fname))
+                else:
+                    sort_key = lambda fname: fname
+                fnames.sort(key = sort_key, reverse = reversed)
 
-            for fname in sorted(fnames, key = sort_key, reverse = reversed):
+            for fname in fnames:
                 fpath = os.path.join(rpath, fname)
                 entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE, fname, fpath, siblings_indent)
                 if not flattening:
@@ -324,7 +344,17 @@ class DWalker:
                         next(unique_fname)
                         unique_fname.send(fname)
 
-            # dirs
+            ## Directories processing ##
+            # remove non-matching
+            if filter_dirs:
+                dnames[:] = [dname for dname in dnames if passed_filters(dname)]
+            # Sort
+            if by_size:
+                dirs_sort_key = lambda dname: FSH.dir_size(os.path.join(rpath, dname))
+            else:
+                dirs_sort_key = lambda dname: dname
+            dnames.sort(key = dirs_sort_key, reverse = reversed)
+
             for dname in dnames[:]:
                 dpath = os.path.join(rpath, dname)
 
@@ -354,13 +384,13 @@ class DWalker:
 
             # if flattening, time to render
             if flattening:
+                # OK to sort now
                 if by_size:
                     sort_key = lambda entry: os.path.getsize(entry.realpath)
                 else:
                     sort_key = lambda entry: os.path.basename(entry.realpath)
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
-
 
     @staticmethod
     def file_entries(src_dir, *,

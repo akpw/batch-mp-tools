@@ -39,7 +39,6 @@ class BaseTagProcessor:
                             include = None, exclude = None,
                             sort = None, nested_indent = DWalker.DEFAULT_NESTED_INDENT,
                             filter_dirs = True, filter_files = True,
-                            flatten = False, ensure_uniq = False,
                             show_size = False, format = None, show_stats = False):
 
         ''' Prints tags in selected media files
@@ -53,7 +52,6 @@ class BaseTagProcessor:
                             include = include, exclude = exclude,
                             sort = sort, nested_indent = nested_indent,
                             filter_dirs = filter_dirs, filter_files = filter_files,
-                            flatten = flatten, ensure_uniq = ensure_uniq,
                             show_size = show_size, formatter = formatter)
 
     def set_tags(self, src_dir, *, end_level = sys.maxsize,

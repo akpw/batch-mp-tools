@@ -280,7 +280,6 @@ class TagsDispatcher:
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                flatten = False, ensure_uniq = False,
                 show_size = args['show_size'], show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
 
