@@ -156,7 +156,8 @@ I will follow up with more examples and common use-cases in future blogs.
           .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
 
-    Usage: renamer [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+    Usage: renamer [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
+    Global Options:
       Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
@@ -210,7 +211,8 @@ I will follow up with more examples and common use-cases in future blogs.
           .. capitalize Capitalizes words in specified tags
           .. detauch    Extracts artwork
 
-    Usage: tagger [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+    Usage: tagger [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
+    Global Options:
       Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
@@ -248,7 +250,8 @@ I will follow up with more examples and common use-cases in future blogs.
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
           .. adjust volume  TDB: Adjust audio volume
 
-    Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
+    Usage: bmfp [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
+    Global Options:
       Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
