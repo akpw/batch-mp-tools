@@ -25,7 +25,7 @@
       . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
       . action commands:
-          .. print      Prints media info
+          .. print      Prints media files
           .. set        Sets tags in media files, including artwork, e.g:
                                 $ tagger set --album 'The Album' -art '~/Desktop/art.jpg'
                             Supports expandable templates. To specify a template value,
@@ -70,6 +70,7 @@ import os
 from argparse import ArgumentParser
 from functools import partial
 from scripts.base.bmpbs import BMPBaseArgParser
+from batchmp.commons.utils import load_image
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
@@ -148,14 +149,14 @@ class TaggerArgParser(BMPBaseArgParser):
                 help = "Sets the Encoder tag",
                 type = str)
         set_tags_parser.add_argument('-art', '--artwork', dest='artwork',
-                help = "Sets Artwork: /Path_to_PNG_or_JPEG",
-                type = lambda f: cls.is_valid_file_path(parser, f))
+                help = "Sets Artwork Image from file path or URL",
+                type = lambda fpath: cls.is_valid_url_or_file_path(parser, fpath))
         set_tags_parser.add_argument('-bm', '--bpm', dest='bpm',
                 help = "Sets the BPM tag",
                 type = str)
         set_tags_parser.add_argument('-cmp', '--compilaton', dest='compilaton',
                 help = "Sets the Compilaton tag",
-                type = lambda f: cls.is_boolean(parser, f))
+                type = lambda fpath: cls.is_boolean(parser, fpath))
         set_tags_parser.add_argument('-grp', '--grouping', dest='grouping',
                 help = "Sets the Grouping tag",
                 type = str)
@@ -172,7 +173,7 @@ class TaggerArgParser(BMPBaseArgParser):
         copy_tags_parser = subparsers.add_parser('copy', description = 'Copies tags from a specified media file')
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
-                type = lambda f: cls.is_valid_file_path(parser, f))
+                type = lambda fpath: cls.is_valid_file_path(parser, fpath))
         cls.add_arg_display_curent_state_mode(copy_tags_parser)
         add_arg_diff_tags_only_mode(copy_tags_parser)
 
@@ -235,6 +236,13 @@ class TaggerArgParser(BMPBaseArgParser):
                         "the top-level media files source directory")
 
     @classmethod
+    def default_command(cls, args, parser):
+        super().default_command(args, parser)
+        args['show_size'] = False
+        args['show_stats'] = False
+        args['full_format'] = False
+
+    @classmethod
     def check_args(cls, args, parser):
         super().check_args(args, parser)
 
@@ -246,26 +254,20 @@ class TaggerArgParser(BMPBaseArgParser):
                                 'Supported tag fields: {1}'.format(tag_field, ', '.join(supported_fields)))
             return fields
 
-        if not args['sub_cmd']:
-            args['sub_cmd'] = 'print'
-            args['show_size'] = False
-            args['show_stats'] = False
-            args['full_format'] = False
-
         if args['sub_cmd'] == 'index':
             if args['start_from'] < 1:
                 parser.error('Track indexing should start from 1, or a larger int number')
 
-        if args['sub_cmd'] == 'remove':
+        elif args['sub_cmd'] == 'remove':
             if args['tag_fields'] is not None:
                 args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
                                                       cls.SUPPORTED_TAGGABLE_FIELDS)
 
-        if args['sub_cmd'] in ('replace', 'capitalize'):
+        elif args['sub_cmd'] in ('replace', 'capitalize'):
             args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
                                                       cls.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)
 
-        if args['sub_cmd'] == 'detauch':
+        elif args['sub_cmd'] == 'detauch':
             if args['target_dir'] is None:
                 args['target_dir'] = args['dir']
 
@@ -277,7 +279,7 @@ class TagsDispatcher:
     def print_dir(args):
         BaseTagProcessor().print_dir(src_dir = args['dir'],
                 sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
+                start_level = args['start_level'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 show_size = args['show_size'], show_stats = args['show_stats'],
@@ -304,10 +306,9 @@ class TagsDispatcher:
         tag_holder.comments = args['comments']
         tag_holder.lyrics = args['lyrics']
 
-        art, art_path = None, args['artwork']
-        if art_path:
-            with open(art_path, 'rb') as f:
-                art = f.read()
+        art, art_path_or_url = None, args['artwork']
+        if art_path_or_url:
+            art = load_image(art_path_or_url)
         if art:
             tag_holder.art = art
 

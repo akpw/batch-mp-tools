@@ -22,6 +22,7 @@ from enum import IntEnum
 class OutputFormatType(IntEnum):
     COMPACT = 0
     FULL = 1
+    STATS = 2
 
 
 class TagOutputFormatter:
@@ -83,12 +84,17 @@ class TagOutputFormatter:
         elif format == OutputFormatType.FULL:
             return TagOutputFormatter._formatter(entry, handler.tag_holder, show_extended = True,
                                                  show_stats = show_stats, diff_fields = diff_fields)
+        elif format == OutputFormatType.STATS:
+            return TagOutputFormatter._formatter(entry, handler.tag_holder,
+                                                    show_compact = False, show_stats = show_stats)
         else:
             return None
 
     # Helpers
     @staticmethod
-    def _formatter(entry, tag_holder, show_extended = False, show_stats = False, diff_fields = None):
+    def _formatter(entry, tag_holder,
+                    show_compact = True, show_extended = False, show_stats = False,
+                    diff_fields = None):
         indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
         media_str = ''
 
@@ -99,24 +105,25 @@ class TagOutputFormatter:
             compact_fields = TagOutputFormatter.COMPACT_FIELDS
             extended_fields = TagOutputFormatter.EXTENDED_FIELDS
 
-        track_set = disc_set = False
-        for field in compact_fields:
-            field_val = getattr(tag_holder, field)
-            if field_val:
-                if field in ('disc', 'disctotal'):
-                    if not disc_set:
-                        disc_set = True
-                        if tag_holder.disc or tag_holder.disctotal:
-                            media_str = TagOutputFormatter._disc_str(tag_holder, indent, media_str)
-                elif field in ('track', 'tracktotal'):
-                    if not track_set:
-                        track_set = True
-                        if tag_holder.track or tag_holder.tracktotal:
-                            media_str = TagOutputFormatter._track_str(tag_holder, indent, media_str)
-                else:
-                    media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
-                                                      TagOutputFormatter._tag_display_name(field),
-                                                      field_val)
+        if show_compact:
+            track_set = disc_set = False
+            for field in compact_fields:
+                field_val = getattr(tag_holder, field)
+                if field_val:
+                    if field in ('disc', 'disctotal'):
+                        if not disc_set:
+                            disc_set = True
+                            if tag_holder.disc or tag_holder.disctotal:
+                                media_str = TagOutputFormatter._disc_str(tag_holder, indent, media_str)
+                    elif field in ('track', 'tracktotal'):
+                        if not track_set:
+                            track_set = True
+                            if tag_holder.track or tag_holder.tracktotal:
+                                media_str = TagOutputFormatter._track_str(tag_holder, indent, media_str)
+                    else:
+                        media_str = '{0}\n{1}{2}: {3}'.format(media_str, indent,
+                                                          TagOutputFormatter._tag_display_name(field),
+                                                          field_val)
         if show_extended:
             for field in extended_fields:
                 field_val = getattr(tag_holder, field)

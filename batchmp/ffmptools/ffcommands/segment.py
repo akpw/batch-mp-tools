@@ -13,28 +13,28 @@
 
 """ Batch splitting of media files
 """
-import shutil, sys, os, datetime, math, fnmatch
-from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
-from batchmp.ffmptools.ffrunner import FFMPRunner
-from batchmp.ffmptools.taskpp import Task, TasksProcessor, TaskResult
+import shutil, sys, os, fnmatch
+from batchmp.commons.utils import temp_dir
+from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
+from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
-from batchmp.ffmptools.ffutils import (
+from batchmp.ffmptools.ffutils import FFH
+from batchmp.commons.utils import (
     timed,
     run_cmd,
-    CmdProcessingError,
-    FFH
+    CmdProcessingError
 )
 
-class SegmenterTask(Task):
+class SegmenterTask(FFMPRunnerTask):
     ''' Segment TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path,
+    def __init__(self, fpath, target_dir,
                             ff_global_options, ff_other_options, preserve_metadata,
                             reset_timestamps, segment_size_MB, segment_length_secs):
 
-        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
 
         # if needed, calculate segment duration via given file size
         if not segment_length_secs and segment_size_MB:
@@ -46,6 +46,9 @@ class SegmenterTask(Task):
                             FFmpegCommands.SEGMENT,
                             ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIME, segment_length_secs),
                             FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if reset_timestamps else ''))
+
+        # try to explicitly tell FFMpeg to preserve the original quality
+        self._FF_preserve_quality()
 
     def execute(self):
         ''' builds and runs Segment FFmpeg command in a subprocess
@@ -75,22 +78,16 @@ class SegmenterTask(Task):
                                                                     '\nOriginal error message:\n\t{1}' \
                                                                             .format(self.fpath, e.args[0]))
             else:
-                # backup the original file if applicable
-                if self.backup_path:
-                    shutil.move(self.fpath, self.backup_path)
-
-                # move split files to destination
-                checker = UniqueDirNamesChecker(os.path.dirname(self.fpath))
-                for fname in os.listdir(tmp_dir):
-                    if fnmatch.fnmatch(fname, '*{}'.format(fname_ext)):
-                        src_fpath = os.path.join(tmp_dir, fname)
+                # move split files to target directory
+                for segmented_fname in os.listdir(tmp_dir):
+                    if fnmatch.fnmatch(segmented_fname, '*{}'.format(fname_ext)):
+                        segmented_fpath = os.path.join(tmp_dir, segmented_fname)
 
                         # restore tags if needed
-                        self._restore_tags(src_fpath)
+                        self._restore_tags(segmented_fpath)
 
-                        dst_fname = checker.unique_name(fname)
-                        dst_fpath = os.path.join(os.path.dirname(self.fpath), dst_fname)
-                        shutil.move(src_fpath, dst_fpath)
+                        # move fragmented file to target dir
+                        shutil.move(segmented_fpath, self.target_dir)
 
         task_result.add_report_msg(self.fpath)
         return task_result
@@ -112,7 +109,7 @@ class Segmenter(FFMPRunner):
     def segment(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
+                    segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
                     ff_global_options = None, ff_other_options = None,
                     reset_timestamps = False, preserve_metadata = False):
         ''' Segment media file by specified size | duration
@@ -123,7 +120,7 @@ class Segmenter(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         segment_size_MB = segment_size_MB,
                                         segment_length_secs = segment_length_secs,
-                                        serial_exec = serial_exec, backup=backup,
+                                        serial_exec = serial_exec, target_dir = target_dir,
                                         ff_global_options = ff_global_options,
                                         ff_other_options = ff_other_options,
                                         reset_timestamps = reset_timestamps,
@@ -136,7 +133,7 @@ class Segmenter(FFMPRunner):
     def run(self, src_dir,
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                segment_size_MB = 0.0, segment_length_secs = 0.0, backup = True,
+                segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
                 ff_global_options = None, ff_other_options = None,
                 reset_timestamps = False, preserve_metadata = False):
 
@@ -156,20 +153,21 @@ class Segmenter(FFMPRunner):
             pass_filter = lambda fpath: FFH.supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
 
 
-        media_files, backup_dirs = self._prepare_files(src_dir,
+        media_files, target_dirs = self._prepare_files(src_dir,
                                         end_level = end_level,
                                         include = include, exclude = exclude,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
+                                        target_dir = target_dir, target_dir_prefix = 'segmented',
                                         pass_filter = pass_filter)
 
         if len(media_files) > 0:
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir,
+            tasks_params = ((media_file, target_dir_path,
                                 ff_global_options, ff_other_options, preserve_metadata,
                                 reset_timestamps, segment_size_MB, segment_length_secs)
-                                    for media_file, backup_dir in zip(media_files, backup_dirs))
+                                    for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []
             for task_param in tasks_params:
                 task = SegmenterTask(*task_param)

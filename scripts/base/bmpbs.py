@@ -27,9 +27,10 @@
         [-q, --quiet]               Do not visualise changes / show messages during processing
 """
 import scripts.base.vchk
-import os, sys, datetime
+import os, sys, datetime, string
 from argparse import ArgumentParser
 from distutils.util import strtobool
+from urllib.parse import urlparse
 from batchmp.fstools.fsutils import FSH, DWalker
 
 
@@ -44,7 +45,7 @@ class BMPBaseArgParser:
         """
         path_arg = BMPBaseArgParser.expanded_path(path_arg)
         if not (os.path.exists(path_arg) and os.path.isdir(path_arg)):
-            parser.error('Please enter a valid source directory path'.format(path_arg))
+            parser.error('"{}" does not seem to be an existing directory path'.format(path_arg))
         else:
             return path_arg
 
@@ -54,7 +55,7 @@ class BMPBaseArgParser:
         """
         path_arg = BMPBaseArgParser.expanded_path(path_arg)
         if not (os.path.exists(path_arg) and os.path.isfile(path_arg)):
-            parser.error('Please enter a valid file path'.format(path_arg))
+            parser.error('"{}" does not seem to be an existing file path'.format(path_arg))
         else:
             return path_arg
 
@@ -65,8 +66,37 @@ class BMPBaseArgParser:
         try:
             bool_arg = True if strtobool(bool_arg) else False
         except ValueError:
-            parser.error('Please enter a boolean value')
+            parser.error('"{}": Please enter a boolean value'.format(bool_arg))
             return False
+
+    @staticmethod
+    def is_valid_url(parser, url_arg):
+        url_parts = urlparse(url_arg)
+
+        if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
+            parser.error('"{}": Please enter a valid URL'.format(url_arg))
+
+        if url_parts.scheme == 'file':
+            if url_parts.netloc == '~':
+                fpath = '~{}'.format(url_parts.path)
+            else:
+                fpath = url_parts.path
+            return BMPBaseArgParser.is_valid_file_path(parser, fpath)
+
+        if not set(url_parts.netloc).issubset(set(string.ascii_letters + string.digits + '-.')):
+            parser.error('"{}": Please enter a valid URL'.format(url_arg))
+        if not url_parts.scheme in ['http', 'https', 'ftp', 'file']:
+            parser.error('"{}": Please enter a valid URL'.format(url_arg))
+
+        return url_arg
+
+    @staticmethod
+    def is_valid_url_or_file_path(parser, url_or_file_path_arg):
+        url_parts = urlparse(url_or_file_path_arg)
+        if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
+            return BMPBaseArgParser.is_valid_file_path(parser, url_or_file_path_arg)
+        else:
+            return BMPBaseArgParser.is_valid_url(parser, url_or_file_path_arg)
 
     @staticmethod
     def is_timedelta(parser, td_arg):
@@ -156,10 +186,32 @@ class BMPBaseArgParser:
         '''
         pass
 
+    # Args checking
+    @classmethod
+    def check_cmd_args(cls, args, parser,
+                        show_help = False,
+                        exit = False):
+        if not args['sub_cmd']:
+            if show_help:
+                parser.print_help()
+            if exit:
+                sys.exit(1)
+
+            # if not exiting, need to default
+            cls.default_command(args, parser)
+
+    @classmethod
+    def default_command(cls, args, parser):
+        args['sub_cmd'] = 'print'
+        args['start_level'] = 0
+
     @classmethod
     def check_args(cls, args, parser):
         ''' Validation of supplied CLI arguments
         '''
+        # check if there is a cmd to execute
+        cls.check_cmd_args(args, parser)
+
         # if input source is a file, need to adjust
         if args['file']:
             args['dir'] = os.path.dirname(args['file'])
@@ -172,6 +224,16 @@ class BMPBaseArgParser:
         # check recursion
         if args['recursive'] and args['end_level'] == 0:
             args['end_level'] = sys.maxsize
+
+        if args['sub_cmd'] == 'print':
+            if args['start_level'] != 0:
+                if args['file']:
+                    print ('Start Level parameter requires a source directory\n Ignoring requested Start Level...')
+                    args['start_level'] = 0
+                elif args['end_level'] < args['start_level']:
+                    print ('Start Level should be greater than or equal to the Recursion End Level Global Option\n'
+                           '... Adjusting End Level to: {}'.format(args['start_level']))
+                    args['end_level'] = args['start_level']
 
     @classmethod
     def parse_options(cls, script_name = 'batchmp tools', description = 'Global Options'):

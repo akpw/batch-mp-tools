@@ -15,7 +15,11 @@
 
 import unittest, os, sys
 from .test_ffmp_base import FFMPTest
-from batchmp.ffmptools.ffutils import FFH, CmdProcessingError, run_cmd
+from batchmp.ffmptools.ffutils import FFH
+from batchmp.commons.utils import (
+    run_cmd,
+    CmdProcessingError
+)
 
 
 class FFMPUtilsTests(FFMPTest):
@@ -27,43 +31,11 @@ class FFMPUtilsTests(FFMPTest):
         media_info = {'00 Background noise.mp3': 6,
                            '01 Background noise.mp4': 116,
                            '02 Background noise.mp4': 175}
+
         media_files = [os.path.basename(fpath)
             for fpath in FFH.media_files(self.src_dir, exclude = 'bmfp*')]
 
         self.assertTrue(set(media_files) == set(media_info.keys()))
-
-    def test_setup_backup_dirs(self):
-        media_files = [f for f in FFH.media_files(self.src_dir, exclude = 'bmfp*')]
-        backup_dirs = FFH.setup_backup_dirs(media_files)
-
-        # should return a backup dir for every file
-        self.assertTrue(len(backup_dirs) == len(media_files))
-
-        # some of the test files are into same backup dirs
-        self.assertTrue(len(set(backup_dirs)) < len(media_files))
-
-        bkp_dirs_ptrn = ['{0}data{0}denoise_a{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX),
-                              '{0}data{0}denoise_v{0}{1}'.format(os.path.sep, FFH.BACKUP_DIR_PREFIX)]
-        for b_d in backup_dirs:
-            # test the naming pattern
-            found = b_d.find(bkp_dirs_ptrn[0]) + b_d.find(bkp_dirs_ptrn[1])
-            self.assertTrue(found > 0)
-
-            # cleanup
-            if os.path.exists(b_d):
-                os.rmdir(b_d)
-
-    def test_backup_dirs(self):
-        media_files = FFH.media_files(self.src_dir)
-        backup_dirs = FFH.setup_backup_dirs(media_files)
-
-        backup_dirs_list = FFH.backup_dirs(self.src_dir)
-        self.assertEqual(set(backup_dirs), set(backup_dirs_list))
-
-        for b_d in backup_dirs_list:
-            # cleanup
-            if os.path.exists(b_d):
-                os.rmdir(b_d)
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_run_shell(self):
@@ -74,3 +46,5 @@ class FFMPUtilsTests(FFMPTest):
     def test_run_shell_raise(self):
         cmd = "which"
         self.assertRaises(CmdProcessingError, run_cmd, cmd)
+
+

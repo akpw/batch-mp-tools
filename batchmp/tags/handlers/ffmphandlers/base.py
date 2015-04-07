@@ -19,8 +19,8 @@
 import os
 from batchmp.commons.chainedhandler import ChainedHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
-from batchmp.fstools.fsutils import temp_dir
-from batchmp.ffmptools.ffutils import (
+from batchmp.commons.utils import temp_dir
+from batchmp.commons.utils import (
     run_cmd,
     CmdProcessingError
 )

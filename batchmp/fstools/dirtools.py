@@ -27,7 +27,7 @@ class DHandler:
                         sort = None, nested_indent = None,
                         filter_dirs = True, filter_files = True,
                         flatten = False, ensure_uniq = False,
-                        show_size = False, formatter = None):
+                        show_size = False, formatter = None, selected_files_description = None):
         """ Prints content of given directory
             Supports additional display name processing via formatter supplied by the caller
         """
@@ -36,6 +36,9 @@ class DHandler:
 
         if not formatter:
             formatter = lambda entry: entry.basename
+
+        if not selected_files_description:
+            selected_files_description = 'file'
 
         # print the dir tree
         fcnt = dcnt = 0
@@ -65,7 +68,9 @@ class DHandler:
                 print('{0}{1}{2}'.format(entry.indent, size, formatted_output))
 
         # print summary
-        print('{0} files, {1} folders'.format(fcnt, dcnt))
+        print('{0} {1}{2}, {3} folder{4}'.format(fcnt,
+                                                    selected_files_description, '' if fcnt == 1 else 's',
+                                                    dcnt, '' if dcnt == 1 else 's'))
         if show_size:
             print('Total selected files size: {}'.format(FSH.fs_size(total_size)))
 
@@ -135,7 +140,7 @@ class DHandler:
                                 include_dirs = False, include_files = True,
                                 flatten = False, ensure_uniq = False,
                                 preformatter = None, formatter = None, reset_formatters = None,
-                                display_current = True):
+                                display_current = True, selected_files_description = None):
 
         ''' Displays targeted changes and gets users' confirmation on futher processing
         '''
@@ -147,7 +152,8 @@ class DHandler:
                                     sort = sort, nested_indent = nested_indent,
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = preformatter)
+                                    formatter = preformatter,
+                                    selected_files_description = selected_files_description)
             if reset_formatters:
                 reset_formatters()
             print()
@@ -159,7 +165,8 @@ class DHandler:
                                 include = include, exclude = exclude,
                                 filter_dirs = filter_dirs, filter_files = filter_files,
                                 flatten = flatten, ensure_uniq = ensure_uniq,
-                                formatter = formatter)
+                                formatter = formatter,
+                                selected_files_description = selected_files_description)
         if fcnt == dcnt == 0:
             print ('Nothing to process')
             return False

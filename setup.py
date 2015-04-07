@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version='0.68',
+    version='0.69',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -25,7 +25,7 @@ setup(
     license='GNU General Public License v2 (GPLv2)',
 
     packages=find_packages(exclude=['test*']),
-    keywords = 'batch processing media video audio CLI ',
+    keywords = 'batch processing media video audio CLI rename tags ID3',
 
     install_requires = ['mutagen>=1.27'],
 

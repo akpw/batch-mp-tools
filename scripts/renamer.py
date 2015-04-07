@@ -212,27 +212,17 @@ class RenameArgParser(BMPBaseArgParser):
         add_include_mode_group(delete_parser)
 
     @classmethod
+    def default_command(cls, args, parser):
+        super().default_command(args, parser)
+        args['show_size'] = False
+
+    @classmethod
     def check_args(cls, args, parser):
         ''' Validation of supplied Renamer CLI arguments
         '''
         super().check_args(args, parser)
 
-        if not args['sub_cmd']:
-            args['sub_cmd'] = 'print'
-            args['start_level'] = 0
-            args['show_size'] = False
-
-        if args['sub_cmd'] == 'print':
-            if args['start_level'] != 0:
-                if args['file']:
-                    print ('Start Level parameter requires a source directory\n Ignoring requested Start Level...')
-                    args['start_level'] = 0
-                elif args['end_level'] < args['start_level']:
-                    print ('Start Level should be greater than or equal to the End Level Global Option\n'
-                           '... Adjusting End Level to: {}'.format(args['start_level']))
-                    args['end_level'] = args['start_level']
-
-        elif args['sub_cmd'] == 'flatten':
+        if args['sub_cmd'] == 'flatten':
             if args['file']:
                 parser.error('This operation requires a source directory')
             if args['end_level'] < args['target_level']:

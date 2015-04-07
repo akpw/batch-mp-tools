@@ -19,12 +19,15 @@
       . supports recursion to specified end_level
       . allows for include / exclude patterns (Unix style)
       . action commands:
+          .. print          Prints media files
           .. convert        Converts media to specified format
                                 For example, to convert all files in current directory
                                     $ bmfp -pm convert -la -tf FLAC
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
+          .. silencesplit   Splits media files by silence
+                                    $ bmfp silcencesplit
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
@@ -46,9 +49,11 @@
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
 
-      Miscellaneous:
-        [-q, --quiet]               Do not visualise changes / show messages during processing
-
+      Target output directory
+        [-td, --target-dir]         Target output directory. When omitted, will be automatically
+                                    created within the root input source directory.
+                                    For recursive processing, the processed files directory structure
+                                    will be the same as for the original files.
       FFmpeg General Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
@@ -58,12 +63,11 @@
         [-fo, --ffmpeg-options]     Additional FFmpeg options
 
       FFmpeg Commands Execution:
-        [-pm, --preserve-meta]      Preserve metadata of processed files
+        [-q, --quiet]               Do not visualise changes / show messages during processing
         [-se, --serial-exec]        Run all task's commands in a single process
-        [-nb, --no-backup]          Do not backup the original file
 
       Commands:
-        {convert, denoise, fragment, segment, ...}
+        {print, convert, denoise, fragment, segment, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import sys
@@ -73,6 +77,8 @@ from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
+from batchmp.tags.processors.basetp import BaseTagProcessor
+from batchmp.tags.output.formatters import OutputFormatType
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 class BMFPArgParser(BMPBaseArgParser):
@@ -80,10 +86,7 @@ class BMFPArgParser(BMPBaseArgParser):
     '''
     @staticmethod
     def add_arg_misc_group(parser):
-        misc_group = parser.add_argument_group('Miscellaneous')
-        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
-                    help = "Disable visualising changes & displaying info messages during processing",
-                    action = 'store_true')
+        pass
 
     @classmethod
     def parse_commands(cls, parser):
@@ -91,6 +94,14 @@ class BMFPArgParser(BMPBaseArgParser):
         '''
 
         # BFMP Global options
+        target_output_group = parser.add_argument_group('Target Output Directory')
+        target_output_group.add_argument("-td", "--target-dir", dest = "target_dir",
+                    type = lambda d: cls.is_valid_dir_path(parser, d),
+                    help = "Target output directory. When omitted, will be automatically "
+                            "created within the root input source directory. "
+                            "For recursive processing, the processed files directory structure "
+                            "will be the same as for the original files.")
+
         ffmpeg_group = parser.add_argument_group('FFmpeg General Options')
         ffmpeg_group.add_argument("-ma", "--map-all", dest='all_streams',
                     help = "Force including all streams from the input file",
@@ -112,18 +123,31 @@ class BMFPArgParser(BMPBaseArgParser):
                 type = str)
 
         misc_group = parser.add_argument_group('FFmpeg Commands Execution')
-        misc_group.add_argument("-pm", "--preserve-meta", dest='preserve_metadata',
-                    help = "Preserve metadata of processed files",
-                    action='store_true')
+        #misc_group.add_argument("-pm", "--preserve-meta", dest='preserve_metadata',
+        #            help = "Preserve metadata of processed files",
+        #            action='store_true')
         misc_group.add_argument("-se", "--serial-exec", dest='serial_exec',
-                    help = "Runs all task's commands in a single process",
+                    help = "Run all task's commands in a single process",
                     action='store_true')
-        misc_group.add_argument("-nb", "--no-backup", dest='nobackup',
-                    help = "Do not backup the original file",
-                    action='store_true')
+        misc_group.add_argument("-q", "--quiet", dest = 'quiet',
+                    help = "Do not display info messages during processing",
+                    action = 'store_true')
 
         # Commands
         subparsers = parser.add_subparsers(dest='sub_cmd', title = 'BMFP Commands')
+
+        # Print
+        print_parser = subparsers.add_parser('print', description = 'Print source directory')
+        print_parser.add_argument('-sl', '--startlevel', dest='start_level',
+                help = 'Initial nested level for printing (0, i.e. root source directory by default)',
+                type = int,
+                default = 0)
+        print_parser.add_argument('-ss', '--show-size', dest='show_size',
+                help ='Shows files size',
+                action = 'store_true')
+        print_parser.add_argument('-st', '--show-tags', dest='show_tags',
+                help ='Shows all media tags',
+                action = 'store_true')
 
         # Convert
         convert_parser = subparsers.add_parser('convert', description = 'Converts media to specified format')
@@ -171,9 +195,6 @@ class BMFPArgParser(BMPBaseArgParser):
                 help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: cls.is_timedelta(parser, f),
                 default = timedelta(days = 380))
-        fragment_parser.add_argument("-ro", "--replace-original", dest='replace_original',
-                    help = "Replace original file with the fragment",
-                    action='store_true')
 
         # Segment
         segment_parser = subparsers.add_parser('segment', description = 'Segments media by specified maximum duration or file size')
@@ -194,14 +215,17 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
 
+
+    @classmethod
+    def default_command(cls, args, parser):
+        super().default_command(args, parser)
+        args['show_size'] = False
+        args['show_tags'] = False
+
     @classmethod
     def check_args(cls, args, parser):
         ''' Validation of supplied BMFP CLI arguments
         '''
-        if not args['sub_cmd']:
-            parser.print_help()
-            sys.exit(1)
-
         # Global options check
         super().check_args(args, parser)
 
@@ -219,6 +243,9 @@ class BMFPArgParser(BMPBaseArgParser):
             ff_global_options |= FFmpegBitMaskOptions.DISABLE_SUBTITLES
 
         args['ff_global_options'] = ff_global_options
+
+        # Always preserve metadata (experimental)
+        args['preserve_metadata'] = True
 
         # Segment attributes check
         if args['sub_cmd'] == 'segment':
@@ -247,12 +274,22 @@ class BMFPDispatcher:
     ''' BMFP CLI commands Dispatcher
     '''
     @staticmethod
+    def print_dir(args):
+        BaseTagProcessor().print_dir(src_dir = args['dir'],
+                start_level = args['start_level'], end_level = args['end_level'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                show_size = args['show_size'], show_stats = True,
+                format = OutputFormatType.STATS if not args['show_tags'] else OutputFormatType.FULL)
+
+    @staticmethod
     def convert(args):
         Convertor().convert(src_dir = args['dir'],
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                backup = not args['nobackup'], serial_exec = args['serial_exec'],
+                serial_exec = args['serial_exec'],
+                target_dir = args['target_dir'],
                 target_format = args['target_format'], convert_options = args['convert_options'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
@@ -263,8 +300,8 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
-                backup = not args['nobackup'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
 
@@ -274,10 +311,10 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'],
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
-                backup = not args['nobackup'], serial_exec = args['serial_exec'],
-                replace_original = args['replace_original'],
+                serial_exec = args['serial_exec'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
 
@@ -287,9 +324,10 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'],
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
-                backup = not args['nobackup'], serial_exec = args['serial_exec'],
+                serial_exec = args['serial_exec'],
                 ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
                 reset_timestamps = args['reset_timestamps'],
                 preserve_metadata = args['preserve_metadata'])
@@ -300,14 +338,16 @@ class BMFPDispatcher:
         '''
         args = BMFPArgParser.parse_options(script_name = 'bmfp', description = \
                         '''
-                        BMFP allows for efficient media processing,
-                        such as conversion between various formats,
+                        BMFP is a batch audio/video media processor,
+                        providing effective conversion between various formats,
                         segmenting / fragmenting media files, denoising audio,
                         detaching individual audio / video streams, etc.
                         BMFP is built on top of FFmpeg (http://ffmpeg.org/),
                         which needs to be installed and available in the command line.
                         ''')
 
+        if args['sub_cmd'] == 'print':
+            BMFPDispatcher.print_dir(args)
         if args['sub_cmd'] == 'convert':
             BMFPDispatcher.convert(args)
         if args['sub_cmd'] == 'denoise':

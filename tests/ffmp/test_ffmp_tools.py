@@ -30,6 +30,7 @@ class FFMPTests(FFMPTest):
     def setUp(self):
         super(FFMPTests, self).setUp()
         self.serial_exec_mode = True if os.name == 'nt' else False
+        self.target_dir = os.path.join(self.src_dir, 'xResults')
 
     def tearDown(self):
         # cleanup
@@ -41,15 +42,20 @@ class FFMPTests(FFMPTest):
         self.assertNotEqual(media_files, [], msg = 'No media files selected')
 
         # get the original media files md5 hashes
-        orig_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
+        orig_hashes = {os.path.basename(fname): FSH.file_md5(fname, hex=True) for fname in media_files}
 
-        hpass, lpass, num_passes = 200, 0, 2
+        hpass, lpass, num_passes = 200, 0, 3
         Denoiser().apply_af_filters(self.src_dir, exclude = 'bmfp*',
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
-                                    serial_exec = self.serial_exec_mode)
+                                    preserve_metadata = True,
+                                    serial_exec = self.serial_exec_mode, target_dir = self.target_dir)
 
-        # check that the original files were replaced with their denoised versions
-        denoised_hashes = {fname: FSH.file_md5(fname, hex=True) for fname in media_files}
+        # check that the original files differ from their denoised versions
+        media_files = [f for f in FFH.media_files(src_dir = self.target_dir)]
+        self.assertNotEqual(media_files, [], msg = 'No media files selected')
+
+        denoised_hashes = {os.path.basename(fname): FSH.file_md5(fname, hex=True) for fname in media_files}
+
         for hash_key in orig_hashes.keys():
             self.assertNotEqual(orig_hashes[hash_key], denoised_hashes[hash_key])
 
@@ -59,15 +65,16 @@ class FFMPTests(FFMPTest):
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
 
-
         hpass, lpass, num_passes = 200, 0, 4
-        Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_a',   filter_files = False,
+        Denoiser().apply_af_filters(self.src_dir,
+                                    include = 'bmfp_a', filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
                                     serial_exec = self.serial_exec_mode,
                                     preserve_metadata = True,
-                                    ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
+                                    ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO,
+                                    target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
@@ -83,9 +90,10 @@ class FFMPTests(FFMPTest):
         Denoiser().apply_af_filters(self.src_dir, include = 'bmfp_v',   filter_files = False,
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
                                     serial_exec = self.serial_exec_mode,
-                                    preserve_metadata = True)
+                                    preserve_metadata = True,
+                                    target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
@@ -100,9 +108,10 @@ class FFMPTests(FFMPTest):
                             target_format = 'mp3',
                             convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
                             serial_exec = self.serial_exec_mode,
-                            preserve_metadata = True)
+                            preserve_metadata = True,
+                            target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         print('Comparing media entries...')
@@ -118,9 +127,10 @@ class FFMPTests(FFMPTest):
                             target_format = 'mp4',
                             convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
                             serial_exec = self.serial_exec_mode,
-                            preserve_metadata = True)
+                            preserve_metadata = True,
+                            target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         print('Comparing media entries...')
@@ -137,9 +147,10 @@ class FFMPTests(FFMPTest):
                                 fragment_starttime = 0, fragment_duration = 1,
                                 serial_exec = self.serial_exec_mode,
                                 preserve_metadata = True,
-                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
+                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO,
+                                target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
@@ -154,14 +165,14 @@ class FFMPTests(FFMPTest):
         Fragmenter().fragment(self.src_dir, include = 'bmfp_v', filter_files = False,
                               fragment_starttime = 0, fragment_duration = 1,
                               serial_exec = self.serial_exec_mode,
-                              preserve_metadata = True)
+                              preserve_metadata = True,
+                              target_dir = self.target_dir)
 
-        processed_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
             self.compare_media(orig_entry, processed_entry)
-
 
     def test_segment_audio(self):
         print('Segmenting audio to parts of 1 sec')
@@ -172,10 +183,11 @@ class FFMPTests(FFMPTest):
                                 segment_size_MB = 0.0, segment_length_secs = 1,
                                 serial_exec = self.serial_exec_mode,
                                 preserve_metadata = True,
-                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO)
+                                ff_global_options = FFmpegBitMaskOptions.DISABLE_VIDEO,
+                                target_dir = self.target_dir)
 
-        src_dir = self.src_dir + '/bmfp_a'
-        processed_media_entries = self._media_entries(src_dir, end_level = 0, include = '*_0.*')
+        processed_media_entries = self._media_entries(src_dir = self.target_dir,
+                                                      include = '*_0.*', filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
@@ -190,10 +202,12 @@ class FFMPTests(FFMPTest):
         Segmenter().segment(self.src_dir, include = 'bmfp_v', filter_files = False,
                               segment_size_MB = 0.05, segment_length_secs = 0.0,
                               serial_exec = self.serial_exec_mode,
-                              preserve_metadata = True)
+                              preserve_metadata = True,
+                              target_dir = self.target_dir)
 
-        src_dir = self.src_dir + '/bmfp_v'
-        processed_media_entries = self._media_entries(src_dir, end_level = 0, include = '*_0.*')
+        processed_media_entries = self._media_entries(src_dir = self.target_dir,
+                                                      include = '*_0.*',
+                                                      filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
 
         for orig_entry, processed_entry in zip(orig_media_entries, processed_media_entries):
@@ -201,9 +215,9 @@ class FFMPTests(FFMPTest):
 
 
     # Internal helpers
-    def _media_entries(self, src_dir = None, include = '*', exclude = '',
+    def _media_entries(self, src_dir = None, include = None, exclude = None,
                        filter_files = True, filter_dirs = True, end_level = sys.maxsize):
-        if not src_dir:
+        if src_dir is None:
             src_dir = self.src_dir
         media_files = [fpath for fpath in FFH.media_files(src_dir, end_level = end_level,
                                                           include = include, filter_files = filter_files,

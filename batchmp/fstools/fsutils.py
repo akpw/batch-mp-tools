@@ -11,22 +11,9 @@
 ## GNU General Public License for more details.
 
 
-import os, sys, fnmatch, shutil, tempfile
+import os, sys, fnmatch, shutil
 import hashlib
 from collections import namedtuple
-from contextlib import contextmanager
-
-
-@contextmanager
-def temp_dir():
-    ''' Temp dir context manager
-    '''
-    tmp_dir = tempfile.mkdtemp()
-    try:
-        yield tmp_dir
-    finally:
-        # remove tmp dir
-        shutil.rmtree(tmp_dir)
 
 
 class UniqueDirNamesChecker:
@@ -266,6 +253,8 @@ class DWalker:
             exclude = DWalker.DEFAULT_EXCLUDE
         if sort is None:
             sort = DWalker.DEFAULT_SORT
+
+        src_dir = FSH.full_path(src_dir)
 
         # sorting
         reversed = True if sort.endswith('d') else False

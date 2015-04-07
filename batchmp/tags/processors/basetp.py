@@ -35,7 +35,8 @@ class BaseTagProcessor:
     def handler(self):
         return self._handler
 
-    def print_dir(self, src_dir, *, end_level = sys.maxsize,
+    def print_dir(self, src_dir, *,
+                            start_level = 0, end_level = sys.maxsize,
                             include = None, exclude = None,
                             sort = None, nested_indent = DWalker.DEFAULT_NESTED_INDENT,
                             filter_dirs = True, filter_files = True,
@@ -48,11 +49,13 @@ class BaseTagProcessor:
                                         handler = self.handler,
                                         show_stats = show_stats)
 
-        DHandler.print_dir(src_dir = src_dir, end_level = end_level,
+        DHandler.print_dir(src_dir = src_dir,
+                            start_level = start_level, end_level = end_level,
                             include = include, exclude = exclude,
                             sort = sort, nested_indent = nested_indent,
                             filter_dirs = filter_dirs, filter_files = filter_files,
-                            show_size = show_size, formatter = formatter)
+                            show_size = show_size, formatter = formatter,
+                            selected_files_description = 'media file')
 
     def set_tags(self, src_dir, *, end_level = sys.maxsize,
                             include = None, exclude = None, sort = None,
@@ -80,7 +83,7 @@ class BaseTagProcessor:
 
         # print summary
         if not quiet:
-            print('Set tags in {0} entries'.format(fcnt))
+            print('Set tags in {0} media file{1}'.format(fcnt, '' if fcnt == 1 else 's'))
 
     def set_tags_visual(self, src_dir, *, end_level = sys.maxsize,
                             include = None, exclude = None,
@@ -122,7 +125,8 @@ class BaseTagProcessor:
                                             filter_dirs = filter_dirs, filter_files = filter_files,
                                             preformatter = preformatter, formatter = formatter,
                                             reset_formatters = reset_tag_holder_builder,
-                                            display_current = display_current)
+                                            display_current = display_current,
+                                            selected_files_description = 'media file')
         if proceed:
             if reset_tag_holder_builder:
                 reset_tag_holder_builder()

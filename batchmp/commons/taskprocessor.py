@@ -17,14 +17,14 @@ from batchmp.commons.progressbar import progress_bar
 
 
 class Task(metaclass = ABCMeta):
-    ''' Represents an abstract TasksProcessor task
+    ''' Abstract TasksProcessor task
     '''
     @abstractmethod
     def execute(self):
         return TaskResult()
 
 class TaskResult:
-    ''' Represents a  TasksProcessor task result
+    ''' TasksProcessor Task result
     '''
     def __init__(self):
         self._task_steps_info_msgs = []
@@ -58,7 +58,7 @@ class TaskResult:
 
 
 class TasksProcessor:
-    ''' Run command line Tasks, sequentially or in a pool of processes
+    ''' Runs cmd-line Tasks, sequentially or in a pool of processes
         Displays progress / tasks done
     '''
     def _process_task(self, task):

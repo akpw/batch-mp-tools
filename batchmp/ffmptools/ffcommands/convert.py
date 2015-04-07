@@ -14,24 +14,23 @@
 """ Batch Conversion of media files
 """
 import shutil, sys, os
-from batchmp.fstools.fsutils import temp_dir, UniqueDirNamesChecker
-from batchmp.ffmptools.ffrunner import FFMPRunner
-from batchmp.ffmptools.taskpp import Task, TasksProcessor, TaskResult
-from batchmp.ffmptools.ffutils import (
+from batchmp.commons.utils import temp_dir
+from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
+from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.commons.utils import (
     timed,
     run_cmd,
-    CmdProcessingError,
-    FFH
+    CmdProcessingError
 )
 
-class ConvertorTask(Task):
+class ConvertorTask(FFMPRunnerTask):
     ''' Conversion TasksProcessor task
     '''
-    def __init__(self, fpath, backup_path,
+    def __init__(self, fpath, target_dir,
                                 ff_global_options, ff_other_options, preserve_metadata,
-                                                        target_format, convert_options):
+                                                            target_format, convert_options):
 
-        super().__init__(fpath, backup_path, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
 
         self.target_format = target_format
         self.cmd = ''.join((self.cmd,
@@ -47,12 +46,12 @@ class ConvertorTask(Task):
 
         with temp_dir() as tmp_dir:
             # prepare the tmp output path
-            cv_name = ''.join((os.path.splitext(os.path.basename(self.fpath))[0], self.target_format))
-            cv_path = os.path.join(tmp_dir, cv_name)
+            conv_fname = ''.join((os.path.splitext(os.path.basename(self.fpath))[0], self.target_format))
+            conv_fpath = os.path.join(tmp_dir, conv_fname)
 
             # build ffmpeg cmd string
             p_in = ''.join((self.cmd,
-                            ' "{}"'.format(cv_path)))
+                            ' "{}"'.format(conv_fpath)))
 
             # run ffmpeg command as a subprocess
             try:
@@ -64,17 +63,10 @@ class ConvertorTask(Task):
                                                         .format(self.fpath, e.args[0]))
             else:
                 # restore tags if needed
-                self._restore_tags(cv_path)
+                self._restore_tags(conv_fpath)
 
-                # backup the original file if applicable
-                if self.backup_path:
-                    shutil.move(self.fpath, self.backup_path)
-
-                # move media fragment to destination
-                checker = UniqueDirNamesChecker(os.path.dirname(self.fpath))
-                dst_fname = checker.unique_name(cv_name)
-                dst_fpath = os.path.join(os.path.dirname(self.fpath), dst_fname)
-                shutil.move(cv_path, dst_fpath)
+                # move converted file to target dir
+                shutil.move(conv_fpath, self.target_dir)
 
         task_result.add_report_msg(self.fpath)
 
@@ -85,7 +77,7 @@ class Convertor(FFMPRunner):
     def convert(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None, convert_options = None, backup = True,
+                    target_format = None, convert_options = None, target_dir = None,
                     ff_global_options = None, ff_other_options = None,
                     preserve_metadata = False):
         ''' Converts media to specified format
@@ -95,7 +87,7 @@ class Convertor(FFMPRunner):
                                         include = include, exclude = exclude, quiet = quiet,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_format = target_format, convert_options = convert_options,
-                                        serial_exec = serial_exec, backup = backup,
+                                        serial_exec = serial_exec, target_dir = target_dir,
                                         ff_global_options = ff_global_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
@@ -107,7 +99,7 @@ class Convertor(FFMPRunner):
     def run(self, src_dir,
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                target_format = None, convert_options = None, backup = True,
+                target_format = None, convert_options = None, target_dir = None,
                 ff_global_options = None, ff_other_options = None,
                 preserve_metadata = False):
 
@@ -116,21 +108,26 @@ class Convertor(FFMPRunner):
         # validate input values
         if not target_format:
             return cpu_core_time
-        if not target_format.startswith('.'):
+
+        if target_format.startswith('.'):
+            target_dir_prefix = '{}'.format(target_format[1:])
+        else:
+            target_dir_prefix = '{}'.format(target_format)
             target_format = '.{}'.format(target_format)
 
-        media_files, backup_dirs = self._prepare_files(src_dir,
+        media_files, target_dirs = self._prepare_files(src_dir,
                                         end_level = end_level,
                                         include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files)
+                                        filter_dirs = filter_dirs, filter_files = filter_files,
+                                        target_dir = target_dir, target_dir_prefix = target_dir_prefix)
         if len(media_files) > 0:
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, backup_dir,
+            tasks_params = ((media_file, target_dir_path,
                                 ff_global_options, ff_other_options, preserve_metadata,
                                 target_format, convert_options)
-                                    for media_file, backup_dir in zip(media_files, backup_dirs))
+                                    for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []
             for task_param in tasks_params:
                 task = ConvertorTask(*task_param)

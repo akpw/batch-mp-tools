@@ -22,7 +22,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def progress_bar(starts_from=0):
+def progress_bar(starts_from = 0):
     ''' Enables usage via a runtime context
     '''
     p_bar = CmdProgressBar(starts_from)

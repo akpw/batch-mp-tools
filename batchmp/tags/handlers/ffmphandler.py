@@ -15,14 +15,11 @@
 
 
 import os, shutil
-from batchmp.fstools.fsutils import temp_dir
+from batchmp.commons.utils import temp_dir
 from batchmp.tags.handlers.basehandler import TagHandler
 from batchmp.tags.handlers.ffmphandlers.base import FFBaseFormatHandler
-from batchmp.ffmptools.ffutils import (
-    FFH,
-    run_cmd,
-    CmdProcessingError
-)
+from batchmp.ffmptools.ffutils import FFH
+from batchmp.commons.utils import run_cmd, CmdProcessingError
 
 
 class FFmpegTagHandler(TagHandler):

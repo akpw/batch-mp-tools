@@ -12,16 +12,14 @@
 
 
 import os, subprocess, shlex, sys
-import time, datetime, json
+import time, datetime, json, re
 from functools import wraps
 from collections import namedtuple
 import batchmp.fstools.fsutils as fsutils
-
-
-
-class CmdProcessingError(Exception):
-    pass
-
+from batchmp.commons.utils import (
+    run_cmd,
+    CmdProcessingError
+)
 
 class FFmpegNotInstalled(Exception):
     def __init__(self, message = None):
@@ -73,7 +71,6 @@ class FFmpegNotInstalled(Exception):
 class FFH:
     ''' FFmpeg-related utilities
     '''
-    BACKUP_DIR_PREFIX = '_backup_'
     FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
     FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams', 'video_streams'])
 
@@ -177,60 +174,58 @@ class FFH:
         return media_files
 
     @staticmethod
-    def setup_backup_dirs(fpathes):
-        """ Given list of files pathes,
-            creates backup dirs in respective folder(s)
-        """
-        backup_dir = '{0}{1}'.format(FFH.BACKUP_DIR_PREFIX,
-                                        datetime.datetime.now().strftime("%y%b%d_%H%M%S"))
-        backup_dirs = []
-        for fpath in fpathes:
-            fdir = os.path.dirname(fpath)
-            if os.access(fdir, os.X_OK):
-                backup_path = os.path.join(fdir, backup_dir)
-                if not os.path.exists(backup_path):
-                    os.mkdir(backup_path)
-                backup_dirs.append(backup_path)
-        return backup_dirs
+    def silence_detector(fpath, *,
+                                min_duration = 2,
+                                noise_tolerance_amplitude_ratio = 0.001):
+        ''' Detects silence
+            If successful, returns a list of SilenceEntry tuples
+        '''
+        if not FFH.ffmpeg_installed():
+            return None
 
-    @staticmethod
-    def backup_dirs(src_dir, recursive = True):
-        """ list of  backup directories from from source folder and (if recursive) its subdfolders
-        """
-        if recursive:
-            dir_names = [os.path.join(r,d) for r,dirs,files in os.walk(src_dir)
-                                for d in dirs if d.find(FFH.BACKUP_DIR_PREFIX) >= 0]
+        cmd = ''.join(('ffmpeg',
+                            ' -i "{}"'.format(fpath),
+                            ' -af silencedetect=',
+                            'n={}'.format(noise_tolerance_amplitude_ratio),
+                            ':d={}'.format(min_duration),
+                            ' -f null - '))
+        try:
+            output, _ = run_cmd(cmd)
+        except CmdProcessingError as e:
+            return None
         else:
-            dir_names = (os.path.join(src_dir, fname) for fname in os.listdir(src_dir)
-                                                    if fname.find(FFH.BACKUP_DIR_PREFIX) >= 0)
-            dir_names = [dir for dir in dir_names if os.path.isdir(dir)]
-        return dir_names
+            silence_starts = re.findall('(?<=silence_start:)(?:\D*)(\d*\.?\d+)', output)
+            silence_ends = re.findall('(?<=silence_end:)(?:\D*)(\d*\.?\d+)', output)
+
+            SilenceEntry = namedtuple('SilenceEntry', ['silence_start', 'silence_end'])
+            silence_entries = []
+            for ss, se in zip(silence_starts, silence_ends):
+                silence_entries.append(SilenceEntry(ss, se))
+
+            if len(silence_entries) < len(silence_starts):
+                # matched silence at the end
+                silence_entries.append(SilenceEntry(silence_starts[-1], str(float(sys.maxsize))))
+
+            return silence_entries
 
 
-# general-level utility functions
-def timed(f):
-    """ A timing decorator
-    """
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        start = time.time()
-        result = f(*args, **kwds)
-        elapsed = time.time() - start
-        return (result, elapsed)
-    return wrapper
-
-@timed
-def run_cmd(cmd, shell = False):
-    ''' Runs shell command in a separate process
-    '''
-    if not shell:
-        cmd = shlex.split(cmd)
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell = shell)
-    output = proc.communicate()[0].decode('utf-8')
-    if proc.returncode != 0:
-        raise CmdProcessingError(output)
-    return output
-
-
+'''
 if __name__ == '__main__':
-    raise FFmpegNotInstalled
+    url = "https://dl-web.dropbox.com/get/11%20Quick%20Shares/art.png?_subject_uid=2573652&w=AADC6woSGldkSToPIgp7dBhLruvSxL9isOlMxEmRYa9cZQ"
+    #url = 'http://ecx.images-amazon.com/images/I/51kmgZ58H9L._SY300_.jpg'
+    #url = 'google.com'
+    art = load_image_from_url2(url)
+
+    if art:
+        target_art_path = '/Users/AKPower/Desktop/art.png'
+        with open(target_art_path, 'wb') as f:
+            f.write(art)
+
+
+
+    silence_entries = FFH.silence_detector('/Users/AKPower/Desktop/_Rips/Chopin Etudes/12 Vladimir Ashkenazy - 12 Etudes Op. 25 - No. 11 in A minor, No. 12 in C minor.m4a',
+                         min_duration = 2,
+                         noise_tolerance_amplitude_ratio = 0.001)
+    print(silence_entries)
+
+'''

@@ -92,3 +92,10 @@ class TagHandler(ChainedHandler):
             with open(art_path, 'wb') as f:
                 f.write(self.tag_holder.art)
         return art_path
+
+
+
+
+
+
+
