@@ -70,7 +70,7 @@ import os
 from argparse import ArgumentParser
 from functools import partial
 from scripts.base.bmpbs import BMPBaseArgParser
-from batchmp.commons.utils import load_image
+from batchmp.commons.utils import ImageLoader
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
@@ -308,7 +308,7 @@ class TagsDispatcher:
 
         art, art_path_or_url = None, args['artwork']
         if art_path_or_url:
-            art = load_image(art_path_or_url)
+            art = ImageLoader.load_image(art_path_or_url)
         if art:
             tag_holder.art = art
 

@@ -46,7 +46,6 @@ def timed(f):
 class CmdProcessingError(Exception):
     pass
 
-
 @timed
 def run_cmd(cmd, shell = False):
     ''' Runs shell commands in a separate process
@@ -60,48 +59,52 @@ def run_cmd(cmd, shell = False):
     return output
 
 
-
-def load_image_from_file(fpath):
-    ''' Loads an image from file path
-    '''
-    img = None
-    if fpath:
-        with open(fpath, 'rb') as f:
-            art = f.read()
-    return img
-
-def load_image_from_url(url):
-    ''' Loads image from an URL
-    '''
-    img = None
-    try:
-        responce = urllib.request.urlopen(url, timeout = 5)
-    except urllib.error.URLError as e:
-        print('A problem while retrieving image: "{}"'.format(e))
-    else:
-        content_type = dict(responce.getheaders())['Content-Type']
-        if content_type.split('/')[0] != 'image':
-            print('URL did not seem to return a valid image')
-            print('Received Content-Type: {}'.format(content_type))
+class ImageLoader:
+    @staticmethod
+    def load_image_from_url(url):
+        ''' Loads image from an URL
+        '''
+        img = None
+        try:
+            responce = urllib.request.urlopen(url, timeout = 5)
+        except urllib.error.URLError as e:
+            print('A problem while retrieving image: "{}"'.format(e))
         else:
-            img = responce.read()
+            content_type = dict(responce.getheaders())['Content-Type']
+            if content_type.split('/')[0] != 'image':
+                print('URL did not seem to return a valid image')
+                print('Received Content-Type: {}'.format(content_type))
+            else:
+                img = responce.read()
 
-    return img
+        return img
 
-def load_image(path_or_url):
-    ''' Loads an image from an URL or a file path
-    '''
-    url_parts = urlparse(path_or_url)
-    if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
-        return load_image_from_url(path_or_url)
+    @staticmethod
+    def load_image_from_file(fpath):
+        ''' Loads an image from file path
+        '''
+        img = None
+        if fpath:
+            with open(fpath, 'rb') as f:
+                img = f.read()
 
-    if url_parts.scheme == 'file':
-        fpath = format(url_parts.path)
-        if url_parts.netloc == '~':
-            fpath = '~{}'.format(fpath)
-        return load_image_from_url(path_or_url)
+        return img
 
-    return load_image_from_url(path_or_url)
+    @staticmethod
+    def load_image(path_or_url):
+        ''' Loads an image from an URL or a file path
+        '''
+        url_parts = urlparse(path_or_url)
+        if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
+            return ImageLoader.load_image_from_file(path_or_url)
+
+        if url_parts.scheme == 'file':
+            fpath = format(url_parts.path)
+            if url_parts.netloc == '~':
+                fpath = '~{}'.format(fpath)
+            return ImageLoader.load_image_from_file(path_or_url)
+
+        return ImageLoader.load_image_from_url(path_or_url)
 
 
 
