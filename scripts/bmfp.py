@@ -49,12 +49,12 @@
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
 
-      Target output directory
-        [-td, --target-dir]         Target output directory. When omitted, will be automatically
-                                    created within the root input source directory.
-                                    For recursive processing, the processed files directory structure
-                                    will be the same as for the original files.
-      FFmpeg General Options:
+        Target output Directory     Target output directory. When omitted, will be
+        [-td, --target-dir]         automatically created at the parent level of
+                                    input source directory. For recursive processing,
+                                    the processed files directory structure there will be
+                                    the same as for the original files.
+      FFmpeg General Output Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
         [-vn, --no-video]           Exclude video streams from the output
@@ -67,7 +67,7 @@
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, denoise, fragment, segment, ...}
+        {print, convert, denoise, fragment, segment, silencesplit...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import sys
@@ -98,11 +98,11 @@ class BMFPArgParser(BMPBaseArgParser):
         target_output_group.add_argument("-td", "--target-dir", dest = "target_dir",
                     type = lambda d: cls.is_valid_dir_path(parser, d),
                     help = "Target output directory. When omitted, will be automatically "
-                            "created within the root input source directory. "
-                            "For recursive processing, the processed files directory structure "
+                            "created at the parent level of input source directory. "
+                            "For recursive processing, the processed files directory structure there "
                             "will be the same as for the original files.")
 
-        ffmpeg_group = parser.add_argument_group('FFmpeg General Options')
+        ffmpeg_group = parser.add_argument_group('FFmpeg General Output Options')
         ffmpeg_group.add_argument("-ma", "--map-all", dest='all_streams',
                     help = "Force including all streams from the input file",
                     action='store_true')
@@ -230,19 +230,19 @@ class BMFPArgParser(BMPBaseArgParser):
         super().check_args(args, parser)
 
         # Compile FF global options
-        ff_global_options = 0
+        ff_general_options = 0
         if args['all_streams']:
-            ff_global_options |= FFmpegBitMaskOptions.MAP_ALL_STREAMS
+            ff_general_options |= FFmpegBitMaskOptions.MAP_ALL_STREAMS
         if args['copy_codecs']:
-            ff_global_options |= FFmpegBitMaskOptions.COPY_CODECS
+            ff_general_options |= FFmpegBitMaskOptions.COPY_CODECS
         if args['exclude_video']:
-            ff_global_options |= FFmpegBitMaskOptions.DISABLE_VIDEO
+            ff_general_options |= FFmpegBitMaskOptions.DISABLE_VIDEO
         if args['exclude_audio']:
-            ff_global_options |= FFmpegBitMaskOptions.DISABLE_AUDIO
+            ff_general_options |= FFmpegBitMaskOptions.DISABLE_AUDIO
         if args['exclude_subtitles']:
-            ff_global_options |= FFmpegBitMaskOptions.DISABLE_SUBTITLES
+            ff_general_options |= FFmpegBitMaskOptions.DISABLE_SUBTITLES
 
-        args['ff_global_options'] = ff_global_options
+        args['ff_general_options'] = ff_general_options
 
         # Always preserve metadata (experimental)
         args['preserve_metadata'] = True
@@ -261,12 +261,11 @@ class BMFPArgParser(BMPBaseArgParser):
 
             if args['convert_options'] == FFmpegCommands.CONVERT_COPY_VBR_QUALITY: #default
                 if args['lossless_audio']:
-                    if args['target_format'] == '.flac':
-                        args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS_FLAC
-                    elif args['target_format'] == '.m4a':
-                        args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS_ALAC
+                    # takes priority over default settings
+                    args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS
 
                 if args['change_container']:
+                    # takes priority over default settings or lossless
                     args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 
 
@@ -291,7 +290,7 @@ class BMFPDispatcher:
                 serial_exec = args['serial_exec'],
                 target_dir = args['target_dir'],
                 target_format = args['target_format'], convert_options = args['convert_options'],
-                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -302,7 +301,7 @@ class BMFPDispatcher:
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
-                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -315,7 +314,7 @@ class BMFPDispatcher:
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
-                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -328,7 +327,7 @@ class BMFPDispatcher:
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
-                ff_global_options = args['ff_global_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 reset_timestamps = args['reset_timestamps'],
                 preserve_metadata = args['preserve_metadata'])
 
@@ -338,8 +337,8 @@ class BMFPDispatcher:
         '''
         args = BMFPArgParser.parse_options(script_name = 'bmfp', description = \
                         '''
-                        BMFP is a batch audio/video media processor,
-                        providing effective conversion between various formats,
+                        BMFP is a batch audio/video media processor for
+                        effective conversion between various formats,
                         segmenting / fragmenting media files, denoising audio,
                         detaching individual audio / video streams, etc.
                         BMFP is built on top of FFmpeg (http://ffmpeg.org/),

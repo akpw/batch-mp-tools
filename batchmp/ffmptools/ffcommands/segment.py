@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -19,7 +20,7 @@ from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
-from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.ffmptools.ffutils import FFH
 from batchmp.commons.utils import (
     timed,
@@ -31,10 +32,17 @@ class SegmenterTask(FFMPRunnerTask):
     ''' Segment TasksProcessor task
     '''
     def __init__(self, fpath, target_dir,
-                            ff_global_options, ff_other_options, preserve_metadata,
+                            ff_general_options, ff_other_options, preserve_metadata,
                             reset_timestamps, segment_size_MB, segment_length_secs):
 
-        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
+
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
+
+            if not self.ff_other_options:
+                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
 
         # if needed, calculate segment duration via given file size
         if not segment_length_secs and segment_size_MB:
@@ -42,13 +50,17 @@ class SegmenterTask(FFMPRunnerTask):
             split_factor  = split_factor if split_factor > 1.11 else 1.11
             segment_length_secs = Segmenter._media_duration(self.fpath) / split_factor
 
-        self.cmd = ''.join((self.cmd,
-                            FFmpegCommands.SEGMENT,
-                            ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIME, segment_length_secs),
-                            FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if reset_timestamps else ''))
+        self.segment_length_secs = segment_length_secs
+        self.reset_timestamps = reset_timestamps
 
-        # try to explicitly tell FFMpeg to preserve the original quality
-        self._FF_preserve_quality()
+    @property
+    def ff_cmd(self):
+        ''' Fragment command builder
+        '''
+        return ''.join((super().ff_cmd,
+                            FFmpegCommands.SEGMENT,
+                            ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIME, self.segment_length_secs),
+                            FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if self.reset_timestamps else ''))
 
     def execute(self):
         ''' builds and runs Segment FFmpeg command in a subprocess
@@ -66,8 +78,9 @@ class SegmenterTask(FFMPRunnerTask):
             fpath_output = os.path.join(tmp_dir, fpath_output)
 
             # build ffmpeg cmd string
-            p_in = ''.join((self.cmd,
-                            ' "{}"'.format(fpath_output)))
+            p_in = ''.join((self.ff_cmd, ' "{}"'.format(fpath_output)))
+
+            #print(p_in)
 
             # run ffmpeg command as a subprocess
             try:
@@ -110,7 +123,7 @@ class Segmenter(FFMPRunner):
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
-                    ff_global_options = None, ff_other_options = None,
+                    ff_general_options = None, ff_other_options = None,
                     reset_timestamps = False, preserve_metadata = False):
         ''' Segment media file by specified size | duration
         '''
@@ -121,7 +134,7 @@ class Segmenter(FFMPRunner):
                                         segment_size_MB = segment_size_MB,
                                         segment_length_secs = segment_length_secs,
                                         serial_exec = serial_exec, target_dir = target_dir,
-                                        ff_global_options = ff_global_options,
+                                        ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         reset_timestamps = reset_timestamps,
                                         preserve_metadata = preserve_metadata)
@@ -134,7 +147,7 @@ class Segmenter(FFMPRunner):
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
-                ff_global_options = None, ff_other_options = None,
+                ff_general_options = None, ff_other_options = None,
                 reset_timestamps = False, preserve_metadata = False):
 
         ''' Perform segmentation by size | duration
@@ -165,7 +178,7 @@ class Segmenter(FFMPRunner):
 
             # build tasks
             tasks_params = ((media_file, target_dir_path,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                 reset_timestamps, segment_size_MB, segment_length_secs)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []

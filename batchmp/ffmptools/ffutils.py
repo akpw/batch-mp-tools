@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -72,7 +73,8 @@ class FFH:
     ''' FFmpeg-related utilities
     '''
     FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
-    FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams', 'video_streams'])
+    FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams',
+                                                            'video_streams', 'artwork_streams'])
 
     @staticmethod
     def ffmpeg_installed():
@@ -88,8 +90,7 @@ class FFH:
     @staticmethod
     def media_file_info(fpath):
         ''' Compact media file info
-            Extracts key information relevant for futher processing,
-            such as main audio stream, artwork, etc.
+            Extracts main audio / artwork streams
         '''
         full_entry = FFH.media_file_info_full(fpath)
         if full_entry:
@@ -100,12 +101,9 @@ class FFH:
             else:
                 return None
 
-            artwork_streams = [stream for stream in full_entry.video_streams
-                                        if 'codec_type' in stream and stream['codec_type'] == 'video'
-                                            and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
-            if artwork_streams:
+            if full_entry.artwork_streams and len(full_entry.artwork_streams) > 0:
                 # in case there are multiple art images, take the first
-                artwork_stream = artwork_streams[0]
+                artwork_stream = full_entry.artwork_streams[0]
 
             return FFH.FFEntry(fpath, full_entry.format, audio_stream, artwork_stream)
         else:
@@ -137,15 +135,20 @@ class FFH:
             streams = out.get('streams')
             audio_streams = video_streams = None
             if streams:
-                audio_streams = [dict for dict in streams
-                                                if 'codec_type' in dict and
-                                                    dict['codec_type'] == 'audio']
-                video_streams = [dict for dict in streams
-                                            if 'codec_type' in dict and
-                                                    dict['codec_type'] == 'video']
+                is_audio_stream = lambda stream: True if stream.get('codec_type') == 'audio' else False
+                is_video_stream = lambda stream: True if stream.get('codec_type') == 'video' else False
+                is_artwork_stream = lambda stream: True if \
+                        stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp') else False
+
+                audio_streams = [stream for stream in streams if is_audio_stream(stream)]
+                video_streams = [stream for stream in streams if \
+                                        is_video_stream(stream) and not is_artwork_stream(stream)]
+                artwork_streams = [stream for stream in streams if \
+                                        is_video_stream(stream) and is_artwork_stream(stream)]
+
             format = out.get('format')
 
-            return FFH.FFFullEntry(fpath, format, audio_streams, video_streams)
+            return FFH.FFFullEntry(fpath, format, audio_streams, video_streams, artwork_streams)
 
     @staticmethod
     def supported_media(fpath):
@@ -208,24 +211,3 @@ class FFH:
 
             return silence_entries
 
-
-'''
-if __name__ == '__main__':
-    url = "https://dl-web.dropbox.com/get/11%20Quick%20Shares/art.png?_subject_uid=2573652&w=AADC6woSGldkSToPIgp7dBhLruvSxL9isOlMxEmRYa9cZQ"
-    #url = 'http://ecx.images-amazon.com/images/I/51kmgZ58H9L._SY300_.jpg'
-    #url = 'google.com'
-    art = load_image_from_url2(url)
-
-    if art:
-        target_art_path = '/Users/AKPower/Desktop/art.png'
-        with open(target_art_path, 'wb') as f:
-            f.write(art)
-
-
-
-    silence_entries = FFH.silence_detector('/Users/AKPower/Desktop/_Rips/Chopin Etudes/12 Vladimir Ashkenazy - 12 Etudes Op. 25 - No. 11 in A minor, No. 12 in C minor.m4a',
-                         min_duration = 2,
-                         noise_tolerance_amplitude_ratio = 0.001)
-    print(silence_entries)
-
-'''

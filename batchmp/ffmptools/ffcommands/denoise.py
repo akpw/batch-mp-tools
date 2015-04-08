@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -19,6 +20,7 @@ import shutil, sys, os, datetime, math
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -29,10 +31,10 @@ class DenoiserTask(FFMPRunnerTask):
     ''' Denoise TasksProcessor task
     '''
     def __init__(self, fpath, target_dir,
-                            ff_global_options, ff_other_options, preserve_metadata,
+                            ff_general_options, ff_other_options, preserve_metadata,
                                                         highpass, lowpass, num_passes):
 
-        super().__init__(None, target_dir, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(None, target_dir, ff_general_options, ff_other_options, preserve_metadata)
         self.fpath = fpath
 
         # build ffmpeg -af parameter
@@ -43,10 +45,29 @@ class DenoiserTask(FFMPRunnerTask):
         elif highpass:
             af_str = 'highpass=f={}'.format(highpass)
         else:
-            raise ValueError('At least of the highpass / lowpass values must be specified')
+            raise ValueError('At least one of the highpass / lowpass values must be specified')
 
-        self.cmd = ''.join((self.cmd, ' -af "{}"'.format(af_str)))
+        self.af_str = af_str
         self.num_passes = num_passes
+
+        self.excluded_artwork_streams = False
+        if (not self.ff_general_options) and (not self.ff_other_options):
+                self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(FFmpegBitMaskOptions.MAP_ALL_STREAMS)
+                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
+                self.excluded_artwork_streams = True
+
+    def ff_denoise_cmd(self, fpath, pass_cnt):
+        ''' Denoise command builder
+        '''
+        # when implicitly excluding artwork streams, need to do this only for the first pass
+        apply_options = (not self.excluded_artwork_streams) or (pass_cnt == 0)
+
+        return ''.join(('ffmpeg',
+                            FFmpegCommands.LOG_LEVEL_ERROR,
+                            ' -i "{}"'.format(fpath),
+                            self.ff_general_options if apply_options else '',
+                            self.ff_other_options if apply_options else '',
+                            ' -af "{}"'.format(self.af_str)))
 
     def execute(self):
         ''' builds and runs Denoise command in a subprocess
@@ -71,9 +92,9 @@ class DenoiserTask(FFMPRunnerTask):
                                         fname_ext))
                 fpath_output = os.path.join(tmp_dir, fpath_output)
 
-                p_in = ''.join((self._ffmpeg_input(fpath_input),
-                                    self.cmd,
-                                    ' "{}"'.format(fpath_output)))
+                p_in = '{0} "{1}"'.format(self.ff_denoise_cmd(fpath_input, pass_cnt), fpath_output)
+
+                # print(p_in)
 
                 # run ffmpeg command as a subprocess
                 try:
@@ -107,7 +128,7 @@ class Denoiser(FFMPRunner):
                             end_level = sys.maxsize, include = None, exclude = None,
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                             num_passes = 1, highpass = None, lowpass = None, target_dir = None,
-                            ff_global_options = None, ff_other_options = None,
+                            ff_general_options = None, ff_other_options = None,
                             preserve_metadata = False):
 
         ''' Reduce of background audio noise in media files
@@ -119,7 +140,7 @@ class Denoiser(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         quiet = quiet, num_passes = num_passes, serial_exec = serial_exec,
                                         highpass = highpass, lowpass = lowpass, target_dir = target_dir,
-                                        ff_global_options = ff_global_options,
+                                        ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
         # print run report
@@ -131,7 +152,7 @@ class Denoiser(FFMPRunner):
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 num_passes = 1, highpass = None, lowpass = None, target_dir = None,
-                ff_global_options = None, ff_other_options = None,
+                ff_general_options = None, ff_other_options = None,
                 preserve_metadata = False):
 
         ''' Applies low-pass / highpass filters
@@ -154,7 +175,7 @@ class Denoiser(FFMPRunner):
                                                    'passes' if num_passes > 1 else 'pass'))
             # build tasks
             tasks_params = ((media_file, target_dir_path,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                 highpass, lowpass, num_passes)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []

@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -17,6 +18,7 @@ import shutil, sys, os
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -27,14 +29,30 @@ class ConvertorTask(FFMPRunnerTask):
     ''' Conversion TasksProcessor task
     '''
     def __init__(self, fpath, target_dir,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                                             target_format, convert_options):
 
-        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
+
+        # check convert options
+        convert_options = convert_options or FFmpegCommands.CONVERT_COPY_VBR_QUALITY # default
+        if convert_options == FFmpegCommands.CONVERT_LOSSLESS:
+            # see if lossless is appropriate
+            if target_format == '.flac':
+                convert_options = FFmpegCommands.CONVERT_LOSSLESS_FLAC
+            elif target_format == '.m4a':
+                convert_options = FFmpegCommands.CONVERT_LOSSLESS_ALAC
+            else:
+                convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
 
         self.target_format = target_format
-        self.cmd = ''.join((self.cmd,
-                            ' {}'.format(convert_options) if convert_options else ''))
+        self.convert_options = convert_options
+
+    @property
+    def ff_cmd(self):
+        ''' Convert command builder
+        '''
+        return ''.join((super().ff_cmd, self.convert_options))
 
     def execute(self):
         ''' builds and runs FFmpeg Conversion command in a subprocess
@@ -50,8 +68,9 @@ class ConvertorTask(FFMPRunnerTask):
             conv_fpath = os.path.join(tmp_dir, conv_fname)
 
             # build ffmpeg cmd string
-            p_in = ''.join((self.cmd,
-                            ' "{}"'.format(conv_fpath)))
+            p_in = ''.join((self.ff_cmd, ' "{}"'.format(conv_fpath)))
+
+            #print(p_in)
 
             # run ffmpeg command as a subprocess
             try:
@@ -78,7 +97,7 @@ class Convertor(FFMPRunner):
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     target_format = None, convert_options = None, target_dir = None,
-                    ff_global_options = None, ff_other_options = None,
+                    ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
         ''' Converts media to specified format
         '''
@@ -88,7 +107,7 @@ class Convertor(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_format = target_format, convert_options = convert_options,
                                         serial_exec = serial_exec, target_dir = target_dir,
-                                        ff_global_options = ff_global_options,
+                                        ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
         # print run report
@@ -100,7 +119,7 @@ class Convertor(FFMPRunner):
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 target_format = None, convert_options = None, target_dir = None,
-                ff_global_options = None, ff_other_options = None,
+                ff_general_options = None, ff_other_options = None,
                 preserve_metadata = False):
 
         cpu_core_time = 0.0
@@ -125,7 +144,7 @@ class Convertor(FFMPRunner):
 
             # build tasks
             tasks_params = ((media_file, target_dir_path,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                 target_format, convert_options)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []

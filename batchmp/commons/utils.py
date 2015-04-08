@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -81,7 +82,7 @@ class ImageLoader:
 
     @staticmethod
     def load_image_from_file(fpath):
-        ''' Loads an image from file path
+        ''' Loads an image from disk via file path
         '''
         img = None
         if fpath:

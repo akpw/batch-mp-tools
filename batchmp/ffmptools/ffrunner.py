@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -24,22 +25,25 @@ from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOpt
 class FFMPRunnerTask(Task):
     ''' Represents an abstract FFMP Runner task
     '''
-    def __init__(self, fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata):
+    def __init__(self, fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata):
         self.fpath = fpath
         self.target_dir = target_dir
+
+        self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(ff_general_options)
+        self.ff_other_options = ff_other_options if ff_other_options else ''
+
         self.tag_holder = TagHolder() if preserve_metadata else None
 
-        self.cmd = ''.join((self._ffmpeg_input(fpath),
-                            FFmpegBitMaskOptions.ff_global_options(ff_global_options),
-                            ' {}'.format(ff_other_options) if ff_other_options else ''))
-    #Helpers
-    def _ffmpeg_input(self, fpath):
-        if fpath is not None:
-            return ''.join(('ffmpeg',
-                                FFmpegCommands.LOG_LEVEL_ERROR,
-                                ' -i "{}"'.format(fpath)))
-        return ''
-
+    @property
+    def ff_cmd(self):
+        ''' Base FFmpeg command builder
+        '''
+        return ''.join(('ffmpeg',
+                            FFmpegCommands.LOG_LEVEL_ERROR,
+                            ' -i "{}"'.format(self.fpath),
+                            self.ff_general_options,
+                            self.ff_other_options))
+    # Helpers
     def _store_tags(self):
         if self.tag_holder:
             handler = MutagenTagHandler() + FFmpegTagHandler()
@@ -53,15 +57,17 @@ class FFMPRunnerTask(Task):
                 handler.tag_holder.copy_tags(self.tag_holder)
                 handler.save()
 
-    def _FF_preserve_quality(self):
-        # try to explicitly tell FFMpeg to preserve the original quality
-        fname_ext = os.path.splitext(self.fpath)[1].strip().lower()
-        if fname_ext == '.flac':
-            self.cmd = ''.join((self.cmd, ' {}'.format(FFmpegCommands.CONVERT_LOSSLESS_FLAC)))
-        elif fname_ext == '.m4a':
-            self.cmd = ''.join((self.cmd, ' {}'.format(FFmpegCommands.CONVERT_LOSSLESS_ALAC)))
-        else:
-            self.cmd = ''.join((self.cmd, ' {}'.format(FFmpegCommands.CONVERT_COPY_VBR_QUALITY)))
+    # FFmpeg command parts builders
+    def _ff_cmd_exclude_artwork_streams(self):
+        media_entry = FFH.media_file_info_full(self.fpath)
+        exclude_artworks_cmd = ''
+        if media_entry:
+            for artwork_stream in media_entry.artwork_streams:
+                idx = artwork_stream.get('index')
+                if idx is not None:
+                    exclude_artworks_cmd = '{0} {1}'.format(exclude_artworks_cmd,
+                                                            FFmpegCommands.exclude_input_stream(idx))
+        return exclude_artworks_cmd
 
 
 class FFMPRunner(metaclass = ABCMeta):

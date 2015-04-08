@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -17,6 +18,7 @@ import shutil, sys, os
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -26,19 +28,30 @@ from batchmp.commons.utils import (
 class FragmenterTask(FFMPRunnerTask):
     ''' Fragment TasksProcessor task
     '''
-
     def __init__(self, fpath, target_dir,
-                            ff_global_options, ff_other_options, preserve_metadata,
+                            ff_general_options, ff_other_options, preserve_metadata,
                             fragment_starttime, fragment_duration):
 
-        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
 
-        self.cmd = ''.join((self.cmd,
-                            ' -ss {}'.format(fragment_starttime),
-                            ' -t {}'.format(fragment_duration)))
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
 
-        # try to explicitly tell FFMpeg to preserve the original quality
-        self._FF_preserve_quality()
+            if not self.ff_other_options:
+                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
+
+        self.fragment_starttime = fragment_starttime
+        self.fragment_duration = fragment_duration
+
+    @property
+    def ff_cmd(self):
+        ''' Fragment command builder
+        '''
+        return ''.join((super().ff_cmd,
+                            ' -ss {}'.format(self.fragment_starttime),
+                            ' -t {}'.format(self.fragment_duration)
+                            ))
 
     def execute(self):
         ''' builds and runs Fragment FFmpeg command in a subprocess
@@ -53,8 +66,9 @@ class FragmenterTask(FFMPRunnerTask):
             fragmented_fpath = os.path.join(tmp_dir, os.path.basename(self.fpath))
 
             # build ffmpeg cmd string
-            p_in = ''.join((self.cmd,
-                            ' "{}"'.format(fragmented_fpath)))
+            p_in = '{0} "{1}"'.format(self.ff_cmd, fragmented_fpath)
+
+            #print(p_in)
 
             # run ffmpeg command as a subprocess
             try:
@@ -81,7 +95,7 @@ class Fragmenter(FFMPRunner):
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     fragment_starttime = None, fragment_duration = None,
                     target_dir = None,
-                    ff_global_options = None, ff_other_options = None,
+                    ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
         ''' Fragment media file by specified starttime & duration
         '''
@@ -93,7 +107,7 @@ class Fragmenter(FFMPRunner):
                                         fragment_duration = fragment_duration,
                                         serial_exec = serial_exec,
                                         target_dir = target_dir,
-                                        ff_global_options = ff_global_options,
+                                        ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
         # print run report
@@ -106,7 +120,7 @@ class Fragmenter(FFMPRunner):
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 fragment_starttime = None, fragment_duration = None,
                 target_dir = None,
-                ff_global_options = None, ff_other_options = None,
+                ff_general_options = None, ff_other_options = None,
                 preserve_metadata = False):
 
         cpu_core_time = 0.0
@@ -125,7 +139,7 @@ class Fragmenter(FFMPRunner):
 
             # build tasks
             tasks_params = ((media_file, target_dir_path,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                 fragment_starttime, fragment_duration)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []

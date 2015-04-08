@@ -1,3 +1,4 @@
+# coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -27,6 +28,7 @@ class FFmpegCommands:
 
     # Conversion options
     CONVERT_COPY_VBR_QUALITY = ' -q:v 0 -q:a 0'
+    CONVERT_LOSSLESS = 'CONVERT_LOSSLESS_IF_POSSIBLE'
     CONVERT_LOSSLESS_ALAC = ' -q:v 0 -acodec alac'
     CONVERT_LOSSLESS_FLAC = ' -q:v 0 -acodec flac'
     CONVERT_CHANGE_CONTAINER = ' -c copy -copyts'
@@ -40,6 +42,14 @@ class FFmpegCommands:
     SEGMENT_TIME = ' -segment_time'
     SEGMENT_RESET_TIMESTAMPS = ' -reset_timestamps 1'
 
+    @staticmethod
+    def exclude_input_stream(stream_idx):
+        return ' -map -0:{}'.format(stream_idx)
+
+    @staticmethod
+    def include_input_stream(stream_idx):
+        return ' -map 0:{}'.format(stream_idx)
+
 
 class FFmpegBitMaskOptions(IntEnum):
     ''' FFmpeg commands / options bitmasks
@@ -52,7 +62,7 @@ class FFmpegBitMaskOptions(IntEnum):
     DISABLE_SUBTITLES = (1<<7)
 
     @classmethod
-    def ff_global_options(cls, ff_gbm_options):
+    def ff_general_options(cls, ff_gbm_options):
         options_str = ''
         if ff_gbm_options:
             for bm_option in cls:
@@ -85,7 +95,10 @@ if __name__ == '__main__':
     if copy_codecs:
         options |= FFmpegBitMaskOptions.COPY_CODECS
     options |= FFmpegBitMaskOptions.DISABLE_VIDEO
-    print(FFmpegBitMaskOptions.ff_global_options(options))
+    print(FFmpegBitMaskOptions.ff_general_options(options))
+
+    exclude_stream = 1
+    print('exclude video stream {}: {}'.format(exclude_stream, FFmpegCommands.exclude_input_stream(exclude_stream)))
 
 
 

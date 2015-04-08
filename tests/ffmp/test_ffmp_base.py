@@ -47,26 +47,17 @@ class FFMPTest(test_base.BMPTest):
         assert_method(len(full_entry_orig.video_streams), len(full_entry_processed.video_streams),
                         msg = '\n{0}\n{1}'
                                     '\n\tDifferent number of video streams:'
-                                    '\n\tOriginal has {2}, but processed has {3}'
-                                    '\n\t{4}\n\t{5}'.format(
+                                    '\n\tOriginal has {2}, but processed has {3}'.format(
                                 full_entry_orig.path, full_entry_processed.path,
-                                len(full_entry_orig.video_streams), len(full_entry_processed.video_streams),
-                                full_entry_orig.video_streams, full_entry_processed.video_streams))
+                                len(full_entry_orig.video_streams), len(full_entry_processed.video_streams)))
 
         # Check artwork streams
-        artwork_streams_orig = [stream for stream in full_entry_orig.video_streams
-                                    if 'codec_type' in stream and stream['codec_type'] == 'video'
-                                        and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
-        artwork_streams_processed = [stream for stream in full_entry_processed.video_streams
-                                    if 'codec_type' in stream and stream['codec_type'] == 'video'
-                                        and stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp')]
-
-        assert_method(len(artwork_streams_orig), len(artwork_streams_processed),
+        assert_method(len(full_entry_orig.artwork_streams), len(full_entry_processed.artwork_streams),
                         msg = '\n{0}\n{1}'
                                     '\n\tDifferent number of artwork streams:'
                                     '\n\tOriginal has {2}, but processed has {3}'.format(
                                 full_entry_orig.path, full_entry_processed.path,
-                                len(artwork_streams_orig), len(artwork_streams_processed)))
+                                len(full_entry_orig.artwork_streams), len(full_entry_processed.artwork_streams)))
 
 
 
