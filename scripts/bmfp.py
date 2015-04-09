@@ -22,12 +22,12 @@
           .. print          Prints media files
           .. convert        Converts media to specified format
                                 For example, to convert all files in current directory
-                                    $ bmfp -pm convert -la -tf FLAC
+                                    $ bmfp convert -la -tf FLAC
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
           .. silencesplit   Splits media files into segments via detecting specified silence
-                                    $ bmfp silcencesplit
+                                    $ bmfp silencesplit
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
@@ -67,7 +67,7 @@
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, denoise, fragment, segment, silencesplit...}
+        {print, convert, denoise, fragment, segment, silencesplit, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import os, sys
