@@ -91,9 +91,9 @@ The commands above show some of the available global options:  `-r` for recursio
 
 For example, to convert all files from the above example from M4A to FLAC:
 ```
-    $ bmfp -r -pm convert -la -tf FLAC
+    $ bmfp -r convert -la -tf FLAC
 ```
-The `-pm` switch here forces preserving *all* metadata information, while `-la` explicitly tells BMFP to do a lossless conversion.
+The `-tf` switch specifies the target format, while `-la` explicitly tells BMFP to do a lossless conversion.
 
 To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
@@ -138,10 +138,11 @@ I will follow up with more examples and common use-cases in future blogs.
 ##Full description of CLI Commands
 ###renamer
     Batch renaming of files and directories
+      . source directory or source file modes
       . visualises original / targeted folders structure before actual processing
-      . supports recursion (also can go down to explicitly specified end_level)
+      . supports recursion, can optionally stop at specified end_level
       . supports flattening folders beyond specified target_level
-      . allows for include / exclude patterns (Unix style)
+      . supports include / exclude patterns (Unix style)
       . display sorting:
           .. by size/date, ascending/descending
       . action commands:
@@ -191,8 +192,9 @@ I will follow up with more examples and common use-cases in future blogs.
 
             'AVI', 'FLV', 'MKV', 'MKA' (support via FFmpeg)
       . source directory / source file modes
-      . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
+      . supports recursion, can optionally stop at specified end_level
+      . include / exclude patterns (Unix style)
       . action commands:
           .. print      Prints media info
           .. set        Sets tags in media files, including artwork, e.g:
@@ -238,20 +240,27 @@ I will follow up with more examples and common use-cases in future blogs.
 
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
     Batch processing of media files
-      . Uses multiprocessing to utilize available CPU cores
+      . supports multiprocessing to utilize available CPU cores
+      . source directory / source file modes
+      . supports recursion, can optionally stop at specified end_level
+      . include / exclude patterns (Unix style)
       . action commands:
+          .. print          Prints media files
           .. convert        Converts media to specified format
+                                For example, to convert all files in current directory
+                                    $ bmfp convert -la -tf FLAC
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
+          .. silencesplit   Splits media files into segments via detecting specified silence
+                                    $ bmfp silencesplit
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
           .. adjust volume  TDB: Adjust audio volume
 
-    Usage: bmfp [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
-    Global Options:
+    Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
       Input source mode:
         [-d, --dir]                 Source directory (default is the current directory)
         [-f, --file]                File to process
@@ -266,10 +275,12 @@ I will follow up with more examples and common use-cases in future blogs.
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
 
-      Miscellaneous:
-        [-q, --quiet]               Do not visualise changes / show messages during processing
-
-      FFmpeg General Options:
+        Target output Directory     Target output directory. When omitted, will be
+        [-td, --target-dir]         automatically created at the parent level of
+                                    the input source. For recursive processing,
+                                    the processed files directory structure there
+                                    will be the same as for the original files.
+      FFmpeg General Output Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
         [-vn, --no-video]           Exclude video streams from the output
@@ -278,13 +289,13 @@ I will follow up with more examples and common use-cases in future blogs.
         [-fo, --ffmpeg-options]     Additional FFmpeg options
 
       FFmpeg Commands Execution:
-        [-pm, --preserve-meta]      Preserve metadata of processed files
+        [-q, --quiet]               Do not visualise changes / show messages during processing
         [-se, --serial-exec]        Run all task's commands in a single process
-        [-nb, --no-backup]          Do not backup the original file
 
       Commands:
-        {convert, denoise, fragment, segment, ...}
+        {print, convert, denoise, fragment, segment, silencesplit, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
+
 
 ##Installing Development version
 - Clone the repo, then run: `$ python setup.py develop`

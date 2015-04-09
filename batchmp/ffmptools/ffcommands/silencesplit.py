@@ -199,17 +199,3 @@ class SilenceSplitter(FFMPRunner):
 
         return cpu_core_time
 
-
-if __name__ == '__main__':
-    fpath = '/Users/AKPower/Desktop/_Rips/Chopin Etudes/12 Vladimir Ashkenazy - 12 Etudes Op. 25 - No. 11 in A minor, No. 12 in C minor.m4a'
-    silence_entries = FFH.silence_detector(fpath,
-                         min_duration = 120,
-                         noise_tolerance_amplitude_ratio = 0.001)
-    print(silence_entries)
-
-
-
-
-
-
-

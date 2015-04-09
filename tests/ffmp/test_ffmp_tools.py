@@ -37,7 +37,7 @@ class FFMPTests(FFMPTest):
         self.resetDataFromBackup(quiet=True)
 
     def test_apply_af_filters_changes(self):
-        #return
+        #return ##
         print('Applying audio filters, might take a while ...')
         media_files = [f for f in FFH.media_files(src_dir = self.src_dir, exclude = 'bmfp*')]
         self.assertNotEqual(media_files, [], msg = 'No media files selected')
@@ -60,7 +60,7 @@ class FFMPTests(FFMPTest):
             self.assertNotEqual(orig_hashes[hash_key], denoised_hashes[hash_key])
 
     def test_apply_af_filters_audio(self):
-        #return
+        #return ##
         print('Applying audio filters on audio files')
 
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
@@ -79,7 +79,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_apply_af_filters_video(self):
-        #return
+        #return ##
         print('Applying audio filters on video files')
 
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
@@ -97,7 +97,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_convert_audio(self):
-        #return
+        #return ##
         print('Converting audio')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -114,7 +114,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_convert_video(self):
-        #return
+        #return ##
         print('Converting video')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -131,7 +131,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_fragment_audio(self):
-        #return
+        #return ##
         print('Fragmenting audio')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -147,7 +147,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_fragment_video(self):
-        #return
+        #return ##
         print('Fragmenting video')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -163,7 +163,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_segment_audio(self):
-        #return
+        #return ##
         print('Segmenting audio to parts of 1 sec')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -180,7 +180,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_segment_video(self):
-        #return
+        #return ##
         print('Segmenting video to parts of 50KB')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -192,14 +192,14 @@ class FFMPTests(FFMPTest):
                               target_dir = self.target_dir)
 
         processed_media_entries = self._media_entries(src_dir = self.target_dir,
-                                                      include = '*_0.*',
+                                                      include = '*_0.*;*_00.*',
                                                       filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
 
     def test_silencesplit_audio(self):
-        #return
+        #return ##
         print('Splitting audio on silence')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -217,7 +217,7 @@ class FFMPTests(FFMPTest):
         self._check_media_entries(orig_media_entries, processed_media_entries)
 
     def test_silencesplit_video(self):
-        #return
+        #return ##
         print('Splitting video on silence')
         orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
         self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
@@ -234,8 +234,6 @@ class FFMPTests(FFMPTest):
                                                       filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
         self._check_media_entries(orig_media_entries, processed_media_entries)
-
-
 
     # Internal helpers
     def _media_entries(self, src_dir = None, include = None, exclude = None,
