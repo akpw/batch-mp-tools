@@ -138,7 +138,7 @@ class FFH:
                 is_audio_stream = lambda stream: True if stream.get('codec_type') == 'audio' else False
                 is_video_stream = lambda stream: True if stream.get('codec_type') == 'video' else False
                 is_artwork_stream = lambda stream: True if \
-                        stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp') else False
+                        stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg') else False
 
                 audio_streams = [stream for stream in streams if is_audio_stream(stream)]
                 video_streams = [stream for stream in streams if \
@@ -192,6 +192,8 @@ class FFH:
                             'n={}'.format(noise_tolerance_amplitude_ratio),
                             ':d={}'.format(min_duration),
                             ' -f null - '))
+
+        # print(cmd)
         try:
             output, _ = run_cmd(cmd)
         except CmdProcessingError as e:
@@ -203,11 +205,11 @@ class FFH:
             SilenceEntry = namedtuple('SilenceEntry', ['silence_start', 'silence_end'])
             silence_entries = []
             for ss, se in zip(silence_starts, silence_ends):
-                silence_entries.append(SilenceEntry(ss, se))
+                silence_entries.append(SilenceEntry(float(ss), float(se)))
 
             if len(silence_entries) < len(silence_starts):
                 # matched silence at the end
-                silence_entries.append(SilenceEntry(silence_starts[-1], str(float(sys.maxsize))))
+                silence_entries.append(SilenceEntry(float(silence_starts[-1]), float(sys.maxsize)))
 
             return silence_entries
 

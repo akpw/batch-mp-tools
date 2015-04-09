@@ -22,6 +22,7 @@ from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.segment import Segmenter
+from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 
 class FFMPTests(FFMPTest):
     def setUp(self):
@@ -71,7 +72,6 @@ class FFMPTests(FFMPTest):
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes,
                                     serial_exec = self.serial_exec_mode,
                                     preserve_metadata = True,
-                                    #ff_other_options = FFmpegCommands.DISABLE_VIDEO,
                                     target_dir = self.target_dir)
 
         processed_media_entries = self._media_entries(src_dir = self.target_dir)
@@ -196,6 +196,45 @@ class FFMPTests(FFMPTest):
                                                       filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
         self._check_media_entries(orig_media_entries, processed_media_entries)
+
+
+    def test_silencesplit_audio(self):
+        #return
+        print('Splitting audio on silence')
+        orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_a',  filter_files = False)
+        self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
+
+        SilenceSplitter().silence_split(self.src_dir,
+                                include = 'bmfp_a', filter_files = False,
+                                serial_exec = self.serial_exec_mode,
+                                preserve_metadata = True,
+                                target_dir = self.target_dir,
+                                silence_min_duration = 0.1, silence_noise_tolerance_amplitude_ratio = 0.5)
+
+        processed_media_entries = self._media_entries(src_dir = self.target_dir,
+                                                      include = '*_0.*', filter_dirs = False)
+        self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
+        self._check_media_entries(orig_media_entries, processed_media_entries)
+
+    def test_silencesplit_video(self):
+        #return
+        print('Splitting video on silence')
+        orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp_v',  filter_files = False)
+        self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
+
+        SilenceSplitter().silence_split(self.src_dir,
+                                include = 'bmfp_v', filter_files = False,
+                                serial_exec = self.serial_exec_mode,
+                                preserve_metadata = True,
+                                target_dir = self.target_dir,
+                                silence_min_duration = 0.1, silence_noise_tolerance_amplitude_ratio = 0.5)
+
+        processed_media_entries = self._media_entries(src_dir = self.target_dir,
+                                                      include = '*_0.*',
+                                                      filter_dirs = False)
+        self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
+        self._check_media_entries(orig_media_entries, processed_media_entries)
+
 
 
     # Internal helpers

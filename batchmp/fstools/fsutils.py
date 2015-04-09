@@ -24,8 +24,8 @@ class UniqueDirNamesChecker:
         self._uname_gen = unique_fnames() if unique_fnames else FSH.unique_fnames()
 
         # init the generator function with file names from given source directory
-        fnames = [fname for fname in os.listdir(src_dir)
-                                            if os.path.isfile(os.path.join(src_dir, fname))]
+        fnames = [fname for fname in os.listdir(src_dir)]
+                                            #if os.path.isfile(os.path.join(src_dir, fname))]
         for fname in fnames:
             next(self._uname_gen)
             self._uname_gen.send(fname)
@@ -319,7 +319,7 @@ class DWalker:
                 if by_size:
                     sort_key = lambda fname: os.path.getsize(os.path.join(rpath,fname))
                 else:
-                    sort_key = lambda fname: fname
+                    sort_key = lambda fname: fname.lower()
                 fnames.sort(key = sort_key, reverse = reversed)
 
             for fname in fnames:
@@ -342,7 +342,7 @@ class DWalker:
             if by_size:
                 dirs_sort_key = lambda dname: FSH.dir_size(os.path.join(rpath, dname))
             else:
-                dirs_sort_key = lambda dname: dname
+                dirs_sort_key = lambda dname: dname.lower()
             dnames.sort(key = dirs_sort_key, reverse = reversed)
 
             for dname in dnames[:]:
@@ -380,7 +380,7 @@ class DWalker:
                 else:
                     # for sorting need to still derive basename from realpath
                     # as for flattened it might be different from entry.basename
-                    sort_key = lambda entry: os.path.basename(entry.realpath)
+                    sort_key = lambda entry: os.path.basename(entry.realpath).lower()
                 for entry in sorted(flattens, key = sort_key, reverse = reversed):
                     yield entry
 

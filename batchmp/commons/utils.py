@@ -60,6 +60,17 @@ def run_cmd(cmd, shell = False):
     return output
 
 
+class MiscHelpers:
+    @staticmethod
+    def int_num_digits(int_num):
+        ''' Number of digits in an int number
+        '''
+        num_digits = 1
+        while (int(abs(int_num)/(10**num_digits)) > 0):
+            num_digits += 1
+        return num_digits
+
+
 class ImageLoader:
     @staticmethod
     def load_image_from_url(url):

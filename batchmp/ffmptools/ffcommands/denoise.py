@@ -37,7 +37,7 @@ class DenoiserTask(FFMPRunnerTask):
         super().__init__(None, target_dir, ff_general_options, ff_other_options, preserve_metadata)
         self.fpath = fpath
 
-        # build ffmpeg -af parameter
+        # build ffmpeg '-af' parameter
         if highpass and lowpass:
             af_str = 'highpass=f={0}, lowpass=f={1}'.format(highpass, lowpass)
         elif lowpass:

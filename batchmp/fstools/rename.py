@@ -16,6 +16,7 @@ import os, re, datetime, string
 from collections import namedtuple
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
+from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 
@@ -82,9 +83,7 @@ class Renamer(object):
 
         # min digits helper
         def num_digits(num):
-            num_digits = 1
-            while (int(abs(num)/(10**num_digits)) > 0):
-                num_digits += 1
+            num_digits = MiscHelpers.int_num_digits(num)
             return max(num_digits, min_digits)
 
         join_str = str(join_str)

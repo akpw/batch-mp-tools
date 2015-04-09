@@ -40,6 +40,7 @@ class FFmpegCommands:
     # Segment
     SEGMENT = ' -f segment'
     SEGMENT_TIME = ' -segment_time'
+    SEGMENT_TIMES = ' -segment_times'
     SEGMENT_RESET_TIMESTAMPS = ' -reset_timestamps 1'
 
     @staticmethod

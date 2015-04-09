@@ -26,7 +26,7 @@
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
-          .. silencesplit   Splits media files by silence
+          .. silencesplit   Splits media files into segments via detecting specified silence
                                     $ bmfp silcencesplit
           .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
@@ -51,9 +51,9 @@
 
         Target output Directory     Target output directory. When omitted, will be
         [-td, --target-dir]         automatically created at the parent level of
-                                    input source directory. For recursive processing,
-                                    the processed files directory structure there will be
-                                    the same as for the original files.
+                                    the input source. For recursive processing,
+                                    the processed files directory structure there
+                                    will be the same as for the original files.
       FFmpeg General Output Options:
         [-ma, --map-all]            Force including all streams from the input file
         [-cc, --copy-codecs]        Copy streams codecs without re-encoding
@@ -70,12 +70,13 @@
         {print, convert, denoise, fragment, segment, silencesplit...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
-import sys
+import os, sys
 from datetime import timedelta
 from scripts.base.bmpbs import BMPBaseArgParser
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
+from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.output.formatters import OutputFormatType
@@ -98,7 +99,7 @@ class BMFPArgParser(BMPBaseArgParser):
         target_output_group.add_argument("-td", "--target-dir", dest = "target_dir",
                     type = lambda d: cls.is_valid_dir_path(parser, d),
                     help = "Target output directory. When omitted, will be automatically "
-                            "created at the parent level of input source directory. "
+                            "created at the parent level of the input source. "
                             "For recursive processing, the processed files directory structure there "
                             "will be the same as for the original files.")
 
@@ -214,7 +215,25 @@ class BMFPArgParser(BMPBaseArgParser):
                             "May not work well for some formats / combinations of muxers/codecs",
                     action='store_true')
 
-
+        # Silence Split
+        silencesplit_parser = subparsers.add_parser('silencesplit', description = 'Splits media files into segments via detecting specified silence')
+        silencesplit_group = silencesplit_parser.add_argument_group('Silence detection parameters')
+        silencesplit_group.add_argument('-md', '--min-duraiton', dest='min_duraiton',
+                help = 'Minimal silence duration, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
+                                                .format(SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS),
+                type = lambda md: cls.is_timedelta(parser, md),
+                default = timedelta(seconds = SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS))
+        silencesplit_group.add_argument('-nt', '--noise-tolerance', dest='noise_tolerance',
+                help = 'Silence noise tolerance, specified as amplitude ratio (default is {})' \
+                                                .format(SilenceSplitter.DEFAULT_SILENCE_NOISE_TOLERANCE),
+                type = float,
+                default = SilenceSplitter.DEFAULT_SILENCE_NOISE_TOLERANCE)
+        silencesplit_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
+                    help = "Reset timestamps at the begin of each segment, so that it "
+                            "starts with near-zero timestamps and therefore there are minimum pauses "
+                            "betweeen segments when played one after another. "
+                            "May not work well for some formats / combinations of muxers/codecs",
+                    action='store_true')
 
     @classmethod
     def default_command(cls, args, parser):
@@ -228,6 +247,12 @@ class BMFPArgParser(BMPBaseArgParser):
         '''
         # Global options check
         super().check_args(args, parser)
+
+        # if input source is a file, adjust the target directory
+        if args['file']:
+            if not args['target_dir']:
+                args['target_dir'] = os.path.dirname(args['file'])
+                print(args['target_dir'])
 
         # Compile FF global options
         ff_general_options = 0
@@ -332,6 +357,20 @@ class BMFPDispatcher:
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
+    def silence_split(args):
+        SilenceSplitter().silence_split(src_dir = args['dir'],
+                end_level = args['end_level'], quiet=args['quiet'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'],
+                serial_exec = args['serial_exec'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                preserve_metadata = args['preserve_metadata'],
+                reset_timestamps = args['reset_timestamps'],
+                silence_min_duration = args['min_duraiton'].total_seconds(),
+                silence_noise_tolerance_amplitude_ratio = args['noise_tolerance'])
+
+    @staticmethod
     def dispatch():
         ''' Dispatches BMFP commands
         '''
@@ -355,6 +394,8 @@ class BMFPDispatcher:
             BMFPDispatcher.fragment(args)
         elif args['sub_cmd'] == 'segment':
             BMFPDispatcher.segment(args)
+        elif args['sub_cmd'] == 'silencesplit':
+            BMFPDispatcher.silence_split(args)
 
 def main():
     ''' BMFP entry point

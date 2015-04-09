@@ -19,6 +19,7 @@ from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
+from batchmp.fstools.fsutils import UniqueDirNamesChecker
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 
@@ -121,9 +122,10 @@ class FFMPRunner(metaclass = ABCMeta):
         DEFAULT_TARGET_DIR_PREFIX = 'processed'
         if target_dir_prefix is None:
             target_dir_prefix = DEFAULT_TARGET_DIR_PREFIX
-        target_dir_name = '{0}_{1}_{2}'.format(os.path.basename(src_dir),
-                                                target_dir_prefix,
-                                                datetime.datetime.now().strftime("%y%b%d_%H%M%S"))
+        target_dir_name = '{0}_{1}'.format(os.path.basename(src_dir) if len(fpathes) > 1 else '',
+                                                target_dir_prefix)
+        target_dir_name = UniqueDirNamesChecker(src_dir).unique_name(target_dir_name)
+
         if target_dir is None:
             target_dir = os.path.join(os.path.dirname(src_dir), target_dir_name)
         else:

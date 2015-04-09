@@ -38,6 +38,7 @@ class ConvertorTask(FFMPRunnerTask):
         convert_options = convert_options or FFmpegCommands.CONVERT_COPY_VBR_QUALITY # default
         if convert_options == FFmpegCommands.CONVERT_LOSSLESS:
             # see if lossless is appropriate
+            # TBD: video formats
             if target_format == '.flac':
                 convert_options = FFmpegCommands.CONVERT_LOSSLESS_FLAC
             elif target_format == '.m4a':

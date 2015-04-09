@@ -14,7 +14,7 @@
 
 """ Batch splitting of media files
 """
-import shutil, sys, os, fnmatch
+import shutil, sys, os, math, fnmatch
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
@@ -25,7 +25,8 @@ from batchmp.ffmptools.ffutils import FFH
 from batchmp.commons.utils import (
     timed,
     run_cmd,
-    CmdProcessingError
+    CmdProcessingError,
+    MiscHelpers
 )
 
 class SegmenterTask(FFMPRunnerTask):
@@ -44,13 +45,18 @@ class SegmenterTask(FFMPRunnerTask):
             if not self.ff_other_options:
                 self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
 
-        # if needed, calculate segment duration via given file size
-        if not segment_length_secs and segment_size_MB:
-            split_factor = Segmenter._media_size_MB(self.fpath) / segment_size_MB
-            split_factor  = split_factor if split_factor > 1.11 else 1.11
-            segment_length_secs = Segmenter._media_duration(self.fpath) / split_factor
-
-        self.segment_length_secs = segment_length_secs
+        # calculate number of segments and, if needed, the segment length in secs
+        if segment_length_secs:
+            self.segment_length_secs = segment_length_secs
+            self.num_segments = math.ceil(Segmenter._media_duration(self.fpath) / segment_length_secs)
+        elif segment_size_MB:
+            num_segments = Segmenter._media_size_MB(self.fpath) / segment_size_MB
+            self.segment_length_secs = Segmenter._media_duration(self.fpath) / num_segments
+            self.num_segments = math.ceil(num_segments)
+        else:
+            # should not really get there, but just in case
+            raise ValueError('One of the command parameters needs to be specified: '\
+                                                    '<segment_size_MB | segment_length_secs>')
         self.reset_timestamps = reset_timestamps
 
     @property
@@ -74,13 +80,15 @@ class SegmenterTask(FFMPRunnerTask):
             # compile intermediary output path
             fn_parts = os.path.splitext(os.path.basename(self.fpath))
             fname_ext = fn_parts[1].strip().lower()
-            fpath_output = ''.join((fn_parts[0], '_%d', fname_ext))
+            fpath_output = ''.join((fn_parts[0],
+                                   '_%{}d'.format(MiscHelpers.int_num_digits(self.num_segments)),
+                                   fname_ext))
             fpath_output = os.path.join(tmp_dir, fpath_output)
 
             # build ffmpeg cmd string
             p_in = ''.join((self.ff_cmd, ' "{}"'.format(fpath_output)))
 
-            #print(p_in)
+            # print(p_in)
 
             # run ffmpeg command as a subprocess
             try:
@@ -117,7 +125,7 @@ class Segmenter(FFMPRunner):
 
     @staticmethod
     def _media_size_MB(fpath):
-        return os.path.getsize(fpath) / 1024**2
+        return os.path.getsize(fpath) / 1000**2
 
     def segment(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,

@@ -20,87 +20,122 @@ from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
-from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.ffmptools.ffutils import FFH
 from batchmp.commons.utils import (
     timed,
     run_cmd,
-    CmdProcessingError
+    CmdProcessingError,
+    MiscHelpers
 )
 
 class SilenceSplitterTask(FFMPRunnerTask):
     ''' Segment TasksProcessor task
     '''
+    DEFAULT_SILENCE_START_PADDING_IN_SECS = 2
+
     def __init__(self, fpath, target_dir,
-                            ff_global_options, ff_other_options, preserve_metadata,
+                            ff_general_options, ff_other_options, preserve_metadata,
                             reset_timestamps, silence_min_duration, silence_noise_tolerance_amplitude_ratio):
 
-        super().__init__(fpath, target_dir, ff_global_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
 
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
 
-        self.cmd = ''.join((self.cmd,
+            if not self.ff_other_options:
+                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
+
+        self.reset_timestamps = reset_timestamps
+        self.silence_min_duration = silence_min_duration
+        self.silence_noise_tolerance_amplitude_ratio = silence_noise_tolerance_amplitude_ratio
+
+    def ff_cmd(self, segment_start_times):
+        ''' Silence Splitter command builder
+        '''
+        return ''.join((super().ff_cmd,
                             FFmpegCommands.SEGMENT,
-                            ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIME, segment_length_secs),
-                            FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if reset_timestamps else ''))
-
-        # try to explicitly tell FFMpeg to preserve the original quality
-        self._FF_preserve_quality()
+                            ' {0} {1}'.format(FFmpegCommands.SEGMENT_TIMES, ','.join(segment_start_times)),
+                            FFmpegCommands.SEGMENT_RESET_TIMESTAMPS if self.reset_timestamps else ''))
 
     def execute(self):
         ''' builds and runs Segment FFmpeg command in a subprocess
         '''
-        # store tags if needed
-        self._store_tags()
 
         task_result = TaskResult()
 
-        with temp_dir() as tmp_dir:
-            # compile intermediary output path
-            fn_parts = os.path.splitext(os.path.basename(self.fpath))
-            fname_ext = fn_parts[1].strip().lower()
-            fpath_output = ''.join((fn_parts[0], '_%d', fname_ext))
-            fpath_output = os.path.join(tmp_dir, fpath_output)
+        segment_start_times, task_elapsed = self._segment_start_times()
+        task_result.add_task_step_duration(task_elapsed)
+        if not segment_start_times:
+            task_result.add_task_step_info_msg( \
+                                        'No silence detected in media file:\n\t{0}'.format(self.fpath))
+        else:
+            # store tags if needed
+            self._store_tags()
 
-            # build ffmpeg cmd string
-            p_in = ''.join((self.cmd,
-                            ' "{}"'.format(fpath_output)))
+            with temp_dir() as tmp_dir:
+                # compile intermediary output path
+                fn_parts = os.path.splitext(os.path.basename(self.fpath))
+                fname_ext = fn_parts[1].strip().lower()
+                fpath_output = ''.join((fn_parts[0],
+                                       '_%{}d'.format(MiscHelpers.int_num_digits(len(segment_start_times))),
+                                       fname_ext))
+                fpath_output = os.path.join(tmp_dir, fpath_output)
 
-            # run ffmpeg command as a subprocess
-            try:
-                _, task_elapsed = run_cmd(p_in)
-                task_result.add_task_step_duration(task_elapsed)
-            except CmdProcessingError as e:
-                task_result.add_task_step_info_msg('A problem while processing media file:\n\t{0}' \
-                                                                    '\nOriginal error message:\n\t{1}' \
-                                                                            .format(self.fpath, e.args[0]))
-            else:
-                # move split files to target directory
-                for segmented_fname in os.listdir(tmp_dir):
-                    if fnmatch.fnmatch(segmented_fname, '*{}'.format(fname_ext)):
-                        segmented_fpath = os.path.join(tmp_dir, segmented_fname)
+                # build ffmpeg cmd string
+                p_in = ''.join((self.ff_cmd(segment_start_times), ' "{}"'.format(fpath_output)))
 
-                        # restore tags if needed
-                        self._restore_tags(segmented_fpath)
+                # print(p_in)
 
-                        # move fragmented file to target dir
-                        shutil.move(segmented_fpath, self.target_dir)
+                # run ffmpeg command as a subprocess
+                try:
+                    _, task_elapsed = run_cmd(p_in)
+                    task_result.add_task_step_duration(task_elapsed)
+                except CmdProcessingError as e:
+                    task_result.add_task_step_info_msg('A problem while processing media file:\n\t{0}' \
+                                                                        '\nOriginal error message:\n\t{1}' \
+                                                                                .format(self.fpath, e.args[0]))
+                else:
+                    # move split files to target directory
+                    for segmented_fname in os.listdir(tmp_dir):
+                        if fnmatch.fnmatch(segmented_fname, '*{}'.format(fname_ext)):
+                            segmented_fpath = os.path.join(tmp_dir, segmented_fname)
+
+                            # restore tags if needed
+                            self._restore_tags(segmented_fpath)
+
+                            # move fragmented file to target dir
+                            shutil.move(segmented_fpath, self.target_dir)
 
         task_result.add_report_msg(self.fpath)
         return task_result
 
+    @timed
+    def _segment_start_times(self):
+        silence_entries = FFH.silence_detector(self.fpath,
+                         min_duration = self.silence_min_duration,
+                         noise_tolerance_amplitude_ratio = self.silence_noise_tolerance_amplitude_ratio)
+        segment_start_times = []
+        for silence_entry in silence_entries:
+            silence_padding = (silence_entry.silence_end - silence_entry.silence_start) / 2
+            if silence_padding > self.DEFAULT_SILENCE_START_PADDING_IN_SECS:
+                silence_padding = self.DEFAULT_SILENCE_START_PADDING_IN_SECS
 
-    def _segment_times():
-        pass
+            segment_start_times.append(str(silence_entry.silence_start + silence_padding))
 
-
+        return segment_start_times
 
 
 class SilenceSplitter(FFMPRunner):
+    DEFAULT_SILENCE_MIN_DURATION_IN_SECS = 2
+    DEFAULT_SILENCE_NOISE_TOLERANCE = 0.002
+
     def silence_split(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     target_dir = None,
-                    ff_global_options = None, ff_other_options = None,
+                    ff_general_options = None, ff_other_options = None,
                     reset_timestamps = False, preserve_metadata = False,
                     silence_min_duration = None, silence_noise_tolerance_amplitude_ratio = None):
         ''' Segment media file by specified size | duration
@@ -112,7 +147,7 @@ class SilenceSplitter(FFMPRunner):
                             silence_min_duration = silence_min_duration,
                             silence_noise_tolerance_amplitude_ratio = silence_noise_tolerance_amplitude_ratio,
                             serial_exec = serial_exec, target_dir = target_dir,
-                            ff_global_options = ff_global_options,
+                            ff_general_options = ff_general_options,
                             ff_other_options = ff_other_options,
                             reset_timestamps = reset_timestamps,
                             preserve_metadata = preserve_metadata)
@@ -125,13 +160,19 @@ class SilenceSplitter(FFMPRunner):
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     target_dir = None,
-                    ff_global_options = None, ff_other_options = None,
+                    ff_general_options = None, ff_other_options = None,
                     reset_timestamps = False, preserve_metadata = False,
                     silence_min_duration = None, silence_noise_tolerance_amplitude_ratio = None):
 
         ''' Perform segmentation by size | duration
         '''
         cpu_core_time = 0.0
+
+        # validate input values
+        if not silence_min_duration:
+            silence_min_duration = self.DEFAULT_SILENCE_MIN_DURATION_IN_SECS
+        if not silence_noise_tolerance_amplitude_ratio:
+            silence_noise_tolerance_amplitude_ratio = self.DEFAULT_SILENCE_NOISE_TOLERANCE
 
         media_files, target_dirs = self._prepare_files(src_dir,
                                         end_level = end_level,
@@ -144,7 +185,7 @@ class SilenceSplitter(FFMPRunner):
 
             # build tasks
             tasks_params = ((media_file, target_dir_path,
-                                ff_global_options, ff_other_options, preserve_metadata,
+                                ff_general_options, ff_other_options, preserve_metadata,
                                 reset_timestamps, silence_min_duration, silence_noise_tolerance_amplitude_ratio)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
             tasks = []
@@ -159,8 +200,12 @@ class SilenceSplitter(FFMPRunner):
         return cpu_core_time
 
 
-
-
+if __name__ == '__main__':
+    fpath = '/Users/AKPower/Desktop/_Rips/Chopin Etudes/12 Vladimir Ashkenazy - 12 Etudes Op. 25 - No. 11 in A minor, No. 12 in C minor.m4a'
+    silence_entries = FFH.silence_detector(fpath,
+                         min_duration = 120,
+                         noise_tolerance_amplitude_ratio = 0.001)
+    print(silence_entries)
 
 
 
