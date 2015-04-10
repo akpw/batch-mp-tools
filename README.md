@@ -131,7 +131,7 @@ To check on the result, lets's just use the [tagger](https://github.com/akpw/bat
     2 files, 4 folders
     Total size: 15.2MB
 ```
-From a brief glance, all looks OK and the tags seem to be preserved as well. As its default behaviour, BMFP also backed up the original file and replace it with the converted one.
+From a brief glance, all looks OK. BMFP used FFmpeg to do the actual conversion, while taking care of all other things like preserving tags / artwork, etc.
 
 I will follow up with more examples and common use-cases in future blogs.
 
