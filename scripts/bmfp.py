@@ -302,6 +302,10 @@ class BMFPArgParser(BMPBaseArgParser):
                     # takes priority over default settings or lossless
                     args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 
+            elif not args['convert_options'].startswith(' '):
+                # add a space if needed
+                args['convert_options'] = ' {}'.format(args['convert_options'])
+
 
 class BMFPDispatcher:
     ''' BMFP CLI commands Dispatcher
