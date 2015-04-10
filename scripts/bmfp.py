@@ -70,9 +70,10 @@
         {print, convert, denoise, fragment, segment, silencesplit, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
-import os, sys
+import os, sys,  argparse
 from datetime import timedelta
 from scripts.base.bmpbs import BMPBaseArgParser
+from batchmp.ffmptools.ffrunner import LogLevel
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
@@ -81,6 +82,7 @@ from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.output.formatters import OutputFormatType
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
+
 
 class BMFPArgParser(BMPBaseArgParser):
     ''' BMFP commands parsing
@@ -235,6 +237,13 @@ class BMFPArgParser(BMPBaseArgParser):
                             "May not work well for some formats / combinations of muxers/codecs",
                     action='store_true')
 
+        # Troubleshooting
+        parser.add_argument('-.ll', dest='log_level',
+            help=argparse.SUPPRESS,
+            type = int,
+            choices = [LogLevel.QUIET, LogLevel.FFMPEG, LogLevel.VERBOSE],
+            default = LogLevel.QUIET)
+
     @classmethod
     def default_command(cls, args, parser):
         super().default_command(args, parser)
@@ -313,7 +322,7 @@ class BMFPDispatcher:
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 serial_exec = args['serial_exec'],
-                target_dir = args['target_dir'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
                 target_format = args['target_format'], convert_options = args['convert_options'],
                 ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
@@ -324,7 +333,7 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
                 ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'])
@@ -335,7 +344,7 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
@@ -348,7 +357,7 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
@@ -362,7 +371,7 @@ class BMFPDispatcher:
                 end_level = args['end_level'], quiet=args['quiet'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
                 serial_exec = args['serial_exec'],
                 ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
                 preserve_metadata = args['preserve_metadata'],

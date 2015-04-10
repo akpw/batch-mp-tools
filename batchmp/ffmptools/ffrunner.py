@@ -13,6 +13,7 @@
 
 
 import os, sys, datetime, math
+from enum import IntEnum
 from abc import ABCMeta, abstractmethod
 from batchmp.commons.taskprocessor import Task
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
@@ -26,9 +27,11 @@ from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOpt
 class FFMPRunnerTask(Task):
     ''' Represents an abstract FFMP Runner task
     '''
-    def __init__(self, fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata):
+    def __init__(self, fpath, target_dir, log_level,
+                        ff_general_options, ff_other_options, preserve_metadata):
         self.fpath = fpath
         self.target_dir = target_dir
+        self.log_level = log_level
 
         self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(ff_general_options)
         self.ff_other_options = ff_other_options if ff_other_options else ''
@@ -58,6 +61,11 @@ class FFMPRunnerTask(Task):
                 handler.tag_holder.copy_tags(self.tag_holder)
                 handler.save()
 
+    def _log(self, msg, type):
+        if self.log_level and self.log_level >= type:
+            # quick log
+            print(msg)
+
     # FFmpeg command parts builders
     def _ff_cmd_exclude_artwork_streams(self):
         media_entry = FFH.media_file_info_full(self.fpath)
@@ -69,6 +77,12 @@ class FFMPRunnerTask(Task):
                     exclude_artworks_cmd = '{0} {1}'.format(exclude_artworks_cmd,
                                                             FFmpegCommands.exclude_input_stream(idx))
         return exclude_artworks_cmd
+
+
+class LogLevel(IntEnum):
+    QUIET = 0
+    FFMPEG = 1
+    VERBOSE = 2
 
 
 class FFMPRunner(metaclass = ABCMeta):

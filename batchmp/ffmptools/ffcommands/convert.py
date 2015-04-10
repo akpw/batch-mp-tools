@@ -16,7 +16,7 @@
 """
 import shutil, sys, os
 from batchmp.commons.utils import temp_dir
-from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
+from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
 from batchmp.commons.utils import (
@@ -28,11 +28,12 @@ from batchmp.commons.utils import (
 class ConvertorTask(FFMPRunnerTask):
     ''' Conversion TasksProcessor task
     '''
-    def __init__(self, fpath, target_dir,
+    def __init__(self, fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                                             target_format, convert_options):
 
-        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, log_level,
+                                ff_general_options, ff_other_options, preserve_metadata)
 
         # check convert options
         convert_options = convert_options or FFmpegCommands.CONVERT_COPY_VBR_QUALITY # default
@@ -70,8 +71,7 @@ class ConvertorTask(FFMPRunnerTask):
 
             # build ffmpeg cmd string
             p_in = ''.join((self.ff_cmd, ' "{}"'.format(conv_fpath)))
-
-            #print(p_in)
+            self._log(p_in, LogLevel.FFMPEG)
 
             # run ffmpeg command as a subprocess
             try:
@@ -97,7 +97,8 @@ class Convertor(FFMPRunner):
     def convert(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None, convert_options = None, target_dir = None,
+                    target_format = None, convert_options = None,
+                    target_dir = None, log_level = None,
                     ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
         ''' Converts media to specified format
@@ -107,7 +108,8 @@ class Convertor(FFMPRunner):
                                         include = include, exclude = exclude, quiet = quiet,
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_format = target_format, convert_options = convert_options,
-                                        serial_exec = serial_exec, target_dir = target_dir,
+                                        serial_exec = serial_exec,
+                                        target_dir = target_dir, log_level = log_level,
                                         ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
@@ -121,7 +123,7 @@ class Convertor(FFMPRunner):
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 target_format = None, convert_options = None, target_dir = None,
                 ff_general_options = None, ff_other_options = None,
-                preserve_metadata = False):
+                preserve_metadata = False, log_level = None):
 
         cpu_core_time = 0.0
 
@@ -144,7 +146,7 @@ class Convertor(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, target_dir_path,
+            tasks_params = ((media_file, target_dir_path, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                 target_format, convert_options)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))

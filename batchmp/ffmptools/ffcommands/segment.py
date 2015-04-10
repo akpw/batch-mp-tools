@@ -16,7 +16,7 @@
 """
 import shutil, sys, os, math, fnmatch
 from batchmp.commons.utils import temp_dir
-from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
+from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -32,11 +32,12 @@ from batchmp.commons.utils import (
 class SegmenterTask(FFMPRunnerTask):
     ''' Segment TasksProcessor task
     '''
-    def __init__(self, fpath, target_dir,
+    def __init__(self, fpath, target_dir, log_level,
                             ff_general_options, ff_other_options, preserve_metadata,
                             reset_timestamps, segment_size_MB, segment_length_secs):
 
-        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, log_level,
+                                ff_general_options, ff_other_options, preserve_metadata)
 
         if not self.ff_general_options:
             self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
@@ -87,8 +88,7 @@ class SegmenterTask(FFMPRunnerTask):
 
             # build ffmpeg cmd string
             p_in = ''.join((self.ff_cmd, ' "{}"'.format(fpath_output)))
-
-            # print(p_in)
+            self._log(p_in, LogLevel.FFMPEG)
 
             # run ffmpeg command as a subprocess
             try:
@@ -130,7 +130,8 @@ class Segmenter(FFMPRunner):
     def segment(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
+                    segment_size_MB = 0.0, segment_length_secs = 0.0,
+                    target_dir = None, log_level = None,
                     ff_general_options = None, ff_other_options = None,
                     reset_timestamps = False, preserve_metadata = False):
         ''' Segment media file by specified size | duration
@@ -141,7 +142,8 @@ class Segmenter(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         segment_size_MB = segment_size_MB,
                                         segment_length_secs = segment_length_secs,
-                                        serial_exec = serial_exec, target_dir = target_dir,
+                                        serial_exec = serial_exec,
+                                        target_dir = target_dir, log_level = log_level,
                                         ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         reset_timestamps = reset_timestamps,
@@ -154,7 +156,8 @@ class Segmenter(FFMPRunner):
     def run(self, src_dir,
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                segment_size_MB = 0.0, segment_length_secs = 0.0, target_dir = None,
+                segment_size_MB = 0.0, segment_length_secs = 0.0,
+                target_dir = None, log_level = None,
                 ff_general_options = None, ff_other_options = None,
                 reset_timestamps = False, preserve_metadata = False):
 
@@ -185,7 +188,7 @@ class Segmenter(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, target_dir_path,
+            tasks_params = ((media_file, target_dir_path, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                 reset_timestamps, segment_size_MB, segment_length_secs)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))

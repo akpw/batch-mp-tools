@@ -16,7 +16,7 @@
 """
 import shutil, sys, os
 from batchmp.commons.utils import temp_dir
-from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask
+from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
@@ -28,11 +28,12 @@ from batchmp.commons.utils import (
 class FragmenterTask(FFMPRunnerTask):
     ''' Fragment TasksProcessor task
     '''
-    def __init__(self, fpath, target_dir,
+    def __init__(self, fpath, target_dir, log_level,
                             ff_general_options, ff_other_options, preserve_metadata,
                             fragment_starttime, fragment_duration):
 
-        super().__init__(fpath, target_dir, ff_general_options, ff_other_options, preserve_metadata)
+        super().__init__(fpath, target_dir, log_level,
+                                ff_general_options, ff_other_options, preserve_metadata)
 
         if not self.ff_general_options:
             self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
@@ -67,8 +68,7 @@ class FragmenterTask(FFMPRunnerTask):
 
             # build ffmpeg cmd string
             p_in = '{0} "{1}"'.format(self.ff_cmd, fragmented_fpath)
-
-            #print(p_in)
+            self._log(p_in, LogLevel.FFMPEG)
 
             # run ffmpeg command as a subprocess
             try:
@@ -94,7 +94,7 @@ class Fragmenter(FFMPRunner):
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                     fragment_starttime = None, fragment_duration = None,
-                    target_dir = None,
+                    target_dir = None, log_level = None,
                     ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
         ''' Fragment media file by specified starttime & duration
@@ -106,7 +106,7 @@ class Fragmenter(FFMPRunner):
                                         fragment_starttime = fragment_starttime,
                                         fragment_duration = fragment_duration,
                                         serial_exec = serial_exec,
-                                        target_dir = target_dir,
+                                        target_dir = target_dir, log_level = log_level,
                                         ff_general_options = ff_general_options,
                                         ff_other_options = ff_other_options,
                                         preserve_metadata = preserve_metadata)
@@ -119,7 +119,7 @@ class Fragmenter(FFMPRunner):
                 end_level = sys.maxsize, include = None, exclude = None,
                 filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
                 fragment_starttime = None, fragment_duration = None,
-                target_dir = None,
+                target_dir = None, log_level = None,
                 ff_general_options = None, ff_other_options = None,
                 preserve_metadata = False):
 
@@ -138,7 +138,7 @@ class Fragmenter(FFMPRunner):
             print('{0} media files to process'.format(len(media_files)))
 
             # build tasks
-            tasks_params = ((media_file, target_dir_path,
+            tasks_params = ((media_file, target_dir_path, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                 fragment_starttime, fragment_duration)
                                     for media_file, target_dir_path in zip(media_files, target_dirs))
