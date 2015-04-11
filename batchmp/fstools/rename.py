@@ -340,6 +340,7 @@ class Renamer(object):
     @staticmethod
     def replace(src_dir,
                     find_str, replace_str, case_insensitive=False,
+                    include_extension = False,
                     end_level = 0,
                     sort = None, nested_indent = None,
                     include = None, exclude = None,
@@ -361,14 +362,14 @@ class Renamer(object):
             if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
                 return entry.basename
 
-            match = p.search(entry.basename)
+            name_base, name_ext = os.path.splitext(entry.basename)
+            match = p.search(entry.basename if include_extension else name_base)
             if match:
-                name_base, name_ext = os.path.splitext(entry.basename)
                 if replace_str is not None:
-                    name_base = p.sub(replace_str, name_base)
+                    res = p.sub(replace_str, entry.basename if include_extension else name_base)
                 else:
-                    name_base = match.group()
-                return '{0}{1}'.format(name_base, name_ext)
+                    res = match.group()
+                return '{0}{1}'.format(res, '' if include_extension else name_ext)
             else:
                 return entry.basename
 

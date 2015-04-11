@@ -195,6 +195,9 @@ class RenameArgParser(BMPBaseArgParser):
         replace_parser.add_argument('-ic', '--ignore-case', dest = 'ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')
+        replace_parser.add_argument('-ie', '--include-extension', dest = 'include_extension',
+                help = 'Include file extension',
+                action = 'store_true')
         add_include_mode_group(replace_parser)
         cls.add_arg_display_curent_state_mode(replace_parser)
 
@@ -316,6 +319,7 @@ class RenameDispatcher:
                 find_str = args['find_str'],
                 replace_str = args['replace_str'] if 'replace_str' in args else None,
                 case_insensitive = args['ignore_case'],
+                include_extension = args['include_extension'],
                 end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
