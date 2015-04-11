@@ -11,6 +11,7 @@ A rainy weekends project under occasional development :)
 
 ####Blogs:
 - [Practical BatchMP Tools, Part I](http://arseniy.drupalgardens.com/content/practical-batchmp-tools-part-i)
+- [Practical BatchMP Tools, Part II](http://arseniy.drupalgardens.com/content/practical-batchmp-tools-part-ii)
 - [The BatchMP Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)
 
