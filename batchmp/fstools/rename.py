@@ -66,7 +66,8 @@ class Renamer(object):
     '''
     @staticmethod
     def add_index(src_dir, as_prefix = False, join_str = '_',
-                            start_from = 1, min_digits = 1, sequential = False,
+                            start_from = 1, min_digits = 1,
+                            sequential = False, by_directory = False,
                             end_level = 0,
                             sort = None, nested_indent = None,
                             include = None, exclude = None,
@@ -87,7 +88,7 @@ class Renamer(object):
             return max(num_digits, min_digits)
 
         join_str = str(join_str)
-        if sequential:
+        if (sequential or by_directory):
             # for sequential indexing, just use counters
             dirs_cnt = files_cnt = start_from
             total_files, total_dirs, _ = DHandler.dir_stats(src_dir = src_dir, end_level = 0,
@@ -99,13 +100,20 @@ class Renamer(object):
                     addition = str(dirs_cnt).zfill(num_digits(total_dirs))
 
                     # update the dirs counter
-                    dirs_cnt = +1
+                    dirs_cnt += 1
 
                 elif entry.type == DWalker.ENTRY_TYPE_FILE:
-                    addition = str(files_cnt).zfill(num_digits(total_files))
+                    if by_directory:
+                        # indexing via adding respective directory counter
+                        fcnt = dirs_cnt - 1
+                        # do nothing for root files
+                        if fcnt >= 0:
+                            addition = str(fcnt).zfill(num_digits(total_files))
+                    else:
+                        addition = str(files_cnt).zfill(num_digits(total_files))
 
-                    # need to update the files counter
-                    files_cnt += 1
+                        # need to update the files counter
+                        files_cnt += 1
 
                 return addition
         else:
@@ -135,18 +143,21 @@ class Renamer(object):
                 return addition
 
         # set the index function
-        index_function = index_sequential if sequential else index_multilevel
+        index_function = index_sequential if (sequential or by_directory) else index_multilevel
         def add_index_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
-                return entry.basename
-
             addition = None
-            if entry.type == DWalker.ENTRY_TYPE_DIR:
+            # src dir
+            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+                pass
+            # dirs
+            elif entry.type == DWalker.ENTRY_TYPE_DIR:
                 if not include_dirs:
+                    if by_directory:
+                        # here still need to update dirs counter
+                        index_function(entry)
                     return entry.basename
                 else:
                     addition = index_function(entry)
-
             # files
             elif entry.type == DWalker.ENTRY_TYPE_FILE:
                 if not include_files:
@@ -171,7 +182,7 @@ class Renamer(object):
                                     formatter = add_index_transform, display_current = display_current)
         if proceed:
             # reset counters
-            if sequential:
+            if (sequential or by_directory):
                 dirs_cnt = files_cnt = start_from
             else:
                 dir_info.reset_counters()

@@ -119,9 +119,15 @@ class RenameArgParser(BMPBaseArgParser):
                 help = 'A number from which the indexing starts (1 by default)',
                 type = int,
                 default = 1)
-        add_index_parser.add_argument('-sq', '--sequential', dest = 'sequential',
+
+        add_index_type_group = add_index_parser.add_mutually_exclusive_group()
+        add_index_type_group.add_argument('-sq', '--sequential', dest = 'sequential',
                 help = 'Index selected files sequentially. ' \
-                       'If omitted, the files will instead be indexed per their respective parent directory (multi-level indexing)',
+                       'If omitted, the files will instead be indexed within their respective directories (multi-level indexing)',
+                action = 'store_true')
+        add_index_type_group.add_argument('-bd', '--by-directory', dest = 'by_directory',
+                help = 'Index selected files via adding their respective directory counter. ' \
+                       'If omitted, the files will instead be indexed within their respective directories (multi-level indexing)',
                 action = 'store_true')
         add_index_parser.add_argument('-as', '--as-suffix', dest = 'as_suffix',
                 help = 'Add index at the end of file names',
@@ -271,7 +277,8 @@ class RenameDispatcher:
                 sort = args['sort'], nested_indent = args['nested_indent'],
                 as_prefix = not args['as_suffix'], join_str = args['join_str'],
                 start_from = args['start_from'], min_digits = args['min_digits'],
-                sequential = args['sequential'], end_level = args['end_level'],
+                sequential = args['sequential'], by_directory = args['by_directory'],
+                end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
