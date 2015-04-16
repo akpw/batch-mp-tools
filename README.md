@@ -185,13 +185,13 @@ I will follow up with more examples and common use-cases in future blogs.
         $ renamer {command} -h  #run this for detailed help on individual commands
 
 ###tagger
-##### Supported formats:
+###### Supported formats:
 'MP3', 'MP4', 'M4A', M4V', 'AIFF', 'ASF', 'QuickTime / MOV',
 'FLAC', 'MonkeysAudio', 'Musepack',
 'Ogg FLAC', 'Ogg Speex', 'Ogg Theora', 'Ogg Vorbis',
-'True Audio', 'WavPack', 'OptimFROG'
-
+'True Audio', 'WavPack', 'OptimFROG' <p>
 Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
+
     Batch management of media files metadata (tags & artwork)
       . source directory / source file modes
       . visualises original / targeted files metadata structure
