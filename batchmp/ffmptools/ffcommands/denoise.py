@@ -16,10 +16,10 @@
     via filtering out highpass / low-pass frequencies
     Supports multi-passes processing, e.g. 3 times for each media file
 """
-import shutil, sys, os, datetime, math
+import shutil, sys, os, datetime, math, shlex
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
-from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.commons.taskprocessor import TaskResult
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
     timed,
@@ -65,10 +65,10 @@ class DenoiserTask(FFMPRunnerTask):
 
         return ''.join(('ffmpeg',
                             FFmpegCommands.LOG_LEVEL_ERROR,
-                            ' -i "{}"'.format(fpath),
+                            ' -i {}'.format(shlex.quote(fpath)),
                             self.ff_general_options if apply_options else '',
                             self.ff_other_options if apply_options else '',
-                            ' -af "{}"'.format(self.af_str)))
+                            ' -af {}'.format(shlex.quote(self.af_str))))
 
     def execute(self):
         ''' builds and runs Denoise command in a subprocess
@@ -93,7 +93,7 @@ class DenoiserTask(FFMPRunnerTask):
                                         fname_ext))
                 fpath_output = os.path.join(tmp_dir, fpath_output)
 
-                p_in = '{0} "{1}"'.format(self.ff_denoise_cmd(fpath_input, pass_cnt), fpath_output)
+                p_in = '{0} {1}'.format(self.ff_denoise_cmd(fpath_input, pass_cnt), shlex.quote(fpath_output))
                 self._log(p_in, LogLevel.FFMPEG)
 
                 # run ffmpeg command as a subprocess
@@ -116,6 +116,9 @@ class DenoiserTask(FFMPRunnerTask):
 
                     # move denoised file to target dir
                     shutil.move(fpath_output, os.path.join(self.target_dir, fname))
+
+                    # all well
+                    task_result.succeeded = True
                 else:
                     # for the next pass, just make the intermediary output new input
                     fpath_input = fpath_output
@@ -124,10 +127,14 @@ class DenoiserTask(FFMPRunnerTask):
         return task_result
 
 class Denoiser(FFMPRunner):
+    DEFAULT_HIGHPASS = 200
+    DEFAULT_LOWPASS = 3000
+    DEFAULT_NUM_PASSES = 1
+
     def apply_af_filters(self, src_dir,
                             end_level = sys.maxsize, include = None, exclude = None,
                             filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                            num_passes = 1, highpass = None, lowpass = None,
+                            num_passes = None, highpass = None, lowpass = None,
                             target_dir = None, log_level = None,
                             ff_general_options = None, ff_other_options = None,
                             preserve_metadata = False):
@@ -135,35 +142,12 @@ class Denoiser(FFMPRunner):
         ''' Reduce of background audio noise in media files
             via filtering out highpass / low-pass frequencies
         '''
-        cpu_core_time, total_elapsed = self.run(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        quiet = quiet, num_passes = num_passes, serial_exec = serial_exec,
-                                        highpass = highpass, lowpass = lowpass,
-                                        target_dir = target_dir, log_level = log_level,
-                                        ff_general_options = ff_general_options,
-                                        ff_other_options = ff_other_options,
-                                        preserve_metadata = preserve_metadata)
-        # print run report
-        if not quiet:
-            self.run_report(cpu_core_time, total_elapsed)
-
-    @timed
-    def run(self, src_dir,
-                end_level = sys.maxsize, include = None, exclude = None,
-                filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                num_passes = 1, highpass = None, lowpass = None, target_dir = None, log_level = None,
-                ff_general_options = None, ff_other_options = None,
-                preserve_metadata = False):
-
-        ''' Applies low-pass / highpass filters
-        '''
-        cpu_core_time = 0.0
-
-        # validate filter values
-        if not highpass and not lowpass:
-            return cpu_core_time
+        if not highpass:
+            highpass = self.DEFAULT_HIGHPASS
+        if not lowpass:
+            highpass = self.DEFAULT_LOWPASS
+        if not num_passes:
+            highpass = self.DEFAULT_NUM_PASSES
 
         media_files, target_dirs = self._prepare_files(src_dir,
                                         end_level = end_level,
@@ -171,23 +155,21 @@ class Denoiser(FFMPRunner):
                                         filter_dirs = filter_dirs, filter_files = filter_files,
                                         target_dir = target_dir, target_dir_prefix = 'denoised')
 
-        if len(media_files) > 0:
-            print('{0} media files to process, ({1} {2} each)'.format(
-                                                    len(media_files), num_passes,
-                                                   'passes' if num_passes > 1 else 'pass'))
-            # build tasks
-            tasks_params = ((media_file, target_dir_path, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata,
-                                highpass, lowpass, num_passes)
-                                    for media_file, target_dir_path in zip(media_files, target_dirs))
-            tasks = []
-            for task_param in tasks_params:
-                task = DenoiserTask(*task_param)
-                tasks.append(task)
+        msg = None if len(media_files) == 0 else \
+                                '{0} media files to process, ({1} {2} each)'.format(
+                                                            len(media_files), num_passes,
+                                                           'passes' if num_passes > 1 else 'pass')
+        # build tasks
+        tasks = []
+        tasks_params = [(media_file, target_dir_path, log_level,
+                            ff_general_options, ff_other_options, preserve_metadata,
+                            highpass, lowpass, num_passes)
+                                for media_file, target_dir_path in zip(media_files, target_dirs)]
+        for task_param in tasks_params:
+            task = DenoiserTask(*task_param)
+            tasks.append(task)
 
-            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
-        else:
-            print('No media files to process')
+        # run tasks
+        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
 
-        return cpu_core_time
 

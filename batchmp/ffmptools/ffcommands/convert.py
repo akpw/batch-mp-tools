@@ -14,10 +14,10 @@
 
 """ Batch Conversion of media files
 """
-import shutil, sys, os
+import shutil, sys, os, shlex
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
-from batchmp.commons.taskprocessor import TasksProcessor, TaskResult
+from batchmp.commons.taskprocessor import TaskResult
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
 from batchmp.commons.utils import (
     timed,
@@ -70,7 +70,7 @@ class ConvertorTask(FFMPRunnerTask):
             conv_fpath = os.path.join(tmp_dir, conv_fname)
 
             # build ffmpeg cmd string
-            p_in = ''.join((self.ff_cmd, ' "{}"'.format(conv_fpath)))
+            p_in = ''.join((self.ff_cmd, ' {}'.format(shlex.quote(conv_fpath))))
             self._log(p_in, LogLevel.FFMPEG)
 
             # run ffmpeg command as a subprocess
@@ -88,8 +88,10 @@ class ConvertorTask(FFMPRunnerTask):
                 # move converted file to target dir
                 shutil.move(conv_fpath, self.target_dir)
 
-        task_result.add_report_msg(self.fpath)
+                # all well
+                task_result.succeeded = True
 
+        task_result.add_report_msg(self.fpath)
         return task_result
 
 
@@ -101,64 +103,34 @@ class Convertor(FFMPRunner):
                     target_dir = None, log_level = None,
                     ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
+
         ''' Converts media to specified format
         '''
-        cpu_core_time, total_elapsed = self.run(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude, quiet = quiet,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        target_format = target_format, convert_options = convert_options,
-                                        serial_exec = serial_exec,
-                                        target_dir = target_dir, log_level = log_level,
-                                        ff_general_options = ff_general_options,
-                                        ff_other_options = ff_other_options,
-                                        preserve_metadata = preserve_metadata)
-        # print run report
-        if not quiet:
-            self.run_report(cpu_core_time, total_elapsed)
+        tasks = []
+        if target_format:
+            if target_format.startswith('.'):
+                target_dir_prefix = '{}'.format(target_format[1:])
+            else:
+                target_dir_prefix = '{}'.format(target_format)
+                target_format = '.{}'.format(target_format)
 
-    @timed
-    def run(self, src_dir,
-                end_level = sys.maxsize, include = None, exclude = None,
-                filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                target_format = None, convert_options = None, target_dir = None,
-                ff_general_options = None, ff_other_options = None,
-                preserve_metadata = False, log_level = None):
-
-        cpu_core_time = 0.0
-
-        # validate input values
-        if not target_format:
-            return cpu_core_time
-
-        if target_format.startswith('.'):
-            target_dir_prefix = '{}'.format(target_format[1:])
-        else:
-            target_dir_prefix = '{}'.format(target_format)
-            target_format = '.{}'.format(target_format)
-
-        media_files, target_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        target_dir = target_dir, target_dir_prefix = target_dir_prefix)
-        if len(media_files) > 0:
-            print('{0} media files to process'.format(len(media_files)))
-
+            media_files, target_dirs = self._prepare_files(src_dir,
+                                            end_level = end_level,
+                                            include = include, exclude = exclude,
+                                            filter_dirs = filter_dirs, filter_files = filter_files,
+                                            target_dir = target_dir, target_dir_prefix = target_dir_prefix)
             # build tasks
-            tasks_params = ((media_file, target_dir_path, log_level,
+            tasks_params = [(media_file, target_dir_path, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                 target_format, convert_options)
-                                    for media_file, target_dir_path in zip(media_files, target_dirs))
-            tasks = []
+                                    for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
                 task = ConvertorTask(*task_param)
                 tasks.append(task)
 
-            cpu_core_time = TasksProcessor().process_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
-        else:
-            print('No media files to process')
+        # run tasks
+        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
 
-        return cpu_core_time
+
 
 

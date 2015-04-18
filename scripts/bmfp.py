@@ -176,16 +176,16 @@ class BMFPArgParser(BMPBaseArgParser):
         denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
                 help = 'Applies filters in multiple passes',
                 type = int,
-                default = 1)
+                default = Denoiser.DEFAULT_NUM_PASSES)
         group = denoise_parser.add_argument_group('Pass Filters')
         group.add_argument("-hp", "--highpass", dest='highpass',
                     help = "Cutoff boundary for lower frequencies",
                     type = int,
-                    default = 200)
+                    default = Denoiser.DEFAULT_HIGHPASS)
         group.add_argument("-lp", "--lowpass", dest='lowpass',
                     help = "Cutoff boundary for higher frequencies",
                     type = int,
-                    default = 3000)
+                    default = Denoiser.DEFAULT_LOWPASS)
 
         # Fragment
         fragment_parser = subparsers.add_parser('fragment', description = 'Extracts a fragment via specified start time & duration')

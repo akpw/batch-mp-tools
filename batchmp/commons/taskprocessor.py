@@ -15,6 +15,7 @@
 import copyreg, types, datetime, math, multiprocessing
 from abc import ABCMeta, abstractmethod
 from batchmp.commons.progressbar import progress_bar
+from batchmp.commons.utils import timed
 
 
 class Task(metaclass = ABCMeta):
@@ -24,12 +25,14 @@ class Task(metaclass = ABCMeta):
     def execute(self):
         return TaskResult()
 
+
 class TaskResult:
     ''' TasksProcessor Task result
     '''
     def __init__(self):
         self._task_steps_info_msgs = []
         self._task_steps_durations = []
+        self._succeeded = False
 
     def add_task_step_duration(self, step_duration):
         self._task_steps_durations.append(step_duration)
@@ -38,9 +41,18 @@ class TaskResult:
         self._task_steps_info_msgs.append(step_info_msg)
 
     def add_report_msg(self, processed_fpath):
-        td = datetime.timedelta(seconds = math.ceil(self.task_duration * 100)/100)
+        task_duration_str = str(datetime.timedelta(seconds = math.ceil(self.task_duration * 100)/100)).rstrip('0')
+        if task_duration_str.endswith(':'):
+            task_duration_str = '{}00'.format(task_duration_str)
         self.add_task_step_info_msg('Done processing\n {0}\n in {1}'.format(
-                                                        processed_fpath, str(td).rstrip('0')))
+                                                        processed_fpath, task_duration_str))
+    @property
+    def succeeded(self):
+         return self._succeeded
+    @succeeded.setter
+    def succeeded(self, value):
+        self._succeeded = value
+
     @property
     def task_output(self):
         task_output = None
@@ -66,13 +78,14 @@ class TasksProcessor:
         result = task.execute()
         return result
 
+    @timed
     def process_tasks(self, tasks_queue, serial_exec = False, num_workers = None, quiet = False):
+        tasks_results = []
         cpu_core_time = 0.0
+
         num_tasks = len(tasks_queue)
         serial_exec = serial_exec or num_tasks == 1
         if num_tasks > 0:
-            tasks_done = 0
-
             # Pre-processing msgs
             if serial_exec:
                 print('Processing {0} {1}'.format(num_tasks,
@@ -84,27 +97,27 @@ class TasksProcessor:
 
             # start showing progress
             with progress_bar() as p_bar:
-                def _show_progress():
-                    nonlocal cpu_core_time, tasks_done
+                def _make_progress(result):
+                    nonlocal cpu_core_time
+                    tasks_results.append(result)
                     if not quiet:
                         p_bar.info_msg = result.task_output
                     cpu_core_time += result.task_duration
-                    tasks_done += 1
-                    p_bar.progress = tasks_done / num_tasks * 100
+                    p_bar.progress = len(tasks_results) / num_tasks * 100
 
                 if serial_exec:
                     # just loop through the queue of tasks
                     for task in tasks_queue:
                         result = self._process_task(task)
-                        _show_progress()
+                        _make_progress(result)
                 else:
                     # init the pool and kick it off
                     with multiprocessing.Pool(num_workers) as pool:
                         for result in pool.imap_unordered(self._process_task, tasks_queue):
-                            _show_progress()
+                            _make_progress(result)
 
-        # return overall time spent by the cpu cores
-        return cpu_core_time
+        # return tasks results, aggregate CPU cores time, and total time elapsed (via @timed)
+        return tasks_results, cpu_core_time
 
 
 """

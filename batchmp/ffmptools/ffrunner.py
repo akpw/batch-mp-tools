@@ -12,10 +12,9 @@
 ## GNU General Public License for more details.
 
 
-import os, sys, datetime, math
+import os, sys, datetime, math, shlex
 from enum import IntEnum
-from abc import ABCMeta, abstractmethod
-from batchmp.commons.taskprocessor import Task
+from batchmp.commons.taskprocessor import Task, TasksProcessor
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
@@ -44,7 +43,7 @@ class FFMPRunnerTask(Task):
         '''
         return ''.join(('ffmpeg',
                             FFmpegCommands.LOG_LEVEL_ERROR,
-                            ' -i "{}"'.format(self.fpath),
+                            ' -i {}'.format(shlex.quote(self.fpath)),
                             self.ff_general_options,
                             self.ff_other_options))
     # Helpers
@@ -85,25 +84,47 @@ class LogLevel(IntEnum):
     VERBOSE = 2
 
 
-class FFMPRunner(metaclass = ABCMeta):
+class FFMPRunner:
     ''' Base FFMPRunner
     '''
     def __init__(self):
         if not FFH.ffmpeg_installed():
             raise FFmpegNotInstalled
 
-    @abstractmethod
-    def run(self, *args, **kwargs):
-        pass
+    def run_tasks(self, tasks, msg = None, serial_exec = False, quiet = False):
+        if tasks and len(tasks) > 0:
+            print('{0} media files to process'.format(len(tasks)) if msg is None else msg)
 
-    def run_report(self, cpu_core_time, total_elapsed):
+            (tasks_results, cpu_core_time), total_elapsed = TasksProcessor().process_tasks(tasks,
+                                                                            serial_exec = serial_exec,
+                                                                            quiet = quiet)
+            # print run report
+            if not quiet:
+                self.run_report(tasks_results, cpu_core_time, total_elapsed)
+        else:
+            print('No media files to process')
+
+
+    def run_report(self, tasks_results, cpu_core_time, total_elapsed):
         ''' Info summary on executed FFMP commands
         '''
-        ttd = datetime.timedelta(seconds = math.ceil(total_elapsed*100)/100)
-        ctd = datetime.timedelta(seconds = math.ceil(cpu_core_time*100)/100)
+        succeeded = sum(1 for result in tasks_results if result.succeeded)
+        failed = sum(1 for result in tasks_results if not result.succeeded)
 
-        print('Total running time: {}'.format(str(ttd).rstrip('0')))
-        print('Cumulative FFmpeg CPU Cores time: {}'.format(str(ctd).rstrip('0')))
+        total_elapsed_str = str(datetime.timedelta(seconds = math.ceil(total_elapsed*100)/100)).rstrip('0')
+        if total_elapsed_str.endswith(':'):
+            total_elapsed_str = '{}00'.format(total_elapsed_str)
+        cpu_core_time_str = str(datetime.timedelta(seconds = math.ceil(cpu_core_time*100)/100)).rstrip('0')
+        if cpu_core_time_str.endswith(':'):
+            cpu_core_time_str = '{}00'.format(cpu_core_time_str)
+
+        num_tasks = len(tasks_results)
+        print('Finished running {0} task{1} '\
+                        '(Succeeded: {2}, Failed: {3})'.format(num_tasks,
+                                                            '' if num_tasks == 1 else 's',
+                                                            succeeded, failed))
+        print('Total running time: {}'.format(total_elapsed_str))
+        print('Cumulative FFmpeg CPU Cores time: {}'.format(cpu_core_time_str))
 
 
     ## Internal helpers
@@ -133,17 +154,19 @@ class FFMPRunner(metaclass = ABCMeta):
     def _setup_target_dirs(src_dir, *,
                             target_dir = None, target_dir_prefix = None,
                             fpathes = None):
+        # check inputs
+        # target dir prefix
         DEFAULT_TARGET_DIR_PREFIX = 'processed'
         if target_dir_prefix is None:
             target_dir_prefix = DEFAULT_TARGET_DIR_PREFIX
-        target_dir_name = '{0}_{1}'.format(os.path.basename(src_dir) if len(fpathes) > 1 else '',
-                                                target_dir_prefix)
-        target_dir_name = UniqueDirNamesChecker(src_dir).unique_name(target_dir_name)
-
+        # target dir
         if target_dir is None:
-            target_dir = os.path.join(os.path.dirname(src_dir), target_dir_name)
-        else:
-            target_dir = os.path.join(target_dir, target_dir_name)
+            target_dir = os.path.dirname(src_dir)
+
+        # target path (within the target dir)
+        target_dir_name = '{0}_{1}'.format(os.path.basename(src_dir), target_dir_prefix)
+        target_dir_name = UniqueDirNamesChecker(target_dir).unique_name(target_dir_name)
+        target_path_dir = os.path.join(target_dir, target_dir_name)
 
         # target dirs
         target_dirs = []
@@ -154,11 +177,10 @@ class FFMPRunner(metaclass = ABCMeta):
             elif relpath.endswith('{}'.format(os.path.curdir)):
                 relpath = relpath[:-1]
 
-            target_path = os.path.join(target_dir, relpath)
+            target_path = os.path.join(target_path_dir, relpath)
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
             target_dirs.append(target_path)
 
         return target_dirs
-
 

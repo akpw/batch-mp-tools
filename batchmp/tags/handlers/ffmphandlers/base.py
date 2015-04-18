@@ -16,7 +16,7 @@
 
 """ FFmpeg generic handler (no format-related specifics)
 """
-import os
+import os, shlex
 from batchmp.commons.chainedhandler import ChainedHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.commons.utils import temp_dir
@@ -177,8 +177,8 @@ class FFBaseFormatHandler(ChainedHandler):
 
         cmd = ''.join(('ffmpeg ',
                         ' -v quiet',
-                        ' -i "{}"'.format(self.media_entry.path),
-                        ' -i "{}"'.format(art_path) if art_path else '',
+                        ' -i {}'.format(shlex.quote(self.media_entry.path)),
+                        ' -i {}'.format(shlex.quote(art_path)) if art_path else '',
                         ' -c copy',
                         ' -map_metadata 0',
                         ' -map 0',
@@ -226,7 +226,7 @@ class FFBaseFormatHandler(ChainedHandler):
                 detached_img_path = os.path.join(tmp, 'detached.png')
                 cmd = ' '.join(('ffmpeg',
                                     ' -v quiet',
-                                    ' -i "{}"'.format(self.media_entry.path),
+                                    ' -i {}'.format(shlex.quote(self.media_entry.path)),
                                     ' -map 0:{}'.format(artwork_stream_idx),
                                     ' -an',
                                     ' -vcodec copy',

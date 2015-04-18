@@ -122,7 +122,7 @@ class FFH:
                             #' -select_streams a',
                             ' -show_format',
                             ' -print_format json',
-                            ' "{}"'.format(fpath)))
+                            ' {}'.format(shlex.quote(fpath))))
         try:
             output, _ = run_cmd(cmd)
         except CmdProcessingError as e:
@@ -164,16 +164,16 @@ class FFH:
                     start_level = 0, end_level = sys.maxsize,
                     include = None, exclude = None,
                     filter_dirs = True, filter_files = True, pass_filter = None):
-        """ Return a generator of media files that are supported by FFmpeg
+        """ Return a list of media files that are supported by FFmpeg
         """
         if not pass_filter:
             pass_filter = lambda fpath: FFH.supported_media(fpath)
 
-        media_files = (entry.realpath for entry in fsutils.DWalker.file_entries(src_dir,
+        media_files = [entry.realpath for entry in fsutils.DWalker.file_entries(src_dir,
                                                         start_level = start_level, end_level = end_level,
                                                         include = include, exclude = exclude,
                                                         filter_dirs = filter_dirs, filter_files = filter_files,
-                                                        pass_filter = pass_filter))
+                                                        pass_filter = pass_filter)]
         return media_files
 
     @staticmethod
@@ -187,7 +187,7 @@ class FFH:
             return None
 
         cmd = ''.join(('ffmpeg',
-                            ' -i "{}"'.format(fpath),
+                            ' -i {}'.format(shlex.quote(fpath)),
                             ' -af silencedetect=',
                             'n={}'.format(noise_tolerance_amplitude_ratio),
                             ':d={}'.format(min_duration),

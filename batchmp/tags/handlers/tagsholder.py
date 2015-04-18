@@ -20,7 +20,6 @@ from batchmp.commons.descriptors import (
         PropertyDescriptor,
         LazyFunctionPropertyDescriptor,
         FunctionPropertyDescriptor,
-        BooleanPropertyDescriptor,
         WeakMethodPropertyDescriptor)
 
 
