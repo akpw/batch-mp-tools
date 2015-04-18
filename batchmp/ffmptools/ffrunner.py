@@ -123,8 +123,8 @@ class FFMPRunner:
                         '(Succeeded: {2}, Failed: {3})'.format(num_tasks,
                                                             '' if num_tasks == 1 else 's',
                                                             succeeded, failed))
-        print('Total running time: {}'.format(total_elapsed_str))
         print('Cumulative FFmpeg CPU Cores time: {}'.format(cpu_core_time_str))
+        print('Total running time: {}'.format(total_elapsed_str))
 
 
     ## Internal helpers
