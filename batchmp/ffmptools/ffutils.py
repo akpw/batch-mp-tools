@@ -29,31 +29,32 @@ class FFmpegNotInstalled(Exception):
     @property
     def default_message(self):
         windows_instructions =  '''
-        Installing FFmpeg on Windows:
-            http://www.renevolution.com/how-to-get-ffmpeg-for-windows/
-            http://www.wikihow.com/Install-FFmpeg-on-Windows
+            Installing on Windows:
+                http://www.wikihow.com/Install-FFmpeg-on-Windows
+                http://www.renevolution.com/how-to-get-ffmpeg-for-windows/
                                 '''
         macos_instructions =    '''
-        Installing FFmpeg on Mac OS X:
-            http://www.renevolution.com/how-to-install-ffmpeg-on-mac-os-x/
+            Installing on Mac OS X:
+                http://www.renevolution.com/how-to-install-ffmpeg-on-mac-os-x/
                                 '''
         linux_instructions =    '''
-        Installing FFmpeg on Ubuntu and Debian:
-            $ sudo apt-get update
-            $ sudo apt-get install ffmpeg
+            Installing on Ubuntu and Debian:
+                $ sudo apt-get update
+                $ sudo apt-get install ffmpeg
 
-        Installing FFmpeg on CentOS/RHEL and Fedora:
-            enable atrpms repository, then:
-            # yum install ffmpeg
+            Installing on CentOS/RHEL and Fedora:
+                enable atrpms repository, then:
+                # yum install ffmpeg
                                 '''
-        install_instructions = ''
+
+        platforms_install_instructions = ''
 
         if sys.platform == 'linux':
-            install_instructions = linux_instructions
+            platforms_install_instructions = linux_instructions
         elif sys.platform == 'darwin':
-            install_instructions = macos_instructions
+            platforms_install_instructions = macos_instructions
         elif sys.platform == 'win32':
-            install_instructions = windows_instructions
+            platforms_install_instructions = windows_instructions
 
         return  '''
 
@@ -65,8 +66,13 @@ class FFmpegNotInstalled(Exception):
 
         You can download FFmpeg from here:
             http://www.ffmpeg.org/download.html
+
+        Installing FFmpeg
+            Manual Install (Universal):
+                . download FFmpeg (choose a static build)
+                . put the FFmpeg executable in your $PATH
         {0}
-        '''.format(install_instructions)
+        '''.format(platforms_install_instructions)
 
 
 class FFH:
@@ -212,4 +218,3 @@ class FFH:
                 silence_entries.append(SilenceEntry(float(silence_starts[-1]), float(sys.maxsize)))
 
             return silence_entries
-
