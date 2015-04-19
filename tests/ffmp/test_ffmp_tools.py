@@ -17,8 +17,10 @@ import unittest, os, sys
 from .test_ffmp_base import FFMPTest
 from batchmp.ffmptools.ffutils import FFH
 from batchmp.fstools.fsutils import FSH
+from batchmp.ffmptools.ffrunner import LogLevel
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
+from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.segment import Segmenter
@@ -234,6 +236,24 @@ class FFMPTests(FFMPTest):
                                                       filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
         self._check_media_entries(orig_media_entries, processed_media_entries)
+
+    def test_peak_normalize(self):
+        #return ##
+        print('Normalizing media files')
+
+        orig_media_entries = self._media_entries(end_level = 1, include = 'bmfp*',  filter_files = False)
+        self.assertNotEqual(orig_media_entries, [], msg = 'No media files selected')
+
+        PeakNormalizer().peak_normalize(self.src_dir,
+                                    include = 'bmfp*', filter_files = False,
+                                    serial_exec = self.serial_exec_mode,
+                                    preserve_metadata = True, log_level = LogLevel.QUIET,
+                                    target_dir = self.target_dir)
+
+        processed_media_entries = self._media_entries(src_dir = self.target_dir)
+        self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
+        self._check_media_entries(orig_media_entries, processed_media_entries)
+
 
     # Internal helpers
     def _media_entries(self, src_dir = None, include = None, exclude = None,

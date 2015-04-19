@@ -218,3 +218,64 @@ class FFH:
                 silence_entries.append(SilenceEntry(float(silence_starts[-1]), float(sys.maxsize)))
 
             return silence_entries
+
+    @staticmethod
+    def volume_detector(fpath):
+        ''' Detect the volume of input media file
+            Returns Mean Volume and Max Volume in decibels, relative to max PCM value
+        '''
+        if not FFH.ffmpeg_installed():
+            return None
+
+        cmd = ''.join(('ffmpeg',
+                            ' -i {}'.format(shlex.quote(fpath)),
+                            ' -filter:a "volumedetect"',
+                            ' -vn',
+                            ' -sn',
+                            ' -f null - '))
+
+        #print(cmd)
+        try:
+            output, _ = run_cmd(cmd)
+        except CmdProcessingError as e:
+            return None
+        else:
+            mean_volume = re.findall('(?<=mean_volume:)(?:\D*)(\d*\.?\d+)', output)
+            if mean_volume:
+                mean_volume = float(mean_volume[0])
+            else:
+                mean_volume = 0
+
+            max_volume = re.findall('(?<=max_volume:)(?:\D*)(\d*\.?\d+)', output)
+            if max_volume:
+                max_volume = float(max_volume[0])
+            else:
+                max_volume = 0
+
+            VolumeEntry = namedtuple('VolumeEntry', ['mean_volume', 'max_volume'])
+
+            return VolumeEntry(mean_volume, max_volume)
+
+
+if __name__ == '__main__':
+    fpath = '/Users/AKPower/Desktop/music/lola.mp3'
+    volumeEntry = FFH.volume_detector(fpath)
+
+    fpath_norm = '/Users/AKPower/Desktop/music/music_peak_normalized/lola.mp3'
+    volumeEntryNorm = FFH.volume_detector(fpath_norm)
+
+    print('Orig')
+    print (volumeEntry.mean_volume)
+    print(volumeEntry.max_volume)
+
+    print('\nNorm')
+    print (volumeEntryNorm.mean_volume)
+    print(volumeEntryNorm.max_volume)
+
+
+
+
+
+
+
+

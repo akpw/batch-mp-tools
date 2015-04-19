@@ -24,6 +24,8 @@
       . source directory / source file modes
       . include / exclude patterns, etc. (see list of Global Options for details)
       . visualises original / targeted files metadata structure
+      . display sorting:
+          .. by size/date, ascending/descending
       . action commands:
           .. print      Prints media files
           .. set        Sets tags in media files, including artwork, e.g:

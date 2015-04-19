@@ -23,16 +23,19 @@
           .. convert        Converts media to specified format
                                 For example, to convert all files in current directory
                                     $ bmfp convert -la -tf FLAC
+          .. normalize      Nomalizes sound volume in media files
+                                Peak normalization supported, RMS normalizations TBD
+          .. fragment       Extract a media file fragment
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
           .. silencesplit   Splits media files into segments via detecting specified silence
                                     $ bmfp silencesplit
-          .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
+
+          .. adjust volume  TDB: Adjust audio volume
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
-          .. adjust volume  TDB: Adjust audio volume
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
       Input source mode:
@@ -67,7 +70,7 @@
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, denoise, fragment, segment, silencesplit, ...}
+        {print, convert, normalize, fragment, segment, silencesplit, denoise, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import os, sys,  argparse
@@ -79,6 +82,7 @@ from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
+from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.output.formatters import OutputFormatType
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
@@ -171,21 +175,18 @@ class BMFPArgParser(BMPBaseArgParser):
                 help = 'For media formats with support for lossless audio, tries a lossless conversion',
                 action='store_true')
 
-        # Denoise
-        denoise_parser = subparsers.add_parser('denoise', description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies')
-        denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
-                help = 'Applies filters in multiple passes',
-                type = int,
-                default = Denoiser.DEFAULT_NUM_PASSES)
-        group = denoise_parser.add_argument_group('Pass Filters')
-        group.add_argument("-hp", "--highpass", dest='highpass',
-                    help = "Cutoff boundary for lower frequencies",
-                    type = int,
-                    default = Denoiser.DEFAULT_HIGHPASS)
-        group.add_argument("-lp", "--lowpass", dest='lowpass',
-                    help = "Cutoff boundary for higher frequencies",
-                    type = int,
-                    default = Denoiser.DEFAULT_LOWPASS)
+        # Nomalize
+        norm_parser = subparsers.add_parser('normalize',
+                                            description = 'Nomalizes media files. ' \
+                                                          'Both Peak and RMS normalizations are supported, ' \
+                                                          'Peak normalization is the default')
+        group = norm_parser.add_argument_group('RMS Normalization')
+        group.add_argument('-rm', '--rms', dest='rms_norm',
+                help ='(TBD) Leverages RMS-based normalization to set average loudness across selected media files',
+                action = 'store_true')
+        group.add_argument('-ac', '--allow-clipping', dest = 'allow_clipping',
+                help ='(TBD) Allows clipping, via turning off automatic limiting of the gain applied (use with caution)',
+                action = 'store_true')
 
         # Fragment
         fragment_parser = subparsers.add_parser('fragment', description = 'Extracts a fragment via specified start time & duration')
@@ -236,6 +237,22 @@ class BMFPArgParser(BMPBaseArgParser):
                             "betweeen segments when played one after another. "
                             "May not work well for some formats / combinations of muxers/codecs",
                     action='store_true')
+
+        # Denoise
+        denoise_parser = subparsers.add_parser('denoise', description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies')
+        denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
+                help = 'Applies filters in multiple passes',
+                type = int,
+                default = Denoiser.DEFAULT_NUM_PASSES)
+        group = denoise_parser.add_argument_group('Pass Filters')
+        group.add_argument("-hp", "--highpass", dest='highpass',
+                    help = "Cutoff boundary for lower frequencies",
+                    type = int,
+                    default = Denoiser.DEFAULT_HIGHPASS)
+        group.add_argument("-lp", "--lowpass", dest='lowpass',
+                    help = "Cutoff boundary for higher frequencies",
+                    type = int,
+                    default = Denoiser.DEFAULT_LOWPASS)
 
         # Troubleshooting
         parser.add_argument('-.ll', dest='log_level',
@@ -343,6 +360,16 @@ class BMFPDispatcher:
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
+    def normalize(args):
+        PeakNormalizer().peak_normalize(src_dir = args['dir'],
+                end_level = args['end_level'], quiet=args['quiet'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                preserve_metadata = args['preserve_metadata'])
+
+    @staticmethod
     def fragment(args):
         Fragmenter().fragment(src_dir = args['dir'],
                 end_level = args['end_level'], quiet=args['quiet'],
@@ -403,6 +430,8 @@ class BMFPDispatcher:
             BMFPDispatcher.convert(args)
         if args['sub_cmd'] == 'denoise':
             BMFPDispatcher.denoise(args)
+        if args['sub_cmd'] == 'normalize':
+            BMFPDispatcher.normalize(args)
         elif args['sub_cmd'] == 'fragment':
             BMFPDispatcher.fragment(args)
         elif args['sub_cmd'] == 'segment':

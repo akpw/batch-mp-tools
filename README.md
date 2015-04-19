@@ -197,6 +197,8 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
       . visualises original / targeted files metadata structure
       . supports recursion, can optionally stop at specified end_level
       . include / exclude patterns (Unix style)
+      . display sorting:
+          .. by size/date, ascending/descending
       . action commands:
           .. print      Prints media info
           .. set        Sets tags in media files, including artwork, e.g:
@@ -242,25 +244,28 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
     Batch processing of media files
-      . supports multiprocessing to utilize available CPU cores
+      . Uses multiprocessing to utilize available CPU cores
       . source directory / source file modes
-      . supports recursion, can optionally stop at specified end_level
+      . recursion to specified end_level
       . include / exclude patterns (Unix style)
       . action commands:
           .. print          Prints media files
           .. convert        Converts media to specified format
                                 For example, to convert all files in current directory
                                     $ bmfp convert -la -tf FLAC
+          .. normalize      Nomalizes sound volume in media files
+                                Peak normalization supported, RMS normalizations TBD
+          .. fragment       Extract a media file fragment
           .. segment        Splits media files into segments
                                 For example, to split media files in segments of 45 mins:
                                     $ bmfp segment -d 45:00
           .. silencesplit   Splits media files into segments via detecting specified silence
                                     $ bmfp silencesplit
-          .. fragment       Extract a media file fragment
           .. denoise        Reduces background audio noise in media files
+
+          .. adjust volume  TDB: Adjust audio volume
           .. speed up       TDB: Uses Time Stretching to increase audio / video speed
           .. slow down      TDB: Uses Time Stretching to increase audio / video speed
-          .. adjust volume  TDB: Adjust audio volume
 
     Usage: bmfp [-h] [-d DIR] [-f FILE] [GLobal Options] {Commands}[Commands Options]
       Input source mode:
@@ -295,7 +300,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, denoise, fragment, segment, silencesplit, ...}
+        {print, convert, normalize, fragment, segment, silencesplit, denoise, ...}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 
 
