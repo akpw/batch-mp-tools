@@ -57,6 +57,11 @@ class PeakNormalizerTask(FFMPRunnerTask):
         if not volume_entry.max_volume:
             task_result.add_task_step_info_msg( \
                                         'Already normalized:\n\t{0}'.format(self.fpath))
+            # copy source file to target dir
+            shutil.copy(self.fpath, self.target_dir)
+
+            # all well
+            task_result.succeeded = True
         else:
             # store tags if needed
             self._store_tags()
@@ -67,7 +72,8 @@ class PeakNormalizerTask(FFMPRunnerTask):
                 norm_fpath = os.path.join(tmp_dir, norm_fname)
 
                 # build ffmpeg cmd string
-                p_in = ''.join((self.ff_normalize_cmd(volume_entry.max_volume), ' {}'.format(shlex.quote(norm_fpath))))
+                p_in = ''.join((self.ff_normalize_cmd(volume_entry.max_volume), \
+                                                ' {}'.format(shlex.quote(norm_fpath))))
                 self._log(p_in, LogLevel.FFMPEG)
 
                 # run ffmpeg command as a subprocess
