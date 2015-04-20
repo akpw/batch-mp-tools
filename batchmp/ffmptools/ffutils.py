@@ -254,22 +254,6 @@ class FFH:
             return VolumeEntry(mean_volume, max_volume)
 
 
-if __name__ == '__main__':
-    fpath = '/Users/AKPower/Desktop/music/lola.mp3'
-    volumeEntry = FFH.volume_detector(fpath)
-
-    fpath_norm = '/Users/AKPower/Desktop/music/music_peak_normalized/lola.mp3'
-    volumeEntryNorm = FFH.volume_detector(fpath_norm)
-
-    print('Orig')
-    print (volumeEntry.mean_volume)
-    print(volumeEntry.max_volume)
-
-    print('\nNorm')
-    print (volumeEntryNorm.mean_volume)
-    print(volumeEntryNorm.max_volume)
-
-
 
 
 
