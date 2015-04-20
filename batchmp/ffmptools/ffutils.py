@@ -69,7 +69,7 @@ class FFmpegNotInstalled(Exception):
 
         Installing FFmpeg
             Manual Install (Universal):
-                . download FFmpeg (choose a static build)
+                . download FFmpeg (select a static build)
                 . put the FFmpeg executable in your $PATH
         {0}
         '''.format(platforms_install_instructions)
@@ -198,7 +198,6 @@ class FFH:
                             'n={}'.format(noise_tolerance_amplitude_ratio),
                             ':d={}'.format(min_duration),
                             ' -f null - '))
-
         # print(cmd)
         try:
             output, _ = run_cmd(cmd)
@@ -233,27 +232,25 @@ class FFH:
                             ' -vn',
                             ' -sn',
                             ' -f null - '))
-
         #print(cmd)
         try:
             output, _ = run_cmd(cmd)
         except CmdProcessingError as e:
             return None
         else:
-            mean_volume = re.findall('(?<=mean_volume:)(?:\D*)(\d*\.?\d+)', output)
-            if mean_volume:
-                mean_volume = float(mean_volume[0])
-            else:
-                mean_volume = 0
+            mean_volume = max_volume = 0
 
-            max_volume = re.findall('(?<=max_volume:)(?:\D*)(\d*\.?\d+)', output)
-            if max_volume:
-                max_volume = float(max_volume[0])
-            else:
-                max_volume = 0
+            # mean volume
+            found = re.findall('(?<=mean_volume:)(?:\D*)(\d*\.?\d+)', output)
+            if found:
+                mean_volume = float(found[0])
+
+            # max volume
+            found = re.findall('(?<=max_volume:)(?:\D*)(\d*\.?\d+)', output)
+            if found:
+                max_volume = float(found[0])
 
             VolumeEntry = namedtuple('VolumeEntry', ['mean_volume', 'max_volume'])
-
             return VolumeEntry(mean_volume, max_volume)
 
 

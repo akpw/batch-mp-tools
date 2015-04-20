@@ -60,13 +60,13 @@ class DenoiserTask(FFMPRunnerTask):
         ''' Denoise command builder
         '''
         # when implicitly excluding artwork streams, need to do this only for the first pass
-        apply_options = (not self.excluded_artwork_streams) or (pass_cnt == 0)
+        apply_ff_other_options = (not self.excluded_artwork_streams) or (pass_cnt == 0)
 
         return ''.join(('ffmpeg',
                             FFmpegCommands.LOG_LEVEL_ERROR,
                             ' -i {}'.format(shlex.quote(fpath)),
-                            self.ff_general_options if apply_options else '',
-                            self.ff_other_options if apply_options else '',
+                            self.ff_general_options,
+                            self.ff_other_options if apply_ff_other_options else '',
                             ' -af {}'.format(shlex.quote(self.af_str))))
 
     def execute(self):

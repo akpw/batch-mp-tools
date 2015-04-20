@@ -43,8 +43,8 @@ class PeakNormalizerTask(FFMPRunnerTask):
         ''' Peak Normalize command builder
         '''
         return ''.join((super().ff_cmd,
-                            ' -af "volume=volume={}dB"'.format(volume_gain),
-                            '' if True else ' -c:a pcm_s16le'))
+                            ' -af "volume=volume={}dB"'.format(volume_gain)))
+                            #'' if True else ' -c:a pcm_s16le'))
 
     def execute(self):
         ''' builds and runs Peak Normalization command in a subprocess
@@ -54,7 +54,10 @@ class PeakNormalizerTask(FFMPRunnerTask):
         volume_entry, task_elapsed = self._detect_volumes()
         task_result.add_task_step_duration(task_elapsed)
 
-        if not volume_entry.max_volume:
+        if not volume_entry:
+            task_result.add_task_step_info_msg('A problem analyzing volume in media file:\n\t{}' \
+                                                                                .format(self.fpath))
+        elif not volume_entry.max_volume:
             task_result.add_task_step_info_msg( \
                                         'Already normalized:\n\t{0}'.format(self.fpath))
             # copy source file to target dir

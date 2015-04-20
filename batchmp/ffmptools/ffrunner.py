@@ -89,7 +89,8 @@ class FFMPRunner:
     '''
     def __init__(self):
         if not FFH.ffmpeg_installed():
-            raise FFmpegNotInstalled
+            print(FFmpegNotInstalled.default_message)
+            sys.exit(0)
 
     def run_tasks(self, tasks, msg = None, serial_exec = False, quiet = False):
         if tasks and len(tasks) > 0:
