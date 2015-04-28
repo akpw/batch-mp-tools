@@ -83,7 +83,7 @@ from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
-from batchmp.tags.processors.basetp import BaseTagProcessor
+from batchmp.ffmptools.processors.basefp import BaseFFProcessor
 from batchmp.tags.output.formatters import OutputFormatType
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
@@ -153,7 +153,13 @@ class BMFPArgParser(BMPBaseArgParser):
                 help ='Shows files size',
                 action = 'store_true')
         print_parser.add_argument('-st', '--show-tags', dest='show_tags',
-                help ='Shows all media tags',
+                help ='Shows media tags',
+                action = 'store_true')
+        print_parser.add_argument('-sv', '--show-volume', dest='show_volume',
+                help ='Shows volume statistics',
+                action = 'store_true')
+        print_parser.add_argument('-se', '--show-silence', dest='show_silence',
+                help ='Shows silence',
                 action = 'store_true')
 
         # Convert
@@ -266,6 +272,8 @@ class BMFPArgParser(BMPBaseArgParser):
         super().default_command(args, parser)
         args['show_size'] = False
         args['show_tags'] = False
+        args['show_volume'] = False
+        args['show_silence'] = False
 
     @classmethod
     def check_args(cls, args, parser):
@@ -328,12 +336,13 @@ class BMFPDispatcher:
     '''
     @staticmethod
     def print_dir(args):
-        BaseTagProcessor().print_dir(src_dir = args['dir'],
+        BaseFFProcessor().print_dir(src_dir = args['dir'],
                 start_level = args['start_level'], end_level = args['end_level'],
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 show_size = args['show_size'], show_stats = True,
-                format = OutputFormatType.STATS if not args['show_tags'] else OutputFormatType.FULL)
+                format = OutputFormatType.STATS if not args['show_tags'] else OutputFormatType.FULL,
+                show_volume = args['show_volume'], show_silence = args['show_silence'])
 
     @staticmethod
     def convert(args):

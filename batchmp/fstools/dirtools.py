@@ -13,7 +13,7 @@
 
 
 import os, sys
-from collections import namedtuple
+from collections import namedtuple, Iterable
 from distutils.util import strtobool
 from batchmp.fstools.fsutils import DWalker, FSH
 
@@ -35,10 +35,10 @@ class DHandler:
         if not os.path.exists(src_dir):
             raise ValueError('Not a valid path')
 
-        if not formatter:
+        if formatter is None:
             formatter = lambda entry: entry.basename
 
-        if not selected_files_description:
+        if selected_files_description is None:
             selected_files_description = 'file'
 
         # print the dir tree
@@ -50,8 +50,17 @@ class DHandler:
                                     sort = sort, nested_indent = nested_indent,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     flatten = flatten, ensure_uniq = ensure_uniq):
+            # get formatted output
+            formatted_output = ''
+            if isinstance(formatter, Iterable):
+                for chained_formatter in formatter:
+                    chained_formatter_output = chained_formatter(entry)
+                    formatted_output = '{0}{1}'.format(
+                            formatted_output if formatted_output else '',
+                            chained_formatter_output if chained_formatter_output else '')
+            else:
+                formatted_output = formatter(entry)
 
-            formatted_output = formatter(entry)
             if formatted_output:
                 size = ''
                 if entry.type == DWalker.ENTRY_TYPE_FILE:

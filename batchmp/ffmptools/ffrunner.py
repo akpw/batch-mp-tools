@@ -12,8 +12,9 @@
 ## GNU General Public License for more details.
 
 
-import os, sys, datetime, math, shlex
+import os, sys, shlex
 from enum import IntEnum
+from batchmp.commons.utils import MiscHelpers
 from batchmp.commons.taskprocessor import Task, TasksProcessor
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -112,12 +113,8 @@ class FFMPRunner:
         succeeded = sum(1 for result in tasks_results if result.succeeded)
         failed = sum(1 for result in tasks_results if not result.succeeded)
 
-        total_elapsed_str = str(datetime.timedelta(seconds = math.ceil(total_elapsed*100)/100)).rstrip('0')
-        if total_elapsed_str.endswith(':'):
-            total_elapsed_str = '{}00'.format(total_elapsed_str)
-        cpu_core_time_str = str(datetime.timedelta(seconds = math.ceil(cpu_core_time*100)/100)).rstrip('0')
-        if cpu_core_time_str.endswith(':'):
-            cpu_core_time_str = '{}00'.format(cpu_core_time_str)
+        total_elapsed_str = MiscHelpers.time_delta_str(total_elapsed)
+        cpu_core_time_str = MiscHelpers.time_delta_str(cpu_core_time)
 
         num_tasks = len(tasks_results)
         print('Finished running {0} task{1} '\

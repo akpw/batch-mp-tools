@@ -31,6 +31,7 @@ import os, sys, datetime, string
 from argparse import ArgumentParser
 from distutils.util import strtobool
 from urllib.parse import urlparse
+from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.fsutils import FSH, DWalker
 
 
@@ -100,21 +101,12 @@ class BMPBaseArgParser:
 
     @staticmethod
     def is_timedelta(parser, td_arg):
-        hrs = mins = secs = None
-        td = td_arg.split(':')
-        time_parts = range(len(td))
-        for i in time_parts:
-            if secs is None:
-                secs = float(td.pop(-1))
-            elif mins is None:
-                mins = int(td.pop(-1))
-            elif hrs is None:
-                hrs = int(td.pop(-1))
-            else:
-                break
-        return  datetime.timedelta(hours = hrs if hrs else 0,
-                                      minutes = mins if mins else 0,
-                                      seconds = secs if secs else 0)
+        try:
+            td = MiscHelpers.time_delta(td_arg)
+        except ValueError:
+            parser.error('"{}": Please enter a valid value, ' \
+                         'in seconds or in the "hh:mm:ss[.xxx]" format'.format(td_arg))
+        return  td
 
     # Processing mode for relevant commands
     @staticmethod

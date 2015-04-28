@@ -19,7 +19,8 @@ from collections import namedtuple
 import batchmp.fstools.fsutils as fsutils
 from batchmp.commons.utils import (
     run_cmd,
-    CmdProcessingError
+    CmdProcessingError,
+    MiscHelpers
 )
 
 class FFmpegNotInstalled(Exception):
@@ -197,6 +198,8 @@ class FFH:
                             ' -af silencedetect=',
                             'n={}'.format(noise_tolerance_amplitude_ratio),
                             ':d={}'.format(min_duration),
+                            ' -vn',
+                            ' -sn',
                             ' -f null - '))
         # print(cmd)
         try:
@@ -213,8 +216,14 @@ class FFH:
                 silence_entries.append(SilenceEntry(float(ss), float(se)))
 
             if len(silence_entries) < len(silence_starts):
-                # matched silence at the end
-                silence_entries.append(SilenceEntry(float(silence_starts[-1]), float(sys.maxsize)))
+                # matched non-balanced silence at the end
+                # try to parse output audio duration and use it as the silence_end value
+                found = re.findall('(?<=Duration:)(?:\D*)([\d:\.]*)', output)
+                if found:
+                    duration = MiscHelpers.time_delta(found[0]).total_seconds()
+                else:
+                    duration = float(sys.maxsize)
+                silence_entries.append(SilenceEntry(float(silence_starts[-1]), duration))
 
             return silence_entries
 
@@ -253,7 +262,12 @@ class FFH:
             VolumeEntry = namedtuple('VolumeEntry', ['mean_volume', 'max_volume'])
             return VolumeEntry(mean_volume, max_volume)
 
+if __name__ == '__main__':
+    fpath = '/Users/AKPower/Desktop/Music/23 Etudes- Op. 42, No. 5.m4a'
+    silence_entries = FFH.silence_detector(fpath, min_duration = 0.1,
+                                           noise_tolerance_amplitude_ratio = 0.02)
 
+    print(silence_entries)
 
 
 

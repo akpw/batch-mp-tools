@@ -12,10 +12,10 @@
 ## GNU General Public License for more details.
 
 
-import copyreg, types, datetime, math, multiprocessing
+import copyreg, types, multiprocessing
 from abc import ABCMeta, abstractmethod
 from batchmp.commons.progressbar import progress_bar
-from batchmp.commons.utils import timed
+from batchmp.commons.utils import timed, MiscHelpers
 
 
 class Task(metaclass = ABCMeta):
@@ -41,9 +41,7 @@ class TaskResult:
         self._task_steps_info_msgs.append(step_info_msg)
 
     def add_report_msg(self, processed_fpath):
-        task_duration_str = str(datetime.timedelta(seconds = math.ceil(self.task_duration * 100)/100)).rstrip('0')
-        if task_duration_str.endswith(':'):
-            task_duration_str = '{}00'.format(task_duration_str)
+        task_duration_str = MiscHelpers.time_delta_str(self.task_duration)
         self.add_task_step_info_msg('Done processing\n {0}\n in {1}'.format(
                                                         processed_fpath, task_duration_str))
     @property

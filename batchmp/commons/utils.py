@@ -12,6 +12,7 @@
 ## GNU General Public License for more details.
 
 import subprocess, shlex, time, tempfile, shutil
+import datetime, math
 from functools import wraps
 from urllib.parse import urlparse
 import urllib.request, urllib.error
@@ -70,6 +71,36 @@ class MiscHelpers:
             num_digits += 1
         return num_digits
 
+    @staticmethod
+    def time_delta(td_str):
+        ''' Timedelta from the "hh:mm:ss[.xxx]" format
+        '''
+        hrs = mins = secs = None
+        td = td_str.split(':')
+        time_parts = range(len(td))
+        for i in time_parts:
+            if secs is None:
+                secs = float(td.pop(-1))
+            elif mins is None:
+                mins = int(td.pop(-1))
+            elif hrs is None:
+                hrs = int(td.pop(-1))
+            else:
+                break
+        return  datetime.timedelta(hours = hrs if hrs else 0,
+                                      minutes = mins if mins else 0,
+                                      seconds = secs if secs else 0)
+
+    @staticmethod
+    def time_delta_str(secs, num_miliseconds = 2):
+        ''' Timedelta string with specified number of miliseconds
+        '''
+        div = 10**num_miliseconds if num_miliseconds > 0 else 1
+        td_str = str(datetime.timedelta(seconds = math.ceil(secs*div)/div)).rstrip('0')
+        if td_str.endswith(':'):
+            td_str = '{}00'.format(td_str)
+        return td_str
+
 
 class ImageLoader:
     @staticmethod
@@ -119,4 +150,8 @@ class ImageLoader:
         return ImageLoader.load_image_from_url(path_or_url)
 
 
+# Quick dev test
+if __name__ == '__main__':
+    td = MiscHelpers.time_delta('00:24.5764654645464')
+    print(MiscHelpers.time_delta_str(td.total_seconds(), num_miliseconds = -1))
 
