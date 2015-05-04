@@ -262,13 +262,9 @@ class FFH:
             VolumeEntry = namedtuple('VolumeEntry', ['mean_volume', 'max_volume'])
             return VolumeEntry(mean_volume, max_volume)
 
+# Quick dev test
 if __name__ == '__main__':
-    fpath = '/Users/AKPower/Desktop/Music/23 Etudes- Op. 42, No. 5.m4a'
-    silence_entries = FFH.silence_detector(fpath, min_duration = 0.1,
-                                           noise_tolerance_amplitude_ratio = 0.02)
-
-    print(silence_entries)
-
+    print(FFmpegNotInstalled().default_message)
 
 
 

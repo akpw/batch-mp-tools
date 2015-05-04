@@ -54,8 +54,10 @@ class BaseFFProcessor:
                 if entry.type == DWalker.ENTRY_TYPE_FILE:
                     if self.handler.can_handle(entry.realpath):
                         volume_entry = FFH.volume_detector(entry.realpath)
-                        if volume_entry:
-                            indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
+                        indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
+                        if not volume_entry:
+                            volume_str = '\n{}No volume detected'.format(indent)
+                        else:
                             volume_str = '\n{0}{1}: -{2}dB, {3}: -{4}dB'.format(indent,
                                                     'Max Volume', volume_entry.max_volume,
                                                     'Mean Volume', volume_entry.mean_volume)

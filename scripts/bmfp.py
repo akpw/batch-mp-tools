@@ -85,6 +85,7 @@ from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
 from batchmp.ffmptools.processors.basefp import BaseFFProcessor
 from batchmp.tags.output.formatters import OutputFormatType
+from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 
@@ -302,8 +303,15 @@ class BMFPArgParser(BMPBaseArgParser):
         # Always preserve metadata (experimental)
         args['preserve_metadata'] = True
 
+        # If advanced media options requested,
+        # check ffmpeg presence
+        if args['sub_cmd'] == 'print':
+            if args['show_volume'] or args['show_silence']:
+                if not FFH.ffmpeg_installed():
+                    print(FFmpegNotInstalled().default_message)
+
         # Segment attributes check
-        if args['sub_cmd'] == 'segment':
+        elif args['sub_cmd'] == 'segment':
             if not args['segment_filesize'] and not args['segment_duration'].total_seconds():
                 parser.error('bmfp segment:\n\t'
                              'One of the command parameters needs to be specified: <filesize | duration>')
