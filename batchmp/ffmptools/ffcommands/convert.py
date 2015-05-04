@@ -18,7 +18,7 @@ import shutil, sys, os, shlex
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TaskResult
-from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -30,31 +30,34 @@ class ConvertorTask(FFMPRunnerTask):
     '''
     def __init__(self, fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
-                                                            target_format, convert_options):
+                                                            target_format):
+        self.target_format = target_format
 
         super().__init__(fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata)
 
-        # check convert options
-        convert_options = convert_options or FFmpegCommands.CONVERT_COPY_VBR_QUALITY # default
-        if convert_options == FFmpegCommands.CONVERT_LOSSLESS:
+    def _check_defaults(self):
+        if not self.ff_other_options:
+            self.ff_other_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
+        elif self.ff_other_options == FFmpegCommands.CONVERT_LOSSLESS:
             # see if lossless is appropriate
             # TBD: video formats
-            if target_format == '.flac':
-                convert_options = FFmpegCommands.CONVERT_LOSSLESS_FLAC
-            elif target_format == '.m4a':
-                convert_options = FFmpegCommands.CONVERT_LOSSLESS_ALAC
+            if self.target_format == '.flac':
+                self.ff_other_options = FFmpegCommands.CONVERT_LOSSLESS_FLAC
+            elif self.target_format == '.m4a':
+                self.ff_other_options = FFmpegCommands.CONVERT_LOSSLESS_ALAC
             else:
-                convert_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
+                self.ff_other_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
 
-        self.target_format = target_format
-        self.convert_options = convert_options
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                                    FFmpegBitMaskOptions.MAP_ALL_STREAMS)
 
-    @property
-    def ff_cmd(self):
-        ''' Convert command builder
-        '''
-        return ''.join((super().ff_cmd, self.convert_options))
+            if self.ff_other_options in (FFmpegCommands.CONVERT_COPY_VBR_QUALITY,
+                                         FFmpegCommands.CONVERT_LOSSLESS_FLAC,
+                                         FFmpegCommands.CONVERT_LOSSLESS_ALAC,
+                                         FFmpegCommands.CONVERT_CHANGE_CONTAINER):
+                self.ff_other_options += self._ff_cmd_exclude_artwork_streams()
 
     def execute(self):
         ''' builds and runs FFmpeg Conversion command in a subprocess
@@ -99,7 +102,7 @@ class Convertor(FFMPRunner):
     def convert(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
                     filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None, convert_options = None,
+                    target_format = None,
                     target_dir = None, log_level = None,
                     ff_general_options = None, ff_other_options = None,
                     preserve_metadata = False):
@@ -122,7 +125,7 @@ class Convertor(FFMPRunner):
             # build tasks
             tasks_params = [(media_file, target_dir_path, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
-                                target_format, convert_options)
+                                target_format)
                                     for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
                 task = ConvertorTask(*task_param)

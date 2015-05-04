@@ -125,9 +125,10 @@ class BMFPArgParser(BMPBaseArgParser):
         ffmpeg_group.add_argument("-sn", "--no-subs", dest='exclude_subtitles',
                     help = "Exclude subtitles streams from the output",
                     action='store_true')
-        ffmpeg_group.add_argument('-fo', '--ffmpeg-options', dest='ff_other_options',
+        ffmpeg_group.add_argument('-fo', '--ffmpeg-options', dest='ffmpeg_options',
                 help = 'Additional options for running FFmpeg',
-                type = str)
+                type = str,
+                default = FFmpegCommands.CONVERT_COPY_VBR_QUALITY)
 
         misc_group = parser.add_argument_group('FFmpeg Commands Execution')
         #misc_group.add_argument("-pm", "--preserve-meta", dest='preserve_metadata',
@@ -169,13 +170,9 @@ class BMFPArgParser(BMPBaseArgParser):
                 type = str,
                 required = True)
         group = convert_parser.add_argument_group('Conversion Options')
-        group.add_argument('-co', '--convert-options', dest='convert_options',
-                help = 'FFmpeg conversion options. When specified, override all other conversion option switches',
-                type = str,
-                default = FFmpegCommands.CONVERT_COPY_VBR_QUALITY)
         group.add_argument('-cc', '--change-container', dest='change_container',
                 help = 'Changes media container without actual re-encoding of contained streams. When specified, ' \
-                       'takes priority over all other option switches except for explicit "--convert-options"',
+                       'takes priority over all other option switches except for those explicitly specified via "-fo/ --ffmpeg-options"',
                 action='store_true')
         group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
                 help = 'For media formats with support for lossless audio, tries a lossless conversion',
@@ -317,18 +314,18 @@ class BMFPArgParser(BMPBaseArgParser):
             if not args['target_format'].startswith('.'):
                 args['target_format'] = '.{}'.format(args['target_format'])
 
-            if args['convert_options'] == FFmpegCommands.CONVERT_COPY_VBR_QUALITY: #default
+            if args['ffmpeg_options'] == FFmpegCommands.CONVERT_COPY_VBR_QUALITY: #default
                 if args['lossless_audio']:
                     # takes priority over default settings
-                    args['convert_options'] = FFmpegCommands.CONVERT_LOSSLESS
+                    args['ffmpeg_options'] = FFmpegCommands.CONVERT_LOSSLESS
 
                 if args['change_container']:
                     # takes priority over default settings or lossless
-                    args['convert_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
+                    args['ffmpeg_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 
-            elif not args['convert_options'].startswith(' '):
-                # add a space if needed
-                args['convert_options'] = ' {}'.format(args['convert_options'])
+        if not args['ffmpeg_options'].startswith(' '):
+            # add a space if needed
+            args['ffmpeg_options'] = ' {}'.format(args['ffmpeg_options'])
 
 
 class BMFPDispatcher:
@@ -352,8 +349,8 @@ class BMFPDispatcher:
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 serial_exec = args['serial_exec'],
                 target_dir = args['target_dir'], log_level = args['log_level'],
-                target_format = args['target_format'], convert_options = args['convert_options'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                target_format = args['target_format'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -364,7 +361,7 @@ class BMFPDispatcher:
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'], log_level = args['log_level'],
                 num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -374,7 +371,7 @@ class BMFPDispatcher:
                 include = args['include'], exclude = args['exclude'],
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'], log_level = args['log_level'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -387,7 +384,7 @@ class BMFPDispatcher:
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
                 fragment_duration = args['fragment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 preserve_metadata = args['preserve_metadata'])
 
     @staticmethod
@@ -400,7 +397,7 @@ class BMFPDispatcher:
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
                 serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 reset_timestamps = args['reset_timestamps'],
                 preserve_metadata = args['preserve_metadata'])
 
@@ -412,7 +409,7 @@ class BMFPDispatcher:
                 filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
                 target_dir = args['target_dir'], log_level = args['log_level'],
                 serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ff_other_options'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
                 preserve_metadata = args['preserve_metadata'],
                 reset_timestamps = args['reset_timestamps'],
                 silence_min_duration = args['min_duraiton'].total_seconds(),

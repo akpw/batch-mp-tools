@@ -32,18 +32,11 @@ class FragmenterTask(FFMPRunnerTask):
                             ff_general_options, ff_other_options, preserve_metadata,
                             fragment_starttime, fragment_duration):
 
-        super().__init__(fpath, target_dir, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata)
-
-        if not self.ff_general_options:
-            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
-                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
-
-            if not self.ff_other_options:
-                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
-
         self.fragment_starttime = fragment_starttime
         self.fragment_duration = fragment_duration
+
+        super().__init__(fpath, target_dir, log_level,
+                                ff_general_options, ff_other_options, preserve_metadata)
 
     @property
     def ff_cmd(self):

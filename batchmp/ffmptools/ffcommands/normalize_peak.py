@@ -19,7 +19,7 @@ from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffutils import FFH
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TaskResult
-from batchmp.ffmptools.ffcommands.cmdopt import FFmpegBitMaskOptions
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -35,9 +35,16 @@ class PeakNormalizerTask(FFMPRunnerTask):
         super().__init__(fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata)
 
-        if (not self.ff_general_options) and (not self.ff_other_options):
-                self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(FFmpegBitMaskOptions.MAP_ALL_STREAMS)
-                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
+    def _check_defaults(self):
+        if not self.ff_other_options:
+            self.ff_other_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
+
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                                          FFmpegBitMaskOptions.MAP_ALL_STREAMS)
+
+            if self.ff_other_options == FFmpegCommands.CONVERT_COPY_VBR_QUALITY:
+                self.ff_other_options += self._ff_cmd_exclude_artwork_streams()
 
     def ff_normalize_cmd(self, volume_gain):
         ''' Peak Normalize command builder

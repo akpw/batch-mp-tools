@@ -28,7 +28,7 @@ class FFmpegCommands:
 
     # Conversion options
     CONVERT_COPY_VBR_QUALITY = ' -q:v 0 -q:a 0'
-    CONVERT_LOSSLESS = 'CONVERT_LOSSLESS_IF_POSSIBLE'
+    CONVERT_LOSSLESS = ' CONVERT_LOSSLESS_IF_POSSIBLE'
     CONVERT_LOSSLESS_ALAC = ' -q:v 0 -acodec alac'
     CONVERT_LOSSLESS_FLAC = ' -q:v 0 -acodec flac'
     CONVERT_CHANGE_CONTAINER = ' -c copy -copyts'

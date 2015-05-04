@@ -39,13 +39,6 @@ class SegmenterTask(FFMPRunnerTask):
         super().__init__(fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata)
 
-        if not self.ff_general_options:
-            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
-                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
-
-            if not self.ff_other_options:
-                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
-
         # calculate number of segments and, if needed, the segment length in secs
         if segment_length_secs:
             self.segment_length_secs = segment_length_secs

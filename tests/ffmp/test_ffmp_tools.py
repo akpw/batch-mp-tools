@@ -106,7 +106,6 @@ class FFMPTests(FFMPTest):
 
         Convertor().convert(self.src_dir, include = 'bmfp_a',  filter_files = False,
                             target_format = 'mp3',
-                            convert_options = FFmpegCommands.CONVERT_LOSSLESS,
                             serial_exec = self.serial_exec_mode,
                             preserve_metadata = True,
                             target_dir = self.target_dir)
@@ -123,7 +122,6 @@ class FFMPTests(FFMPTest):
 
         Convertor().convert(self.src_dir, include = 'bmfp_v',  filter_files = False,
                             target_format = 'mp4',
-                            convert_options = FFmpegCommands.CONVERT_LOSSLESS,
                             serial_exec = self.serial_exec_mode,
                             preserve_metadata = True,
                             target_dir = self.target_dir)

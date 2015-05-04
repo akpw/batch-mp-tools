@@ -33,10 +33,6 @@ class DenoiserTask(FFMPRunnerTask):
     def __init__(self, fpath, target_dir, log_level,
                             ff_general_options, ff_other_options, preserve_metadata,
                                                         highpass, lowpass, num_passes):
-
-        super().__init__(fpath, target_dir, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata)
-
         # build ffmpeg '-af' parameter
         if highpass and lowpass:
             af_str = 'highpass=f={0}, lowpass=f={1}'.format(highpass, lowpass)
@@ -49,12 +45,22 @@ class DenoiserTask(FFMPRunnerTask):
 
         self.af_str = af_str
         self.num_passes = num_passes
-
         self.excluded_artwork_streams = False
-        if (not self.ff_general_options) and (not self.ff_other_options):
-                self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(FFmpegBitMaskOptions.MAP_ALL_STREAMS)
-                self.ff_other_options = self._ff_cmd_exclude_artwork_streams()
+
+        super().__init__(fpath, target_dir, log_level,
+                                ff_general_options, ff_other_options, preserve_metadata)
+
+    def _check_defaults(self):
+        if not self.ff_other_options:
+            self.ff_other_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
+
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(FFmpegBitMaskOptions.MAP_ALL_STREAMS)
+
+            if self.ff_other_options == FFmpegCommands.CONVERT_COPY_VBR_QUALITY:
+                self.ff_other_options += self._ff_cmd_exclude_artwork_streams()
                 self.excluded_artwork_streams = True
+
 
     def ff_denoise_cmd(self, fpath, pass_cnt):
         ''' Denoise command builder

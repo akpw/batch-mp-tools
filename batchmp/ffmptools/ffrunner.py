@@ -34,9 +34,11 @@ class FFMPRunnerTask(Task):
         self.log_level = log_level
 
         self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(ff_general_options)
-        self.ff_other_options = ff_other_options if ff_other_options else ''
+        self.ff_other_options = ff_other_options
 
         self.tag_holder = TagHolder() if preserve_metadata else None
+
+        self._check_defaults()
 
     @property
     def ff_cmd(self):
@@ -47,7 +49,19 @@ class FFMPRunnerTask(Task):
                             ' -i {}'.format(shlex.quote(self.fpath)),
                             self.ff_general_options,
                             self.ff_other_options))
+
     # Helpers
+    def _check_defaults(self):
+        if not self.ff_other_options:
+            self.ff_other_options = FFmpegCommands.CONVERT_COPY_VBR_QUALITY
+
+        if not self.ff_general_options:
+            self.ff_general_options = FFmpegBitMaskOptions.ff_general_options(
+                                  FFmpegBitMaskOptions.COPY_CODECS | FFmpegBitMaskOptions.MAP_ALL_STREAMS)
+
+            if self.ff_other_options == FFmpegCommands.CONVERT_COPY_VBR_QUALITY:
+                self.ff_other_options += self._ff_cmd_exclude_artwork_streams()
+
     def _store_tags(self):
         if self.tag_holder:
             handler = MutagenTagHandler() + FFmpegTagHandler()
