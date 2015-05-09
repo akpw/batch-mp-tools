@@ -61,6 +61,7 @@
 import sys
 from argparse import ArgumentParser
 from scripts.base.bmpbs import BMPBaseArgParser
+from batchmp.fstools.fsutils import DWalker
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
@@ -93,6 +94,9 @@ class RenameArgParser(BMPBaseArgParser):
                 default = 0)
         print_parser.add_argument('-ss', '--show-size', dest = 'show_size',
                 help ='Show files size',
+                action = 'store_true')
+        print_parser.add_argument('-sh', '--show-hidden', dest = 'show_hidden',
+                help ='Show hidden files',
                 action = 'store_true')
 
         # Flatten
@@ -224,6 +228,7 @@ class RenameArgParser(BMPBaseArgParser):
     def default_command(cls, args, parser):
         super().default_command(args, parser)
         args['show_size'] = False
+        args['show_hidden'] = False
 
     @classmethod
     def check_args(cls, args, parser):
@@ -231,7 +236,10 @@ class RenameArgParser(BMPBaseArgParser):
         '''
         super().check_args(args, parser)
 
-        if args['sub_cmd'] == 'flatten':
+        if args['sub_cmd'] == 'print':
+            if args['show_hidden'] and (args['exclude'] == DWalker.DEFAULT_EXCLUDE):
+                args['exclude'] = ''
+        elif args['sub_cmd'] == 'flatten':
             if args['file']:
                 parser.error('This operation requires a source directory')
             if args['end_level'] < args['target_level']:
