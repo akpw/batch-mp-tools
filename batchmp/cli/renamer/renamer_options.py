@@ -124,7 +124,7 @@ class RenameArgParser(BatchMPArgParser):
                 type=str,
                 choices = ['de', 'le', 'da'],
                 default = 'de')
-        self._add_arg_misc_group(flatten_parser)
+        self._add_arg_display_curent_state_mode(flatten_parser)
 
         # Add index
         add_index_parser = subparsers.add_parser('index',
@@ -156,7 +156,7 @@ class RenameArgParser(BatchMPArgParser):
                 type = int,
                 default = 2)
         _add_include_mode_group(add_index_parser)
-        self._add_arg_misc_group(add_index_parser)
+        self._add_arg_display_curent_state_mode(add_index_parser)
 
         # Add Date
         add_date_parser = subparsers.add_parser('add_date',
@@ -174,7 +174,7 @@ class RenameArgParser(BatchMPArgParser):
                 type = str,
                 default = '%Y-%m-%d')
         _add_include_mode_group(add_date_parser)
-        self._add_arg_misc_group(add_date_parser)
+        self._add_arg_display_curent_state_mode(add_date_parser)
 
         # Add Text
         add_text_parser = subparsers.add_parser('add_text',
@@ -192,7 +192,7 @@ class RenameArgParser(BatchMPArgParser):
                 type = str,
                 required = True)
         _add_include_mode_group(add_text_parser)
-        self._add_arg_misc_group(add_text_parser)
+        self._add_arg_display_curent_state_mode(add_text_parser)
 
         # Remove chars
         remove_chars_parser = subparsers.add_parser('remove',
@@ -206,7 +206,7 @@ class RenameArgParser(BatchMPArgParser):
                 help = 'Removes text from tail',
                 action = 'store_true')
         _add_include_mode_group(remove_chars_parser)
-        self._add_arg_misc_group(remove_chars_parser)
+        self._add_arg_display_curent_state_mode(remove_chars_parser)
 
         # Replace
         replace_parser = subparsers.add_parser('replace',
@@ -228,14 +228,14 @@ class RenameArgParser(BatchMPArgParser):
                 help = 'Include file extension',
                 action = 'store_true')
         _add_include_mode_group(replace_parser)
-        self._add_arg_misc_group(replace_parser)
+        self._add_arg_display_curent_state_mode(replace_parser)
 
         # Capitalize
         capitalize_parser = subparsers.add_parser('capitalize',
                                                 description = 'Capitalizes words in files / directories names',
                                                 formatter_class = BatchMPHelpFormatter)
         _add_include_mode_group(capitalize_parser)
-        self._add_arg_misc_group(capitalize_parser)
+        self._add_arg_display_curent_state_mode(capitalize_parser)
 
         # Delete
         delete_parser = subparsers.add_parser('delete',
@@ -244,7 +244,7 @@ class RenameArgParser(BatchMPArgParser):
         delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',
                 help = 'Delete all non-media files only',
                 action = 'store_true')
-        self._add_arg_misc_group(delete_parser)
+        self._add_arg_display_curent_state_mode(delete_parser)
         _add_include_mode_group(delete_parser)
 
 
