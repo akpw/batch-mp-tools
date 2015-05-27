@@ -42,7 +42,7 @@ class FSH:
     '''
     @staticmethod
     def full_path(path):
-        return  os.path.realpath(os.path.expanduser(path))
+        return os.path.realpath(os.path.expanduser(path)) if path else None
 
     @staticmethod
     def is_subdir(subdir_path, parent_path):

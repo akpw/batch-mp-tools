@@ -48,6 +48,7 @@
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
@@ -70,41 +71,43 @@
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, normalize, fragment, segment, silencesplit, denoise, ...}
+        {print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
-import os, sys,  argparse
+import os, argparse
 from datetime import timedelta
-from scripts.base.bmpbs import BMPBaseArgParser
+from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
 from batchmp.ffmptools.ffrunner import LogLevel
-from batchmp.ffmptools.ffcommands.convert import Convertor
-from batchmp.ffmptools.ffcommands.segment import Segmenter
-from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
-from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
-from batchmp.ffmptools.processors.basefp import BaseFFProcessor
-from batchmp.tags.output.formatters import OutputFormatType
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
 
 
-class BMFPArgParser(BMPBaseArgParser):
+class BMFPArgParser(BatchMPArgParser):
     ''' BMFP commands parsing
     '''
-    @staticmethod
-    def add_arg_misc_group(parser):
-        pass
+    def __init__(self):
+        self._script_name = 'BMFP'
+        self._description = '''
+                        BMFP is a batch audio/video media processor for efficient
+                        media content transformations across selected media files.
+                        BMFP supports operations such as batch conversion between various formats,
+                        normalization of audio volume, segmenting / fragmenting media files,
+                        denoising audio, detaching individual audio / video streams, etc.
+                        BMFP is built on top of FFmpeg (http://ffmpeg.org/),
+                        which needs to be installed and available in the command line.
+                        '''
 
-    @classmethod
-    def parse_commands(cls, parser):
-        ''' parses BMFP parsing
+    # Args Parsing
+    def parse_commands(self, parser):
+        ''' BMFP commands parsing
         '''
 
         # BFMP Global options
         target_output_group = parser.add_argument_group('Target Output Directory')
         target_output_group.add_argument("-td", "--target-dir", dest = "target_dir",
-                    type = lambda d: cls.is_valid_dir_path(parser, d),
+                    type = lambda d: self._is_valid_dir_path(parser, d),
                     help = "Target output directory. When omitted, will be automatically "
                             "created at the parent level of the input source. "
                             "For recursive processing, the processed files directory structure there "
@@ -143,10 +146,14 @@ class BMFPArgParser(BMPBaseArgParser):
                     action = 'store_true')
 
         # Commands
-        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'BMFP Commands')
+        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'BMFP Commands',
+                                           metavar = '{print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}')
+        self._add_version(subparsers)
+        self._add_info(subparsers)
 
         # Print
-        print_parser = subparsers.add_parser('print', description = 'Print source directory')
+        print_parser = subparsers.add_parser('print', description = 'Print source directory',
+                                                                formatter_class = BatchMPHelpFormatter)
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
                 help = 'Initial nested level for printing (0, i.e. root source directory by default)',
                 type = int,
@@ -165,7 +172,9 @@ class BMFPArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Convert
-        convert_parser = subparsers.add_parser('convert', description = 'Converts media to specified format')
+        convert_parser = subparsers.add_parser('convert',
+                                                    description = 'Converts media to specified format',
+                                                    formatter_class = BatchMPHelpFormatter)
         convert_parser.add_argument('-tf', '--target-format', dest='target_format',
                 help = 'Target format file extension, e.g. mp3 / m4a / mp4 / mov /...',
                 type = str,
@@ -183,7 +192,8 @@ class BMFPArgParser(BMPBaseArgParser):
         norm_parser = subparsers.add_parser('normalize',
                                             description = 'Nomalizes media files. ' \
                                                           'Both Peak and RMS normalizations are supported, ' \
-                                                          'Peak normalization is the default')
+                                                          'Peak normalization is the default',
+                                            formatter_class = BatchMPHelpFormatter)
         group = norm_parser.add_argument_group('RMS Normalization')
         group.add_argument('-rm', '--rms', dest='rms_norm',
                 help ='(TBD) Leverages RMS-based normalization to set average loudness across selected media files',
@@ -193,19 +203,23 @@ class BMFPArgParser(BMPBaseArgParser):
                 action = 'store_true')
 
         # Fragment
-        fragment_parser = subparsers.add_parser('fragment', description = 'Extracts a fragment via specified start time & duration')
+        fragment_parser = subparsers.add_parser('fragment',
+                                            description = 'Extracts a fragment via specified start time & duration',
+                                            formatter_class = BatchMPHelpFormatter)
         group = fragment_parser.add_argument_group('Fragment parameters')
         group.add_argument('-fs', '--starttime', dest='fragment_starttime',
                 help = 'Fragment start time, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: cls.is_timedelta(parser, f),
+                type = lambda f: self._is_timedelta(parser, f),
                 required = True)
         group.add_argument('-fd', '--duration', dest='fragment_duration',
                 help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: cls.is_timedelta(parser, f),
+                type = lambda f: self._is_timedelta(parser, f),
                 default = timedelta(days = 380))
 
         # Segment
-        segment_parser = subparsers.add_parser('segment', description = 'Segments media by specified maximum duration or file size')
+        segment_parser = subparsers.add_parser('segment',
+                                            description = 'Segments media by specified maximum duration or file size',
+                                            formatter_class = BatchMPHelpFormatter)
         segment_group = segment_parser.add_mutually_exclusive_group()
         segment_group.add_argument('-fs', '--filesize', dest='segment_filesize',
                 help = 'Maximum media file size in MB',
@@ -213,7 +227,7 @@ class BMFPArgParser(BMPBaseArgParser):
                 default = 0.0)
         segment_group.add_argument('-sd', '--duration', dest='segment_duration',
                 help = 'Maximum media duration, in seconds or in the "hh:mm:ss[.xxx]" format',
-                type = lambda f: cls.is_timedelta(parser, f),
+                type = lambda f: self._is_timedelta(parser, f),
                 default = timedelta(0))
         segment_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
                     help = "Reset timestamps at the begin of each segment, so that it "
@@ -223,12 +237,14 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
         # Silence Split
-        silencesplit_parser = subparsers.add_parser('silencesplit', description = 'Splits media files into segments via detecting specified silence')
+        silencesplit_parser = subparsers.add_parser('silencesplit',
+                                                description = 'Splits media files into segments via detecting specified silence',
+                                                formatter_class = BatchMPHelpFormatter)
         silencesplit_group = silencesplit_parser.add_argument_group('Silence detection parameters')
         silencesplit_group.add_argument('-md', '--min-duraiton', dest='min_duraiton',
                 help = 'Minimal silence duration, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
                                                 .format(SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS),
-                type = lambda md: cls.is_timedelta(parser, md),
+                type = lambda md: self._is_timedelta(parser, md),
                 default = timedelta(seconds = SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS))
         silencesplit_group.add_argument('-nt', '--noise-tolerance', dest='noise_tolerance',
                 help = 'Silence noise tolerance, specified as amplitude ratio (default is {})' \
@@ -243,7 +259,9 @@ class BMFPArgParser(BMPBaseArgParser):
                     action='store_true')
 
         # Denoise
-        denoise_parser = subparsers.add_parser('denoise', description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies')
+        denoise_parser = subparsers.add_parser('denoise',
+                                        description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies',
+                                        formatter_class = BatchMPHelpFormatter)
         denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
                 help = 'Applies filters in multiple passes',
                 type = int,
@@ -265,16 +283,16 @@ class BMFPArgParser(BMPBaseArgParser):
             choices = [LogLevel.QUIET, LogLevel.FFMPEG, LogLevel.VERBOSE],
             default = LogLevel.QUIET)
 
-    @classmethod
-    def default_command(cls, args, parser):
-        super().default_command(args, parser)
+    # Args Checking
+    def default_command(self, args, parser):
+        args['sub_cmd'] = 'print'
+        args['start_level'] = 0
         args['show_size'] = False
         args['show_tags'] = False
         args['show_volume'] = False
         args['show_silence'] = False
 
-    @classmethod
-    def check_args(cls, args, parser):
+    def check_args(self, args, parser):
         ''' Validation of supplied BMFP CLI arguments
         '''
         # Global options check
@@ -336,124 +354,7 @@ class BMFPArgParser(BMPBaseArgParser):
             args['ffmpeg_options'] = ' {}'.format(args['ffmpeg_options'])
 
 
-class BMFPDispatcher:
-    ''' BMFP CLI commands Dispatcher
-    '''
+    # Internal Helpers
     @staticmethod
-    def print_dir(args):
-        BaseFFProcessor().print_dir(src_dir = args['dir'],
-                start_level = args['start_level'], end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                show_size = args['show_size'], show_stats = True,
-                format = OutputFormatType.STATS if not args['show_tags'] else OutputFormatType.FULL,
-                show_volume = args['show_volume'], show_silence = args['show_silence'])
-
-    @staticmethod
-    def convert(args):
-        Convertor().convert(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                serial_exec = args['serial_exec'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                target_format = args['target_format'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
-
-    @staticmethod
-    def denoise(args):
-        Denoiser().apply_af_filters(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
-
-    @staticmethod
-    def normalize(args):
-        PeakNormalizer().peak_normalize(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
-
-    @staticmethod
-    def fragment(args):
-        Fragmenter().fragment(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                fragment_starttime = args['fragment_starttime'].total_seconds(),
-                fragment_duration = args['fragment_duration'].total_seconds(),
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
-
-    @staticmethod
-    def segment(args):
-        Segmenter().segment(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                segment_size_MB = args['segment_filesize'],
-                segment_length_secs = args['segment_duration'].total_seconds(),
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                reset_timestamps = args['reset_timestamps'],
-                preserve_metadata = args['preserve_metadata'])
-
-    @staticmethod
-    def silence_split(args):
-        SilenceSplitter().silence_split(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'],
-                reset_timestamps = args['reset_timestamps'],
-                silence_min_duration = args['min_duraiton'].total_seconds(),
-                silence_noise_tolerance_amplitude_ratio = args['noise_tolerance'])
-
-    @staticmethod
-    def dispatch():
-        ''' Dispatches BMFP commands
-        '''
-        args = BMFPArgParser.parse_options(script_name = 'bmfp', description = \
-                        '''
-                        BMFP is a batch audio/video media processor for efficient
-                        media content transformations across selected media files.
-                        BMFP supports operations such as batch conversion between various formats,
-                        normalization of audio volume, segmenting / fragmenting media files,
-                        denoising audio, detaching individual audio / video streams, etc.
-                        BMFP is built on top of FFmpeg (http://ffmpeg.org/),
-                        which needs to be installed and available in the command line.
-                        ''')
-
-        if args['sub_cmd'] == 'print':
-            BMFPDispatcher.print_dir(args)
-        if args['sub_cmd'] == 'convert':
-            BMFPDispatcher.convert(args)
-        if args['sub_cmd'] == 'denoise':
-            BMFPDispatcher.denoise(args)
-        if args['sub_cmd'] == 'normalize':
-            BMFPDispatcher.normalize(args)
-        elif args['sub_cmd'] == 'fragment':
-            BMFPDispatcher.fragment(args)
-        elif args['sub_cmd'] == 'segment':
-            BMFPDispatcher.segment(args)
-        elif args['sub_cmd'] == 'silencesplit':
-            BMFPDispatcher.silence_split(args)
-
-def main():
-    ''' BMFP entry point
-    '''
-    BMFPDispatcher.dispatch()
+    def _add_arg_misc_group(parser):
+        pass

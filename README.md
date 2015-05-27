@@ -171,6 +171,7 @@ I will follow up with more examples and common use-cases in future blogs.
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
@@ -181,7 +182,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands:
-        {print, flatten, index, add_date, add_text, remove, replace, capitalize, delete}
+        {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}
         $ renamer {command} -h  #run this for detailed help on individual commands
 
 ###tagger
@@ -229,6 +230,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
@@ -239,7 +241,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands:
-        {print, set, copy, index, remove, replace, capitalize, detauch}
+        {print, set, copy, index, remove, replace, capitalize, detauch, version, info}
         $ tagger {command} -h #run this for detailed help on individual commands
 
 ###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
@@ -278,6 +280,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
+        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
@@ -300,7 +303,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, normalize, fragment, segment, silencesplit, denoise, ...}
+        {print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 
 

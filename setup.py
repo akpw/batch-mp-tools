@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batchmp',
-    version='0.74',
+    version='0.75',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -32,9 +32,10 @@ setup(
     test_suite = 'tests.batch_mp_test_suite',
 
     entry_points={'console_scripts': [
-        'bmfp = scripts.bmfp:main',
-        'renamer = scripts.renamer:main',
-        'tagger = scripts.tagger:main',
+        'batchmp = batchmp.cli.base.bmp_dispatch:main',
+        'renamer = batchmp.cli.renamer.renamer_dispatch:main',
+        'tagger = batchmp.cli.tagger.tagger_dispatch:main',
+        'bmfp = batchmp.cli.bmfp.bmfp_dispatch:main',
     ]},
     zip_safe=True,
     classifiers=[
