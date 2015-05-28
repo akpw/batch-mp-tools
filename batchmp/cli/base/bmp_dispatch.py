@@ -14,7 +14,6 @@
 
 import pkg_resources
 import batchmp.cli.base.vchk
-import os, sys, datetime, string
 from batchmp.cli.base.bmp_options import BatchMPArgParser
 
 

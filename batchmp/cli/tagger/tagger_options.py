@@ -57,8 +57,10 @@
         [-in, --include]            Include: Unix-style name patterns separated by ';'
         [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
+                                      (shows hidden files excluded by default)
 
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
@@ -72,6 +74,7 @@
 
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
 from batchmp.tags.handlers.tagsholder import TagHolder
+from batchmp.fstools.fsutils import FSH
 
 
 class TaggerArgParser(BatchMPArgParser):
@@ -84,18 +87,18 @@ class TaggerArgParser(BatchMPArgParser):
         self._script_name = 'Tagger'
         self._description =  '''
         Tagger manages media metadata, such as tags and artwork.
-        It can read and write media metadata across many different formats,
+        It can read and write metadata across many different formats,
         with support for advanced metadata manipulation such as regexp-based replace in tags,
         template processing, etc.
         As default behavior, Tagger first visualises targeted changes and ask for confirmation
-        before actually doing anything.
+        before actually changing anything.
         '''
 
     # Args parsing
     def parse_commands(self, parser):
         ''' parses Tagger commands
         '''
-        def add_arg_diff_tags_only_mode(parser):
+        def _add_arg_diff_tags_only_mode(parser):
             parser.add_argument('-do', '--diff-only', dest = 'diff_tags_only',
                     help ='Show only changed tags in the confirmation propmt',
                     action = 'store_true')
@@ -183,7 +186,7 @@ class TaggerArgParser(BatchMPArgParser):
                 help = "Sets the Lyrics tag",
                 type = str)
         self._add_arg_display_curent_state_mode(set_tags_parser)
-        add_arg_diff_tags_only_mode(set_tags_parser)
+        _add_arg_diff_tags_only_mode(set_tags_parser)
 
          # Copy Tags
         copy_tags_parser = subparsers.add_parser('copy',
@@ -191,9 +194,10 @@ class TaggerArgParser(BatchMPArgParser):
                                     formatter_class = BatchMPHelpFormatter)
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
                 help = "TagHolder Media file: /Path_to_TagHolder_Media_File",
+                required = True,
                 type = lambda fpath: self._is_valid_file_path(parser, fpath))
         self._add_arg_display_curent_state_mode(copy_tags_parser)
-        add_arg_diff_tags_only_mode(copy_tags_parser)
+        _add_arg_diff_tags_only_mode(copy_tags_parser)
 
         # Index
         index_parser = subparsers.add_parser('index',
@@ -204,7 +208,7 @@ class TaggerArgParser(BatchMPArgParser):
                 type = int,
                 default = 1)
         self._add_arg_display_curent_state_mode(index_parser)
-        add_arg_diff_tags_only_mode(index_parser)
+        _add_arg_diff_tags_only_mode(index_parser)
 
          # Remove Tags
         remove_tags_parser = subparsers.add_parser('remove',
@@ -215,7 +219,7 @@ class TaggerArgParser(BatchMPArgParser):
                         "Supported tag fields: {}".format(', '.join(self.SUPPORTED_TAGGABLE_FIELDS)),
                 type = str)
         self._add_arg_display_curent_state_mode(remove_tags_parser)
-        add_arg_diff_tags_only_mode(remove_tags_parser)
+        _add_arg_diff_tags_only_mode(remove_tags_parser)
 
          # Replace Tags
         replace_parser = subparsers.add_parser('replace',
@@ -239,7 +243,7 @@ class TaggerArgParser(BatchMPArgParser):
                 help = 'Case insensitive',
                 action = 'store_true')
         self._add_arg_display_curent_state_mode(replace_parser)
-        add_arg_diff_tags_only_mode(replace_parser)
+        _add_arg_diff_tags_only_mode(replace_parser)
 
          # Capitalize Tags
         capitalize_parser = subparsers.add_parser('capitalize',
@@ -251,14 +255,14 @@ class TaggerArgParser(BatchMPArgParser):
                 type = str,
                 required=True)
         self._add_arg_display_curent_state_mode(capitalize_parser)
-        add_arg_diff_tags_only_mode(capitalize_parser)
+        _add_arg_diff_tags_only_mode(capitalize_parser)
 
         # Detauch Art
         detauch_parser = subparsers.add_parser('detauch',
                                     description = 'Detauches art into specified target directory',
                                     formatter_class = BatchMPHelpFormatter)
         detauch_parser.add_argument("-td", "--target_dir", dest = "target_dir",
-            type = lambda fpath: self.expanded_path(fpath),
+            type = lambda fpath: FSH.full_path(fpath),
             default = None,
             help = "Target directory for detauching art. When omitted, detauched art will be stored in "
                         "the top-level media files source directory")

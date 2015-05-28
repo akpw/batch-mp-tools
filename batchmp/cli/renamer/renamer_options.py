@@ -45,11 +45,11 @@
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
-        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
-
+                                      (shows hidden files excluded by default)
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
@@ -59,8 +59,8 @@
         {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}
         $ renamer {command} -h  #run this for detailed help on individual commands
 """
+
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
-from batchmp.fstools.fsutils import DWalker
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 
 
@@ -75,7 +75,8 @@ class RenameArgParser(BatchMPArgParser):
                         it also supports multi-level indexing across nested directories,
                         flattening folders, and cleaning up non-media files.
                         As default behavior, Renamer visualises targeted changes and ask
-                        for confirmation before actually doing anything.                        '''
+                        for confirmation before actually changing anything.
+                        '''
     # Args Parsing
     def parse_commands(self, parser):
         ''' Renamer commands parsing

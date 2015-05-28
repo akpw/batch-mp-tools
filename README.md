@@ -171,11 +171,11 @@ I will follow up with more examples and common use-cases in future blogs.
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
-        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
-
+                                      (shows hidden files excluded by default)
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
@@ -230,11 +230,11 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
-        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
-
+                                      (shows hidden files excluded by default)
       Miscellaneous:
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
@@ -280,10 +280,11 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
       Filter files or folders:
         [-in, --include]            Include: Unix-style name patterns separated by ';'
-        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
+                                      (shows hidden files excluded by default)
 
         Target output Directory     Target output directory. When omitted, will be
         [-td, --target-dir]         automatically created at the parent level of

@@ -50,8 +50,10 @@
         [-in, --include]            Include: Unix-style name patterns separated by ';'
         [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude: Unix-style name patterns separated by ';'
+                                      (excludes hidden files by default)
         [-fd, --filter-dirs]        Enable  Include/Exclude patterns on directories
         [-af, --all-files]          Disable Include/Exclude patterns on files
+                                      (shows hidden files excluded by default)
 
         Target output Directory     Target output directory. When omitted, will be
         [-td, --target-dir]         automatically created at the parent level of

@@ -18,17 +18,18 @@
         [-el, --end-level]          End level for recursion into nested folders
 
         [-in, --include]            Include names pattern (Unix style)
-        [-sh, --show-hidden]        Shows hidden files
         [-ex, --exclude]            Exclude names pattern (Unix style)
+                                      (excludes hidden files by default)
         [-ad, --all-dirs]           Prevent using Include/Exclude patterns on directories
         [-af, --all-files]          Prevent using Include/Exclude patterns on files
+                                      (shows hidden files excluded by default)
 
         [-s, --sort]{na|nd|sa|sd}   Sort order for files / folders (name | date, asc | desc)
         [-ni, nested-indent]        Indent for printing nested directories
         [-q, --quiet]               Do not visualise changes / show messages during processing
 """
-import batchmp.cli.base.vchk
-import os, sys, datetime, string
+
+import os, sys, string
 from argparse import ArgumentParser, HelpFormatter
 from distutils.util import strtobool
 from urllib.parse import urlparse
@@ -128,22 +129,19 @@ class BatchMPArgParser:
                     default = 0)
 
         include_mode_group = parser.add_argument_group('Filter files or folders')
-        include_mode_group.add_argument("-in", "--include",
+        include_mode_group.add_argument("-in", "--include", dest = "include",
                     help = "Include: Unix-style name patterns separated by ';'",
                     type = str,
                     default = DWalker.DEFAULT_INCLUDE)
-        include_mode_group.add_argument("-sh", "--show-hidden",  dest = "show_hidden",
-                    help = "Shows hidden files",
-                    action = 'store_true')
-        include_mode_group.add_argument("-ex", "--exclude",
-                    help = "Exclude: Unix-style name patterns separated by ';'",
+        include_mode_group.add_argument("-ex", "--exclude", dest = "exclude",
+                    help = "Exclude: Unix-style name patterns separated by ';' (excludes hidden files by default)",
                     type = str,
                     default = DWalker.DEFAULT_EXCLUDE)
         include_mode_group.add_argument("-fd", "--filter-dirs", dest = "filter_dirs",
                     help = "Enable Include/Exclude patterns on directories",
                     action = 'store_true')
         include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
-                    help = "Disable Include/Exclude patterns on files",
+                    help = "Disable Include/Exclude patterns on files (shows hidden files excluded by default)",
                     action = 'store_true')
 
         # Add Default Miscellaneous Group
@@ -177,10 +175,6 @@ class BatchMPArgParser:
         '''
         # check if there is a cmd to execute
         self.check_cmd_args(args, parser)
-
-        if args['show_hidden']:
-            if args['exclude'] == DWalker.DEFAULT_EXCLUDE:
-                args['exclude'] = ''
 
         # if input source is a file, need to adjust
         if args['file']:
@@ -241,8 +235,11 @@ class BatchMPArgParser:
     def _is_valid_url(parser, url_arg):
         url_parts = urlparse(url_arg)
 
-        if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
+        def _parser_error():
             parser.error('"{}": Please enter a valid URL'.format(url_arg))
+
+        if url_parts.scheme in (None, '') and url_parts.netloc in (None, ''):
+            _parser_error()
 
         if url_parts.scheme == 'file':
             if url_parts.netloc == '~':
@@ -252,9 +249,10 @@ class BatchMPArgParser:
             return BatchMPArgParser._is_valid_file_path(parser, fpath)
 
         if not set(url_parts.netloc).issubset(set(string.ascii_letters + string.digits + '-.')):
-            parser.error('"{}": Please enter a valid URL'.format(url_arg))
+            _parser_error()
+
         if not url_parts.scheme in ['http', 'https', 'ftp', 'file']:
-            parser.error('"{}": Please enter a valid URL'.format(url_arg))
+            _parser_error()
 
         return url_arg
 

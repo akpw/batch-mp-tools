@@ -41,8 +41,20 @@ class FSH:
     ''' FS helper utilities
     '''
     @staticmethod
-    def full_path(path):
-        return os.path.realpath(os.path.expanduser(path)) if path else None
+    def full_path(path, check_parent_path = False):
+        if path:
+            path = os.path.expanduser(path)
+            path = os.path.expandvars(path)
+            path = os.path.abspath(path)
+            path = os.path.realpath(path)
+
+        # for files, check that the parent dir exists
+        if check_parent_path:
+            if not os.access(os.path.dirname(path), os.W_OK):
+                print('Non-valid path:\n\t "{}"'.format(path))
+                sys.exit(1)
+
+        return path if path else None
 
     @staticmethod
     def is_subdir(subdir_path, parent_path):
