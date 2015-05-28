@@ -78,12 +78,35 @@
 """
 import os, argparse
 from datetime import timedelta
-from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
+from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.ffmptools.ffrunner import LogLevel
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
+
+
+class BMFPCommands(BatchMPBaseCommands):
+    CONVERT = 'convert'
+    NORMALIZE = 'normalize'
+    FRAGMENT = 'fragment'
+    SEGMENT = 'segment'
+    SILENCESPLIT = 'silencesplit'
+    DENOISE = 'denoise'
+
+    @classmethod
+    def commands_meta(cls):
+        return ''.join(('{',
+                        '{}, '.format(cls.PRINT),
+                        '{}, '.format(cls.CONVERT),
+                        '{}, '.format(cls.NORMALIZE),
+                        '{}, '.format(cls.FRAGMENT),
+                        '{}, '.format(cls.SEGMENT),
+                        '{}, '.format(cls.SILENCESPLIT),
+                        '{}, '.format(cls.DENOISE),
+                        '{}, '.format(cls.INFO),
+                        '{}'.format(cls.VERSION),
+                        '}'))
 
 
 class BMFPArgParser(BatchMPArgParser):
@@ -148,13 +171,14 @@ class BMFPArgParser(BatchMPArgParser):
                     action = 'store_true')
 
         # Commands
-        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'BMFP Commands',
-                                           metavar = '{print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}')
+        subparsers = parser.add_subparsers(dest='sub_cmd',
+                                                title = 'BMFP Commands',
+                                                    metavar = BMFPCommands.commands_meta())
         self._add_version(subparsers)
         self._add_info(subparsers)
 
         # Print
-        print_parser = subparsers.add_parser('print', description = 'Print source directory',
+        print_parser = subparsers.add_parser(BMFPCommands.PRINT, description = 'Print source directory',
                                                                 formatter_class = BatchMPHelpFormatter)
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
                 help = 'Initial nested level for printing (0, i.e. root source directory by default)',
@@ -174,7 +198,7 @@ class BMFPArgParser(BatchMPArgParser):
                 action = 'store_true')
 
         # Convert
-        convert_parser = subparsers.add_parser('convert',
+        convert_parser = subparsers.add_parser(BMFPCommands.CONVERT,
                                                     description = 'Converts media to specified format',
                                                     formatter_class = BatchMPHelpFormatter)
         convert_parser.add_argument('-tf', '--target-format', dest='target_format',
@@ -191,7 +215,7 @@ class BMFPArgParser(BatchMPArgParser):
                 action='store_true')
 
         # Nomalize
-        norm_parser = subparsers.add_parser('normalize',
+        norm_parser = subparsers.add_parser(BMFPCommands.NORMALIZE,
                                             description = 'Nomalizes media files. ' \
                                                           'Both Peak and RMS normalizations are supported, ' \
                                                           'Peak normalization is the default',
@@ -205,7 +229,7 @@ class BMFPArgParser(BatchMPArgParser):
                 action = 'store_true')
 
         # Fragment
-        fragment_parser = subparsers.add_parser('fragment',
+        fragment_parser = subparsers.add_parser(BMFPCommands.FRAGMENT,
                                             description = 'Extracts a fragment via specified start time & duration',
                                             formatter_class = BatchMPHelpFormatter)
         group = fragment_parser.add_argument_group('Fragment parameters')
@@ -219,7 +243,7 @@ class BMFPArgParser(BatchMPArgParser):
                 default = timedelta(days = 380))
 
         # Segment
-        segment_parser = subparsers.add_parser('segment',
+        segment_parser = subparsers.add_parser(BMFPCommands.SEGMENT,
                                             description = 'Segments media by specified maximum duration or file size',
                                             formatter_class = BatchMPHelpFormatter)
         segment_group = segment_parser.add_mutually_exclusive_group()
@@ -239,7 +263,7 @@ class BMFPArgParser(BatchMPArgParser):
                     action='store_true')
 
         # Silence Split
-        silencesplit_parser = subparsers.add_parser('silencesplit',
+        silencesplit_parser = subparsers.add_parser(BMFPCommands.SILENCESPLIT,
                                                 description = 'Splits media files into segments via detecting specified silence',
                                                 formatter_class = BatchMPHelpFormatter)
         silencesplit_group = silencesplit_parser.add_argument_group('Silence detection parameters')
@@ -261,7 +285,7 @@ class BMFPArgParser(BatchMPArgParser):
                     action='store_true')
 
         # Denoise
-        denoise_parser = subparsers.add_parser('denoise',
+        denoise_parser = subparsers.add_parser(BMFPCommands.DENOISE,
                                         description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies',
                                         formatter_class = BatchMPHelpFormatter)
         denoise_parser.add_argument('-np', '--numpasses', dest='num_passes',
@@ -360,3 +384,6 @@ class BMFPArgParser(BatchMPArgParser):
     @staticmethod
     def _add_arg_misc_group(parser):
         pass
+
+
+

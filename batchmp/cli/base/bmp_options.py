@@ -37,34 +37,17 @@ from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.fsutils import FSH, DWalker
 
 
-class BatchMPHelpFormatter(HelpFormatter):
-    ''' Custom formatter for ArgumentParser
-        Disables double metavar display, showing only for long-named options
-    '''
-    def _format_action_invocation(self, action):
-        if not action.option_strings:
-            metavar, = self._metavar_formatter(action, action.dest)(1)
-            return metavar
-        else:
-            parts = []
-            # if the Optional doesn't take a value, format is:
-            #    -s, --long
-            if action.nargs == 0:
-                parts.extend(action.option_strings)
+class BatchMPBaseCommands:
+    VERSION = 'version'
+    INFO = 'info'
+    PRINT = 'print'
 
-            # if the Optional takes a value, format is:
-            #    -s ARGS, --long ARGS
-            # change to
-            #    -s, --long ARGS
-            else:
-                default = action.dest.upper()
-                args_string = self._format_args(action, default)
-                for option_string in action.option_strings:
-                    #parts.append('%s %s' % (option_string, args_string))
-                    parts.append('%s' % option_string)
-                parts[-1] += ' %s'%args_string
-            return ', '.join(parts)
-
+    @classmethod
+    def commands_meta(cls):
+        return ''.join(('{',
+                        '{}, '.format(cls.INFO),
+                        '{}'.format(cls.VERSION),
+                        '}'))
 
 class BatchMPArgParser:
     def __init__(self):
@@ -150,7 +133,9 @@ class BatchMPArgParser:
     def parse_commands(self, parser):
         ''' Specific commands parsing
         '''
-        subparsers = parser.add_subparsers(dest = 'sub_cmd', title = 'BatchMP commands', metavar = '{info, version}')
+        subparsers = parser.add_subparsers(dest = 'sub_cmd',
+                                            title = 'BatchMP commands',
+                                                metavar = BatchMPBaseCommands.commands_meta())
         self._add_version(subparsers)
         self._add_info(subparsers)
 
@@ -300,13 +285,44 @@ class BatchMPArgParser:
     def _add_version(parser):
         ''' Adds the version command
         '''
-        parser.add_parser('version', description = 'Displays BatchMP version info',
-                                                        formatter_class=BatchMPHelpFormatter)
+        parser.add_parser(BatchMPBaseCommands.VERSION,
+                                description = 'Displays BatchMP version info',
+                                        formatter_class=BatchMPHelpFormatter)
 
     @staticmethod
     def _add_info(parser):
         ''' Adds the info command
         '''
-        parser.add_parser('info', description = 'Displays BatchMP info',
-                                                        formatter_class=BatchMPHelpFormatter)
+        parser.add_parser(BatchMPBaseCommands.INFO,
+                                description = 'Displays BatchMP info',
+                                        formatter_class=BatchMPHelpFormatter)
 
+
+
+class BatchMPHelpFormatter(HelpFormatter):
+    ''' Custom ArgumentParser formatter
+        Disables double metavar display, showing it only for long-named options
+    '''
+    def _format_action_invocation(self, action):
+        if not action.option_strings:
+            metavar, = self._metavar_formatter(action, action.dest)(1)
+            return metavar
+        else:
+            parts = []
+            # if the Optional doesn't take a value, format is:
+            #    -s, --long
+            if action.nargs == 0:
+                parts.extend(action.option_strings)
+
+            # if the Optional takes a value, format is:
+            #    -s ARGS, --long ARGS
+            # change to
+            #    -s, --long ARGS
+            else:
+                default = action.dest.upper()
+                args_string = self._format_args(action, default)
+                for option_string in action.option_strings:
+                    #parts.append('%s %s' % (option_string, args_string))
+                    parts.append('%s' % option_string)
+                parts[-1] += ' %s'%args_string
+            return ', '.join(parts)

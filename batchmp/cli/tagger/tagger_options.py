@@ -72,9 +72,34 @@
         $ tagger {command} -h #run this for detailed help on individual commands
 """
 
-from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
+from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.fstools.fsutils import FSH
+
+
+class TaggerCommands(BatchMPBaseCommands):
+    SET = 'set'
+    COPY = 'copy'
+    INDEX = 'index'
+    REMOVE = 'remove'
+    REPLACE = 'replace'
+    CAPITALIZE = 'capitalize'
+    DETAUCH = 'detauch'
+
+    @classmethod
+    def commands_meta(cls):
+        return ''.join(('{',
+                        '{}, '.format(cls.PRINT),
+                        '{}, '.format(cls.SET),
+                        '{}, '.format(cls.COPY),
+                        '{}, '.format(cls.INDEX),
+                        '{}, '.format(cls.REMOVE),
+                        '{}, '.format(cls.REPLACE),
+                        '{}, '.format(cls.CAPITALIZE),
+                        '{}, '.format(cls.DETAUCH),
+                        '{}, '.format(cls.INFO),
+                        '{}'.format(cls.VERSION),
+                        '}'))
 
 
 class TaggerArgParser(BatchMPArgParser):
@@ -103,13 +128,14 @@ class TaggerArgParser(BatchMPArgParser):
                     help ='Show only changed tags in the confirmation propmt',
                     action = 'store_true')
 
-        subparsers = parser.add_subparsers(dest='sub_cmd', title = 'Tagger Commands',
-                                            metavar = '{print, set, copy, index, remove, replace, capitalize, detauch, version, info}')
+        subparsers = parser.add_subparsers(dest='sub_cmd',
+                                                title = 'Tagger Commands',
+                                                        metavar = TaggerCommands.commands_meta())
         self._add_version(subparsers)
         self._add_info(subparsers)
 
         # Print
-        print_parser = subparsers.add_parser('print',
+        print_parser = subparsers.add_parser(TaggerCommands.PRINT,
                                             description = 'Print source directory',
                                             formatter_class = BatchMPHelpFormatter)
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
@@ -127,7 +153,7 @@ class TaggerArgParser(BatchMPArgParser):
                 action = 'store_true')
 
         # Set Tags
-        set_tags_parser = subparsers.add_parser('set',
+        set_tags_parser = subparsers.add_parser(TaggerCommands.SET,
                                     description = 'Sets specified tags in media files. ' \
                                                    'Supports templates, such as $filename, $title, $album, ... ',
                                     formatter_class = BatchMPHelpFormatter)
@@ -189,7 +215,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(set_tags_parser)
 
          # Copy Tags
-        copy_tags_parser = subparsers.add_parser('copy',
+        copy_tags_parser = subparsers.add_parser(TaggerCommands.COPY,
                                     description = 'Copies tags from a specified media file',
                                     formatter_class = BatchMPHelpFormatter)
         copy_tags_parser.add_argument('-th', '--tagholder', dest='tagholder',
@@ -200,7 +226,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(copy_tags_parser)
 
         # Index
-        index_parser = subparsers.add_parser('index',
+        index_parser = subparsers.add_parser(TaggerCommands.INDEX,
                                     description = 'Index Tracks for selected media files',
                                     formatter_class = BatchMPHelpFormatter)
         index_parser.add_argument('-sf', '--startfrom', dest='start_from',
@@ -211,7 +237,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(index_parser)
 
          # Remove Tags
-        remove_tags_parser = subparsers.add_parser('remove',
+        remove_tags_parser = subparsers.add_parser(TaggerCommands.REMOVE,
                                     description = 'Remove tags from media files',
                                     formatter_class = BatchMPHelpFormatter)
         remove_tags_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
@@ -222,7 +248,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(remove_tags_parser)
 
          # Replace Tags
-        replace_parser = subparsers.add_parser('replace',
+        replace_parser = subparsers.add_parser(TaggerCommands.REPLACE,
                                     description = 'RegExp-based replace in specified tag fields',
                                     formatter_class = BatchMPHelpFormatter)
         replace_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
@@ -246,7 +272,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(replace_parser)
 
          # Capitalize Tags
-        capitalize_parser = subparsers.add_parser('capitalize',
+        capitalize_parser = subparsers.add_parser(TaggerCommands.CAPITALIZE,
                                     description = 'Capitalize words in specified tag fields',
                                     formatter_class = BatchMPHelpFormatter)
         capitalize_parser.add_argument('-tf', '--tag-fields', dest='tag_fields',
@@ -258,7 +284,7 @@ class TaggerArgParser(BatchMPArgParser):
         _add_arg_diff_tags_only_mode(capitalize_parser)
 
         # Detauch Art
-        detauch_parser = subparsers.add_parser('detauch',
+        detauch_parser = subparsers.add_parser(TaggerCommands.DETAUCH,
                                     description = 'Detauches art into specified target directory',
                                     formatter_class = BatchMPHelpFormatter)
         detauch_parser.add_argument("-td", "--target_dir", dest = "target_dir",

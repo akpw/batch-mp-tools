@@ -13,7 +13,7 @@
 ## GNU General Public License for more details.
 
 from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
-from batchmp.cli.tagger.tagger_options import TaggerArgParser
+from batchmp.cli.tagger.tagger_options import TaggerArgParser, TaggerCommands
 from batchmp.commons.utils import ImageLoader
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
@@ -32,28 +32,28 @@ class TagsDispatcher(BatchMPDispatcher):
         '''
         if not super().dispatch():
             args = self.option_parser.parse_options()
-            if args['sub_cmd'] == 'print':
+            if args['sub_cmd'] == TaggerCommands.PRINT:
                 self.print_dir(args)
 
-            elif args['sub_cmd'] == 'set':
+            elif args['sub_cmd'] == TaggerCommands.SET:
                 self.set_tags(args)
 
-            elif args['sub_cmd'] == 'copy':
+            elif args['sub_cmd'] == TaggerCommands.COPY:
                 self.copy_tags(args)
 
-            elif args['sub_cmd'] == 'index':
+            elif args['sub_cmd'] == TaggerCommands.INDEX:
                 self.index(args)
 
-            elif args['sub_cmd'] == 'remove':
+            elif args['sub_cmd'] == TaggerCommands.REMOVE:
                 self.remove_tags(args)
 
-            elif args['sub_cmd'] == 'replace':
+            elif args['sub_cmd'] == TaggerCommands.REPLACE:
                 self.replace_tags(args)
 
-            elif args['sub_cmd'] == 'capitalize':
+            elif args['sub_cmd'] == TaggerCommands.CAPITALIZE:
                 self.capitalize_tags(args)
 
-            elif args['sub_cmd'] == 'detauch':
+            elif args['sub_cmd'] == TaggerCommands.DETAUCH:
                 self.detauch_art(args)
 
             else:

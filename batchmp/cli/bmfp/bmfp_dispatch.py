@@ -13,7 +13,7 @@
 ## GNU General Public License for more details.
 
 from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
-from batchmp.cli.bmfp.bmfp_options import BMFPArgParser
+from batchmp.cli.bmfp.bmfp_options import BMFPArgParser, BMFPCommands
 from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
@@ -36,25 +36,25 @@ class BMFPDispatcher(BatchMPDispatcher):
         '''
         if not super().dispatch():
             args = self.option_parser.parse_options()
-            if args['sub_cmd'] == 'print':
+            if args['sub_cmd'] == BMFPCommands.PRINT:
                 self.print_dir(args)
 
-            elif args['sub_cmd'] == 'convert':
+            elif args['sub_cmd'] == BMFPCommands.CONVERT:
                 self.convert(args)
 
-            elif args['sub_cmd'] == 'denoise':
+            elif args['sub_cmd'] == BMFPCommands.DENOISE:
                 self.denoise(args)
 
-            elif args['sub_cmd'] == 'normalize':
+            elif args['sub_cmd'] == BMFPCommands.NORMALIZE:
                 self.normalize(args)
 
-            elif args['sub_cmd'] == 'fragment':
+            elif args['sub_cmd'] == BMFPCommands.FRAGMENT:
                 self.fragment(args)
 
-            elif args['sub_cmd'] == 'segment':
+            elif args['sub_cmd'] == BMFPCommands.SEGMENT:
                 self.segment(args)
 
-            elif args['sub_cmd'] == 'silencesplit':
+            elif args['sub_cmd'] == BMFPCommands.SILENCESPLIT:
                 self.silence_split(args)
 
             else:

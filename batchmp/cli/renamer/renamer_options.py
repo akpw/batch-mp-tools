@@ -60,8 +60,35 @@
         $ renamer {command} -h  #run this for detailed help on individual commands
 """
 
-from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter
+from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
+
+
+class RenamerCommands(BatchMPBaseCommands):
+    INDEX = 'index'
+    ADD_DATE = 'add_date'
+    ADD_TEXT = 'add_text'
+    REMOVE = 'remove'
+    REPLACE = 'replace'
+    CAPITALIZE = 'capitalize'
+    FLATTEN = 'flatten'
+    DELETE = 'delete'
+
+    @classmethod
+    def commands_meta(cls):
+        return ''.join(('{',
+                        '{}, '.format(cls.PRINT),
+                        '{}, '.format(cls.INDEX),
+                        '{}, '.format(cls.ADD_DATE),
+                        '{}, '.format(cls.ADD_TEXT),
+                        '{}, '.format(cls.REMOVE),
+                        '{}, '.format(cls.REPLACE),
+                        '{}, '.format(cls.CAPITALIZE),
+                        '{}, '.format(cls.FLATTEN),
+                        '{}, '.format(cls.DELETE),
+                        '{}, '.format(cls.INFO),
+                        '{}'.format(cls.VERSION),
+                        '}'))
 
 
 class RenameArgParser(BatchMPArgParser):
@@ -82,8 +109,9 @@ class RenameArgParser(BatchMPArgParser):
         ''' Renamer commands parsing
         '''
         # Commands
-        subparsers = parser.add_subparsers(dest = 'sub_cmd', title = 'Renamer Commands',
-                                            metavar = '{print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}')
+        subparsers = parser.add_subparsers(dest = 'sub_cmd',
+                                                title = 'Renamer Commands',
+                                                        metavar = RenamerCommands.commands_meta())
         self._add_version(subparsers)
         self._add_info(subparsers)
 
@@ -97,7 +125,7 @@ class RenameArgParser(BatchMPArgParser):
                 action = 'store_true')
 
         # Print
-        print_parser = subparsers.add_parser('print',
+        print_parser = subparsers.add_parser(RenamerCommands.PRINT,
                                                 description = 'Print source directory',
                                                 formatter_class = BatchMPHelpFormatter)
         print_parser.add_argument('-sl', '--start-level', dest = 'start_level',
@@ -109,7 +137,7 @@ class RenameArgParser(BatchMPArgParser):
                 action = 'store_true')
 
         # Flatten
-        flatten_parser = subparsers.add_parser('flatten',
+        flatten_parser = subparsers.add_parser(RenamerCommands.FLATTEN,
                 description = 'Flatten all folders below target level, moving the files up the target level. \
                                                   By default, all empty flattened folders will be deleted.',
                 formatter_class = BatchMPHelpFormatter)
@@ -128,7 +156,7 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(flatten_parser)
 
         # Add index
-        add_index_parser = subparsers.add_parser('index',
+        add_index_parser = subparsers.add_parser(RenamerCommands.INDEX,
                                                  description = 'Adds index to files and directories names',
                                                 formatter_class = BatchMPHelpFormatter)
         add_index_parser.add_argument('-sf', '--start-from', dest = 'start_from',
@@ -160,7 +188,7 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(add_index_parser)
 
         # Add Date
-        add_date_parser = subparsers.add_parser('add_date',
+        add_date_parser = subparsers.add_parser(RenamerCommands.ADD_DATE,
                                                 description = 'Adds date to files and directories names',
                                                 formatter_class = BatchMPHelpFormatter)
         add_date_parser.add_argument('-ap', '--as-prefix', dest = 'as_prefix',
@@ -178,7 +206,7 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(add_date_parser)
 
         # Add Text
-        add_text_parser = subparsers.add_parser('add_text',
+        add_text_parser = subparsers.add_parser(RenamerCommands.ADD_TEXT,
                                                 description = 'Adds text to files and directories names',
                                                 formatter_class = BatchMPHelpFormatter)
         add_text_parser.add_argument('-ap', '--asprefix', dest = 'as_prefix',
@@ -196,7 +224,7 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(add_text_parser)
 
         # Remove chars
-        remove_chars_parser = subparsers.add_parser('remove',
+        remove_chars_parser = subparsers.add_parser(RenamerCommands.REMOVE,
                                             description = 'Removes n characters from files and directories names',
                                             formatter_class = BatchMPHelpFormatter)
         remove_chars_parser.add_argument('-nc', '--num-chars', dest = 'num_chars',
@@ -210,7 +238,7 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(remove_chars_parser)
 
         # Replace
-        replace_parser = subparsers.add_parser('replace',
+        replace_parser = subparsers.add_parser(RenamerCommands.REPLACE,
                                             description = 'RegExp-based replace in files and directories names',
                                             formatter_class = BatchMPHelpFormatter)
         replace_parser.add_argument('-fs', '--find-string', dest = 'find_str',
@@ -232,14 +260,14 @@ class RenameArgParser(BatchMPArgParser):
         self._add_arg_display_curent_state_mode(replace_parser)
 
         # Capitalize
-        capitalize_parser = subparsers.add_parser('capitalize',
+        capitalize_parser = subparsers.add_parser(RenamerCommands.CAPITALIZE,
                                                 description = 'Capitalizes words in files / directories names',
                                                 formatter_class = BatchMPHelpFormatter)
         _add_include_mode_group(capitalize_parser)
         self._add_arg_display_curent_state_mode(capitalize_parser)
 
         # Delete
-        delete_parser = subparsers.add_parser('delete',
+        delete_parser = subparsers.add_parser(RenamerCommands.DELETE,
                                             description = 'Delete selected files and directories',
                                             formatter_class = BatchMPHelpFormatter)
         delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',

@@ -14,7 +14,7 @@
 
 import pkg_resources
 import batchmp.cli.base.vchk
-from batchmp.cli.base.bmp_options import BatchMPArgParser
+from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPBaseCommands
 
 
 class BatchMPDispatcher:
@@ -27,10 +27,10 @@ class BatchMPDispatcher:
     def dispatch(self):
         args = self.option_parser.parse_options()
 
-        if args['sub_cmd'] == 'version':
+        if args['sub_cmd'] == BatchMPBaseCommands.VERSION:
             self.print_version()
 
-        elif args['sub_cmd'] == 'info':
+        elif args['sub_cmd'] == BatchMPBaseCommands.INFO:
             self.print_info()
 
         else:

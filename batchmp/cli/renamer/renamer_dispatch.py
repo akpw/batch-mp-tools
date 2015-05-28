@@ -13,7 +13,7 @@
 ## GNU General Public License for more details.
 
 from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
-from batchmp.cli.renamer.renamer_options import RenameArgParser
+from batchmp.cli.renamer.renamer_options import RenameArgParser, RenamerCommands
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
 
@@ -30,31 +30,31 @@ class RenameDispatcher(BatchMPDispatcher):
         '''
         if not super().dispatch():
             args = self.option_parser.parse_options()
-            if args['sub_cmd'] == 'print':
+            if args['sub_cmd'] == RenamerCommands.PRINT:
                 self.print_dir(args)
 
-            elif args['sub_cmd'] == 'flatten':
+            elif args['sub_cmd'] == RenamerCommands.FLATTEN:
                 self.flatten(args)
 
-            elif args['sub_cmd'] == 'index':
+            elif args['sub_cmd'] == RenamerCommands.INDEX:
                 self.add_index(args)
 
-            elif args['sub_cmd'] == 'add_date':
+            elif args['sub_cmd'] == RenamerCommands.ADD_DATE:
                 self.add_date(args)
 
-            elif args['sub_cmd'] == 'add_text':
+            elif args['sub_cmd'] == RenamerCommands.ADD_TEXT:
                 self.add_text(args)
 
-            elif args['sub_cmd'] == 'remove':
+            elif args['sub_cmd'] == RenamerCommands.REMOVE:
                 self.remove(args)
 
-            elif args['sub_cmd'] == 'replace':
+            elif args['sub_cmd'] == RenamerCommands.REPLACE:
                 self.replace(args)
 
-            elif args['sub_cmd'] == 'capitalize':
+            elif args['sub_cmd'] == RenamerCommands.CAPITALIZE:
                 self.capitalize(args)
 
-            elif args['sub_cmd'] == 'delete':
+            elif args['sub_cmd'] == RenamerCommands.DELETE:
                 self.delete(args)
 
             else:
