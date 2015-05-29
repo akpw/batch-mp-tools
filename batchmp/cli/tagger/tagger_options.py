@@ -112,13 +112,15 @@ class TaggerArgParser(BatchMPArgParser):
         self._script_name = 'Tagger'
         self._description =  \
         '''
-        Tagger manages media metadata, such as tags and artwork.
-        It can read and write metadata across many different formats,
-        with support for advanced metadata manipulation such as regexp-based replace in tags,
-        template processing, etc.
+        Tagger manages media metadata, such as tags and
+        artwork. It can read and write metadata across
+        many different formats, with support for advanced
+        metadata manipulation such as regexp-based replace
+        in tags, template processing, etc.
 
-        As default behavior, Tagger first visualises targeted changes and ask for confirmation
-        before actually changing anything.
+        As default behavior, Tagger first visualises targeted
+        changes and ask for confirmation before actually
+        changing anything.
         '''
 
     # Args parsing

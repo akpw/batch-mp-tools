@@ -98,13 +98,16 @@ class RenameArgParser(BatchMPArgParser):
         self._script_name = 'Renamer'
         self._description = \
         '''
-        Renamer is a multi-platform batch rename tool. In addition to common
-        operations such as regexp-based replace, adding text / dates,
-        etc. it also supports multi-level indexing across nested directories,
-        flattening folders, and cleaning up non-media files.
+        Renamer is a multi-platform batch rename tool.
+        In addition to common rename operations such as
+        regexp-based replace, adding text / dates, etc.
+        it also supports multi-level indexing across
+        nested directories, flattening folders, and
+        cleaning up non-media files.
 
-        As default behavior, Renamer visualises targeted changes and ask
-        for confirmation before actually changing anything.
+        As default behavior, Renamer visualises targeted
+        changes and ask for confirmation before actually
+        changing anything.
         '''
     # Args Parsing
     def parse_commands(self, parser):
