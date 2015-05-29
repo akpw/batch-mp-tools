@@ -76,7 +76,7 @@
         {print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
-import os, argparse
+import os, sys, argparse
 from datetime import timedelta
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.ffmptools.ffrunner import LogLevel
