@@ -358,6 +358,7 @@ class BMFPArgParser(BatchMPArgParser):
             if args['show_volume'] or args['show_silence']:
                 if not FFH.ffmpeg_installed():
                     print(FFmpegNotInstalled().default_message)
+                    sys.exit(0)
 
         # Segment attributes check
         elif args['sub_cmd'] == 'segment':
