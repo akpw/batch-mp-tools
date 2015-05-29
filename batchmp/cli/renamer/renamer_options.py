@@ -59,7 +59,7 @@
         {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}
         $ renamer {command} -h  #run this for detailed help on individual commands
 """
-
+import sys
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 
