@@ -110,11 +110,13 @@ class TaggerArgParser(BatchMPArgParser):
 
     def __init__(self):
         self._script_name = 'Tagger'
-        self._description =  '''
+        self._description =  \
+        '''
         Tagger manages media metadata, such as tags and artwork.
         It can read and write metadata across many different formats,
         with support for advanced metadata manipulation such as regexp-based replace in tags,
         template processing, etc.
+
         As default behavior, Tagger first visualises targeted changes and ask for confirmation
         before actually changing anything.
         '''
@@ -295,7 +297,7 @@ class TaggerArgParser(BatchMPArgParser):
 
     # Args Checking
     def default_command(self, args, parser):
-        args['sub_cmd'] = 'print'
+        args['sub_cmd'] = TaggerCommands.PRINT
         args['start_level'] = 0
         args['show_size'] = False
         args['show_stats'] = False

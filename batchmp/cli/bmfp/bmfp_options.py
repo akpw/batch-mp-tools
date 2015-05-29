@@ -114,15 +114,18 @@ class BMFPArgParser(BatchMPArgParser):
     '''
     def __init__(self):
         self._script_name = 'BMFP'
-        self._description = '''
-                        BMFP is a batch audio/video media processor for efficient
-                        media content transformations across selected media files.
-                        BMFP supports operations such as batch conversion between various formats,
-                        normalization of audio volume, segmenting / fragmenting media files,
-                        denoising audio, detaching individual audio / video streams, etc.
-                        BMFP is built on top of FFmpeg (http://ffmpeg.org/),
-                        which needs to be installed and available in the command line.
-                        '''
+        self._description = \
+        '''
+        BMFP is a batch audio/video media processor for efficient
+        media content transformations across selected media files.
+        BMFP supports operations such as batch conversion between
+        various formats, normalization of audio volume,
+        segmenting / fragmenting media files, denoising audio,
+        detaching individual audio / video streams, etc.
+
+        BMFP is built on top of FFmpeg (http://ffmpeg.org/),
+        which needs to be installed and available in the command line.
+        '''
 
     # Args Parsing
     def parse_commands(self, parser):
@@ -311,7 +314,7 @@ class BMFPArgParser(BatchMPArgParser):
 
     # Args Checking
     def default_command(self, args, parser):
-        args['sub_cmd'] = 'print'
+        args['sub_cmd'] = BMFPCommands.PRINT
         args['start_level'] = 0
         args['show_size'] = False
         args['show_tags'] = False

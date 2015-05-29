@@ -52,18 +52,19 @@ class BatchMPBaseCommands:
 class BatchMPArgParser:
     def __init__(self):
         self._script_name = 'BatchMP'
-        self._description = '''
-        BatchMP provide management of media files,
-        from base properties such as file names
-        through tags / artwork metadata to
-        advanced operations on the media content.
+        self._description = \
+    '''
+    BatchMP provide management of media files,
+    from base properties such as file names
+    through tags / artwork metadata to
+    advanced operations on the media content.
 
-        BatchMP tools  consist of three main command-line utilities.
-        For more information, run:
-            $ renamer -h
-            $ tagger -h
-            $ bmfp -h
-        '''
+    BatchMP tools  consist of three main command-line utilities.
+    For more information, run:
+        $ renamer -h
+        $ tagger -h
+        $ bmfp -h
+    '''
 
     @property
     def description(self):
@@ -153,7 +154,7 @@ class BatchMPArgParser:
             self.default_command(args, parser)
 
     def default_command(self, args, parser):
-        args['sub_cmd'] = 'info'
+        args['sub_cmd'] = BatchMPBaseCommands.INFO
 
     def check_args(self, args, parser):
         ''' Validation of supplied CLI arguments
