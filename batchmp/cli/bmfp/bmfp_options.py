@@ -120,12 +120,13 @@ class BMFPArgParser(BatchMPArgParser):
         efficient media content transformations across
         selected media files. BMFP supports operations
         such as batch conversion between various formats,
-        normalization of audio volume, segmenting / fragmenting
-        media files, denoising audio, detaching
-        individual audio / video streams, etc.
+        normalization of audio volume,
+        segmenting / fragmenting media, denoising audio,
+        detaching individual audio / video streams, etc.
 
         BMFP is built on top of FFmpeg (http://ffmpeg.org/),
-        which needs to be installed and available in the command line.
+        which needs to be installed and available
+        in the command line.
         '''
 
     # Args Parsing

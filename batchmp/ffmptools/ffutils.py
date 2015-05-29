@@ -29,24 +29,27 @@ class FFmpegNotInstalled(Exception):
 
     @property
     def default_message(self):
-        windows_instructions =  '''
-            Installing on Windows:
-                http://www.wikihow.com/Install-FFmpeg-on-Windows
-                http://www.renevolution.com/how-to-get-ffmpeg-for-windows/
-                                '''
-        macos_instructions =    '''
-            Installing on Mac OS X:
-                http://www.renevolution.com/how-to-install-ffmpeg-on-mac-os-x/
-                                '''
-        linux_instructions =    '''
-            Installing on Ubuntu and Debian:
-                $ sudo apt-get update
-                $ sudo apt-get install ffmpeg
+        windows_instructions =  \
+        '''
+        Installing on Windows:
+            http://www.wikihow.com/Install-FFmpeg-on-Windows
+            http://www.renevolution.com/how-to-get-ffmpeg-for-windows/
+        '''
+        macos_instructions =   \
+        '''
+        Installing on Mac OS X:
+            http://www.renevolution.com/how-to-install-ffmpeg-on-mac-os-x/
+        '''
+        linux_instructions =   \
+        '''
+        Installing on Ubuntu and Debian:
+            $ sudo apt-get update
+            $ sudo apt-get install ffmpeg
 
-            Installing on CentOS/RHEL and Fedora:
-                enable atrpms repository, then:
-                # yum install ffmpeg
-                                '''
+        Installing on CentOS/RHEL and Fedora:
+            enable atrpms repository, then:
+            # yum install ffmpeg
+        '''
 
         platforms_install_instructions = ''
 
@@ -57,7 +60,8 @@ class FFmpegNotInstalled(Exception):
         elif sys.platform == 'win32':
             platforms_install_instructions = windows_instructions
 
-        return  '''
+        return  \
+        '''
 
         Looks like FFmpeg is not installed
 
