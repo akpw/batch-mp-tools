@@ -16,7 +16,7 @@ import sys, math, datetime
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
-from batchmp.ffmptools.ffutils import FFH
+from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
