@@ -357,6 +357,7 @@ class BMFPArgParser(BatchMPArgParser):
         if args['sub_cmd'] == 'print':
             if args['show_volume'] or args['show_silence']:
                 if not FFH.ffmpeg_installed():
+                    print('Advanced media content operations require FFmpeg')
                     print(FFmpegNotInstalled().default_message)
                     sys.exit(0)
 

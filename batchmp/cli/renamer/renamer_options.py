@@ -304,7 +304,10 @@ class RenameArgParser(BatchMPArgParser):
         elif args['sub_cmd'] == 'delete':
             if args['non_media_files_only']:
                 if not FFH.ffmpeg_installed():
+                    print('Advanced media-related operations require FFmpeg')
                     print(FFmpegNotInstalled().default_message)
+                    sys.exit(0)
+
 
 
 
