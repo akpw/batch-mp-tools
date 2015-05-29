@@ -43,6 +43,12 @@ class BaseFFProcessor:
 
         ''' Prints tags in selected media files
         '''
+
+        if show_volume or show_silence:
+            if not FFH.ffmpeg_installed():
+                print(FFmpegNotInstalled().default_message)
+                sys.exit(0)
+
         base_formatter = partial(TagOutputFormatter.tags_formatter,
                                         format = format if format else OutputFormatType.COMPACT,
                                         handler = self.handler,
