@@ -78,7 +78,7 @@ class MiscHelpers:
         hrs = mins = secs = None
         td = td_str.split(':')
         time_parts = range(len(td))
-        for i in time_parts:
+        for _ in time_parts:
             if secs is None:
                 secs = float(td.pop(-1))
             elif mins is None:
@@ -153,5 +153,6 @@ class ImageLoader:
 # Quick dev test
 if __name__ == '__main__':
     td = MiscHelpers.time_delta('00:24.5764654645464')
+    print(td)
     print(MiscHelpers.time_delta_str(td.total_seconds(), num_miliseconds = -1))
 

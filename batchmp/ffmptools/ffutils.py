@@ -144,7 +144,7 @@ class FFH:
                 return None
 
             streams = out.get('streams')
-            audio_streams = video_streams = None
+            audio_streams = video_streams = artwork_streams = None
             if streams:
                 is_audio_stream = lambda stream: True if stream.get('codec_type') == 'audio' else False
                 is_video_stream = lambda stream: True if stream.get('codec_type') == 'video' else False

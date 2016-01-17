@@ -20,6 +20,7 @@ from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
 from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
+from batchmp.ffmptools.ffcommands.cuesplit import CueSplitter
 from batchmp.ffmptools.processors.basefp import BaseFFProcessor
 from batchmp.tags.output.formatters import OutputFormatType
 
@@ -56,6 +57,9 @@ class BMFPDispatcher(BatchMPDispatcher):
 
             elif args['sub_cmd'] == BMFPCommands.SILENCESPLIT:
                 self.silence_split(args)
+
+            elif args['sub_cmd'] == BMFPCommands.CUESPLIT:
+                self.cue_split(args)
 
             else:
                 print('Nothing to dispatch')
@@ -140,6 +144,19 @@ class BMFPDispatcher(BatchMPDispatcher):
                 reset_timestamps = args['reset_timestamps'],
                 silence_min_duration = args['min_duraiton'].total_seconds(),
                 silence_noise_tolerance_amplitude_ratio = args['noise_tolerance'])
+
+    def cue_split(self, args):
+        CueSplitter().cue_split(src_dir = args['dir'],
+                end_level = args['end_level'], quiet=args['quiet'],
+                include = args['include'], exclude = args['exclude'],
+                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+                serial_exec = args['serial_exec'],
+                target_dir = args['target_dir'], log_level = args['log_level'],
+                target_format = args['target_format'],
+                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
+                preserve_metadata = args['preserve_metadata'],
+                encoding = args['encoding'])
+
 
 def main():
     ''' BMFP entry point

@@ -31,6 +31,12 @@
                                     $ bmfp segment -d 45:00
           .. silencesplit   Splits media files into segments via detecting specified silence
                                     $ bmfp silencesplit
+
+          .. cuesplit       Splits media files into parts with specified output format,
+                            according to their respective cue sheets
+                                For example, to split media files in current directory
+                                    $ bmfp cuesplit -la -tf FLAC
+
           .. denoise        Reduces background audio noise in media files
 
           .. adjust volume  TDB: Adjust audio volume
@@ -73,7 +79,7 @@
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}
+        {print, convert, normalize, fragment, segment, silencesplit, cuesplit, denoise, version, info}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 """
 import os, sys, argparse
@@ -92,6 +98,7 @@ class BMFPCommands(BatchMPBaseCommands):
     FRAGMENT = 'fragment'
     SEGMENT = 'segment'
     SILENCESPLIT = 'silencesplit'
+    CUESPLIT = 'cuesplit'
     DENOISE = 'denoise'
 
     @classmethod
@@ -103,6 +110,7 @@ class BMFPCommands(BatchMPBaseCommands):
                         '{}, '.format(cls.FRAGMENT),
                         '{}, '.format(cls.SEGMENT),
                         '{}, '.format(cls.SILENCESPLIT),
+                        '{}, '.format(cls.CUESPLIT),
                         '{}, '.format(cls.DENOISE),
                         '{}, '.format(cls.INFO),
                         '{}'.format(cls.VERSION),
@@ -289,6 +297,30 @@ class BMFPArgParser(BatchMPArgParser):
                             "May not work well for some formats / combinations of muxers/codecs",
                     action='store_true')
 
+        # Cue Split
+        cuesplit_parser = subparsers.add_parser(BMFPCommands.CUESPLIT,
+                                                description = 'Splits media files according to their respective cue sheets',
+                                                formatter_class = BatchMPHelpFormatter)
+
+        cuesplit_parser.add_argument('-en', '--encoding', dest='encoding',
+                help = 'Cue file encoding, utf-8 by default',
+                type = str,
+                default = 'utf-8')
+
+        group = cuesplit_parser.add_argument_group('Conversion Options')
+        group.add_argument('-tf', '--target-format', dest='target_format',
+                help = 'Target format file extension, e.g. mp3 / m4a / mp4 ...',
+                type = str,
+                required = True)
+        group.add_argument('-cc', '--change-container', dest='change_container',
+                help = 'Changes media container without actual re-encoding of contained streams. When specified, ' \
+                       'takes priority over all other option switches except for those explicitly specified via "-fo/ --ffmpeg-options"',
+                action='store_true')
+        group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
+                help = 'For media formats with support for lossless audio, tries a lossless conversion',
+                action='store_true')
+
+
         # Denoise
         denoise_parser = subparsers.add_parser(BMFPCommands.DENOISE,
                                         description = 'Reduces background audio noise in media files via filtering out highpass / low-pass frequencies',
@@ -367,7 +399,7 @@ class BMFPArgParser(BatchMPArgParser):
                 parser.error('bmfp segment:\n\t'
                              'One of the command parameters needs to be specified: <filesize | duration>')
 
-        elif args['sub_cmd'] == 'convert':
+        elif args['sub_cmd'] in ('convert', 'cuesplit'):
             # Convert attributes check
             args['target_format'] = args['target_format'].lower()
             if not args['target_format'].startswith('.'):
