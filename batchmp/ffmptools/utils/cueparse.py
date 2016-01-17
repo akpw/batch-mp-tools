@@ -199,37 +199,3 @@ class CueParser:
         time_offset = CueTrack.TimeOffset(mins, secs, frames)
         return time_offset
 
-from datetime import timedelta
-if __name__ == '__main__':
-    dir = '/Users/AKPower/Desktop/Trifonov'
-    cue_filepath = 'trifonov.cue'
-    cue_filepath = os.path.join(dir, cue_filepath)
-
-    line_parser = CueLineParser()
-    params = 'TRACK 01 AUDIO'
-    params = line_parser.parse_line(params)
-    print(params)
-
-    params = 'TITLE "Applauses"'
-    params = line_parser.parse_line(params)
-    print(params)
-
-    params = 'INDEX 01 00:00:00'
-    params = line_parser.parse_line(params)
-    print(params)
-
-    params = line_parser.parse_line('TITLE "Trifonov plays Liszts Transcendental Études in Lyon (France)"')
-    print(params)
-
-    params = line_parser.parse_line('FILE "Trifonov plays Liszts Transcendental Études in Lyon (France)-Q-PGLFNQ4v0.webm" WEBM')
-    print(params)
-
-    parser = CueParser()
-    cuesheet = parser.parse(cue_filepath)
-    print(cuesheet)
-
-
-    td = timedelta(minutes = 45, seconds = 53)
-    print(cuesheet.track_by_timedelta(td))
-
-
