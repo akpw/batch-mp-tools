@@ -99,6 +99,7 @@ class CueSplitterTask(ConvertorTask):
         with temp_dir() as tmp_dir:
             # prepare the tmp output path
             conv_fname = '{0:02d} {1}'.format(self.track_number, self.track_title)
+            conv_fname = re.sub('[^\w\-_\. ]', '_', conv_fname)
             conv_fname = ''.join((conv_fname, self.target_format))
             conv_fpath = os.path.join(tmp_dir, conv_fname)
 
@@ -222,9 +223,7 @@ class CueSplitter(FFMPRunner):
                                     tag_holder.genre = match.group(1)
                         tag_holder.comments = ', '.join(cue_sheet.rem)
 
-                    title = track.title or cue_sheet.title
-                    if track.title:
-                        tag_holder.title = track.title.replace(os.path.sep, '')
+                    tag_holder.title = track.title or cue_sheet.title
                     tag_holder.album = cue_sheet.title
                     tag_holder.albumartist = track.performer or cue_sheet.performer
                     tag_holder.composer = track.songwriter or cue_sheet.songwriter
