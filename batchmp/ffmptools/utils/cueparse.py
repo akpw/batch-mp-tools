@@ -202,7 +202,7 @@ class CueParser:
 
 from datetime import timedelta
 if __name__ == '__main__':
-    cue_filepath = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/ffmp/.data/bmfp_a/noise.cue'
+    cue_filepath = os.path.expanduser('~/_Dev/GitHub/batch-mp-tools/tests/ffmp/.data/bmfp_a/noise.cue')
 
     line_parser = CueLineParser()
     param_dict = ['TRACK 01 AUDIO',
