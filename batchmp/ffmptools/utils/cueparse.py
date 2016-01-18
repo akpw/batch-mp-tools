@@ -94,7 +94,8 @@ class CueParser:
 
         for line in self._lines:
             command, params = self._line_parser.parse_line(line)
-            self._commands_map[command](params)
+            if command:
+                self._commands_map[command](params)
 
         return self._cuesheet
 
@@ -198,4 +199,26 @@ class CueParser:
             frames = int(match.group(3))
         time_offset = CueTrack.TimeOffset(mins, secs, frames)
         return time_offset
+
+from datetime import timedelta
+if __name__ == '__main__':
+    cue_filepath = '/Users/AKPower/_Dev/GitHub/batch-mp-tools/tests/ffmp/.data/bmfp_a/noise.cue'
+
+    line_parser = CueLineParser()
+    param_dict = ['TRACK 01 AUDIO',
+              'INDEX 01 00:00:00',
+              'TITLE "BMFP Noisy Classical"',
+              'FILE "01 background noise.aiff" AIFF',
+              'REM GENRE "NOISY CLASSICAL"','REM DATE "2016"']
+
+    for params in param_dict:
+        param = line_parser.parse_line(params)
+        print(param)
+    print()
+
+    parser = CueParser()
+    cuesheet = parser.parse(cue_filepath)
+    print(cuesheet)
+
+
 

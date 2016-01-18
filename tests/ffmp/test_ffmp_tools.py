@@ -25,6 +25,9 @@ from batchmp.ffmptools.ffcommands.convert import Convertor
 from batchmp.ffmptools.ffcommands.fragment import Fragmenter
 from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
+from batchmp.ffmptools.ffcommands.cuesplit import CueSplitter
+from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
+from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 
 class FFMPTests(FFMPTest):
     def setUp(self):
@@ -234,6 +237,27 @@ class FFMPTests(FFMPTest):
                                                       filter_dirs = False)
         self.assertNotEqual(processed_media_entries, [], msg = 'No media files selected')
         self._check_media_entries(orig_media_entries, processed_media_entries)
+
+    def test_cuesplit_audio(self):
+        #return ##
+        print('Cue splitting')
+        CueSplitter().cue_split(self.src_dir, include = 'bmfp_a',  filter_files = False,
+                serial_exec = self.serial_exec_mode,
+                preserve_metadata = True,
+                target_dir = self.target_dir,
+                target_format = 'mp4')
+
+        media_files = [fpath for fpath in FFH.media_files(src_dir = self.target_dir)]
+        self.assertEqual(len(media_files), 18)
+
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+        for media_file in media_files:
+            if handler.can_handle(media_file):
+                self.assertEqual(handler.tag_holder.album, 'BMFP NOISE PRODUCTION AUDIO')
+                self.assertEqual(handler.tag_holder.albumartist, 'BMFP TESTER')
+                self.assertEqual(handler.tag_holder.year, 2016)
+                self.assertEqual(handler.tag_holder.genre, 'NOISY CLASSICAL')
+
 
     def test_peak_normalize(self):
         #return ##

@@ -64,8 +64,8 @@ class CueBase:
 
     @property
     def default_substitute_dictionary(self):
-        ''' common properties for output-related template processing
-            subclasses extend this via adding ther specific properties to process
+        ''' common default output-related template processing
+            subclasses can extend this via adding ther specific stuff to process
         '''
         sd = {}
         sd['performer'] = self.performer if self.performer else ''
@@ -134,7 +134,7 @@ class CueTrack(CueBase):
 
     @property
     def default_substitute_dictionary(self):
-        ''' cue track specific properties for output template processing
+        ''' cue track default output template processing
         '''
         sd = super().default_substitute_dictionary
         if len(self.indexes) > 0:
@@ -147,7 +147,7 @@ class CueTrack(CueBase):
             minutes = math.floor(self.duration.total_seconds() / 60)
             sd['duration'] = '{0:02d}:{1:02d}'.format(minutes, self.duration.seconds - 60 * minutes)
         else:
-            sd['duration'] = ''
+            sd['duration'] = '  :  '
         return sd
 
 class CueSheet(CueBase):
@@ -201,35 +201,39 @@ class CueSheet(CueBase):
         if file:
             file.tracks.append(CueTrack(number, type))
 
-    def track_by_timedelta(self, timedelta):
-        for file in reversed(self.files):
-            for track in reversed(file.tracks):
-                if timedelta.total_seconds() > track.offset_in_seconds:
-                    return track
-        return None
-
     # Internal methods
     ###################
     @property
     def default_output_format(self):
-        return 'Performer: $performer\nTitle: $title\n$rem\nFile: $file\nTracks: $tracks'
+        return 'Performer: $performer\nTitle: $title\nRem: $rem\nFiles: $files\nTracks: $tracks'
 
     @property
     def default_substitute_dictionary(self):
-        ''' cue sheet specific properties for output template processing
+        ''' cue sheet default output template processing
         '''
         sd = super().default_substitute_dictionary
-        sd['rem'] = self.rem if self.rem else ''
-        sd['file'] = self.files[0].name if len(self.files) > 0 else ''
-        sd['type'] = self.files[0].format if len(self.files) > 0 else ''
 
-        if len(self.files) > 0 and len(self.files[0].tracks) > 0:
-            tracks_output = '\n'
-            for track in self.files[0].tracks:
+        if self.rem:
+            rem_output = '\n'
+            for rem in self.rem:
+                if rem == self.rem[-1]:
+                    rem_output += ' {}'.format(rem)
+                else:
+                    rem_output += ' {}\n'.format(rem)
+            sd['rem'] = rem_output
+
+        files_output = '\n'
+        tracks_output = '\n'
+        for file in self.files:
+            if file == self.files[-1]:
+                files_output += ' {0} ({1})'.format(file.name, file.type)
+            else:
+                files_output += ' {0} ({1})\n'.format(file.name, file.type)
+            for track in file.tracks:
                 tracks_output += '{}\n'.format(str(track))
-            sd['tracks'] = tracks_output
-        else:
-            sd['tracks'] = ''
+
+        sd['files'] = files_output
+        sd['tracks'] = tracks_output
 
         return sd
 

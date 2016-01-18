@@ -14,7 +14,7 @@
 
 """ Batch cue splitter
 """
-import shutil, sys, os, shlex
+import shutil, sys, os, shlex, re
 from datetime import timedelta
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, LogLevel
@@ -42,13 +42,15 @@ class CueSplitterTask(ConvertorTask):
     def __init__(self, cue_tag_holder, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata,
                                                 target_format):
-        # unpack relevant properties due to pickle / ultiprocessing
+
+        # unpack relevant properties due to pickle / multiprocessing
         self.time_offset = cue_tag_holder.time_offset
         self.duration = cue_tag_holder.length
-        self.track_number = cue_tag_holder.track
-        if cue_tag_holder.title:
-            self.track_title = cue_tag_holder.title.replace(os.path.sep, '')
 
+        self.track_number = cue_tag_holder.track
+        self.year = cue_tag_holder.year
+        self.genre = cue_tag_holder.genre
+        self.track_title = cue_tag_holder.title
         self.albumartist = cue_tag_holder.albumartist
         self.album = cue_tag_holder.album
         self.composer = cue_tag_holder.composer
@@ -68,17 +70,28 @@ class CueSplitterTask(ConvertorTask):
 
     def _store_tags(self):
         if self.tag_holder:
-            self.tag_holder.comments = self.comments
-            self.tag_holder.title = self.track_title
-            self.tag_holder.album = self.album
-            self.tag_holder.composer = self.composer
-            self.tag_holder.track  = self.track_number
-            self.tag_holder.albumartist  = self.albumartist
+            if self.track_title:
+                self.tag_holder.title = self.track_title
+            if self.album:
+                self.tag_holder.album = self.album
+            if self.albumartist:
+               self.tag_holder.albumartist  = self.albumartist
+            if self.composer:
+                self.tag_holder.composer = self.composer
+            if self.track_number:
+                self.tag_holder.track  = self.track_number
+            if self.comments:
+                self.tag_holder.comments = self.comments
+            if self.year:
+                self.tag_holder.year = self.year
+            if self.genre:
+                self.tag_holder.genre = self.genre
+
 
     def execute(self):
         ''' builds and runs FFmpeg Conversion command in a subprocess
         '''
-        # store tags if needed
+        # store tags
         self._store_tags()
 
         task_result = TaskResult()
@@ -196,15 +209,29 @@ class CueSplitter(FFMPRunner):
                     tag_holder.cue_virt_fpath = os.path.join(cue_virt_dir, file.name)
                     tag_holder.filepath = os.path.join(os.path.dirname(cue_fpath), file.name)
 
-                    tag_holder.comments = ' '.join(cue_sheet.rem)
+                    if cue_sheet.rem:
+                        for rem_item in cue_sheet.rem:
+                            if not tag_holder.year:
+                                match = re.match('DATE.+(\d{4})', rem_item)
+                                if match:
+                                    tag_holder.year = match.group(1)
+                                    continue
+                            if not tag_holder.genre:
+                                match = re.match('GENRE\s+(.+)$', rem_item)
+                                if match:
+                                    tag_holder.genre = match.group(1)
+                        tag_holder.comments = ', '.join(cue_sheet.rem)
 
-                    tag_holder.title = track.title if track.title else cue_sheet.title
-                    tag_holder.albumartist = track.performer if track.performer else cue_sheet.performer
-                    tag_holder.composer = track.songwriter if track.songwriter else cue_sheet.songwriter
+                    title = track.title or cue_sheet.title
+                    if track.title:
+                        tag_holder.title = track.title.replace(os.path.sep, '')
+                    tag_holder.album = cue_sheet.title
+                    tag_holder.albumartist = track.performer or cue_sheet.performer
+                    tag_holder.composer = track.songwriter or cue_sheet.songwriter
 
                     tag_holder.track = track.number
                     tag_holder.time_offset = track.offset_in_seconds
-                    tag_holder.length = track.duration_in_seconds if track.duration_in_seconds else timedelta(days = 30).total_seconds()
+                    tag_holder.length = track.duration_in_seconds or timedelta(days = 30).total_seconds()
 
                     cue_tagholders.append(tag_holder)
 
