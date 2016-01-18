@@ -34,8 +34,8 @@
 
           .. cuesplit       Splits media files into parts with specified output format,
                             according to their respective cue sheets
-                                For example, to split media files in current directory
-                                    $ bmfp cuesplit -la -tf FLAC
+                                For example, to split all cue files in the current directory
+                                    $ bmfp cuesplit -tf mp3
 
           .. denoise        Reduces background audio noise in media files
 
@@ -312,10 +312,6 @@ class BMFPArgParser(BatchMPArgParser):
                 help = 'Target format file extension, e.g. mp3 / m4a / mp4 ...',
                 type = str,
                 required = True)
-        group.add_argument('-cc', '--change-container', dest='change_container',
-                help = 'Changes media container without actual re-encoding of contained streams. When specified, ' \
-                       'takes priority over all other option switches except for those explicitly specified via "-fo/ --ffmpeg-options"',
-                action='store_true')
         group.add_argument('-la', '--lossless-audio', dest='lossless_audio',
                 help = 'For media formats with support for lossless audio, tries a lossless conversion',
                 action='store_true')
@@ -410,7 +406,7 @@ class BMFPArgParser(BatchMPArgParser):
                     # takes priority over default settings
                     args['ffmpeg_options'] = FFmpegCommands.CONVERT_LOSSLESS
 
-                if args['change_container']:
+                if args['sub_cmd'] == 'convert' and args['change_container']:
                     # takes priority over default settings or lossless
                     args['ffmpeg_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 

@@ -263,6 +263,10 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
                                     $ bmfp segment -d 45:00
           .. silencesplit   Splits media files into segments via detecting specified silence
                                     $ bmfp silencesplit
+          .. cuesplit       Splits media files into parts with specified output format,
+                            according to their respective cue sheets
+                                For example, to split all cue files in the current directory
+                                    $ bmfp cuesplit -tf mp3
           .. denoise        Reduces background audio noise in media files
 
           .. adjust volume  TDB: Adjust audio volume
@@ -304,7 +308,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         [-se, --serial-exec]        Run all task's commands in a single process
 
       Commands:
-        {print, convert, normalize, fragment, segment, silencesplit, denoise, version, info}
+        {print, convert, normalize, fragment, segment, silencesplit, cuesplit, denoise, version, info}
         $ bmfp {command} -h  #run this for detailed help on individual commands
 
 
