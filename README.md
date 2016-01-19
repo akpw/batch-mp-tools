@@ -10,6 +10,7 @@ A rainy weekends project under occasional development :)
 - latest from source repository: `$ pip install git+https://github.com/akpw/batch-mp-tools.git`
 
 ####Blogs:
+- [Practical BatchMP](http://arseniy.drupalgardens.com/content/practical-batch-media-processing)
 - [BatchMP Tools Tutorial](http://arseniy.drupalgardens.com/content/practical-batchmp-tools-part-i)
 - [The BatchMP Tools Project](http://arseniy.drupalgardens.com/content/batch-mp-tools-project)
 - [Parallel batch media processing with FFmpeg and Python](http://arseniy.drupalgardens.com/content/parallel-batch-media-processing-ffmpeg-and-python)

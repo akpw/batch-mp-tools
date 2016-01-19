@@ -190,7 +190,7 @@ class FFH:
     @staticmethod
     def silence_detector(fpath, *,
                                 min_duration = 2,
-                                noise_tolerance_amplitude_ratio = 0.001):
+                                noise_tolerance_amplitude_ratio = 0.005):
         ''' Detects silence
             If successful, returns a list of SilenceEntry tuples
         '''

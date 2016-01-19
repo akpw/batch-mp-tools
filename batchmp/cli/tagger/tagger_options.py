@@ -140,7 +140,7 @@ class TaggerArgParser(BatchMPArgParser):
 
         # Print
         print_parser = subparsers.add_parser(TaggerCommands.PRINT,
-                                            description = 'Print source directory',
+                                            description = 'Prints info about media files metadata, such as tags and artwork',
                                             formatter_class = BatchMPHelpFormatter)
         print_parser.add_argument('-sl', '--startlevel', dest='start_level',
                 help = 'Initial nested level for printing (0, i.e. root source directory by default)',

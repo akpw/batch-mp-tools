@@ -125,7 +125,7 @@ class SilenceSplitterTask(FFMPRunnerTask):
 
 class SilenceSplitter(FFMPRunner):
     DEFAULT_SILENCE_MIN_DURATION_IN_SECS = 2
-    DEFAULT_SILENCE_NOISE_TOLERANCE = 0.002
+    DEFAULT_SILENCE_NOISE_TOLERANCE = 0.005
 
     def silence_split(self, src_dir,
                     end_level = sys.maxsize, include = None, exclude = None,
