@@ -83,7 +83,7 @@ class CueParser:
                             'TRACK':      self._parse_track
                             }
 
-        self._time_offset_matcher = re.compile('^(\d{2,3}):(\d{2}):(\d{2})$')
+        self._time_offset_matcher = re.compile('^(\d{1,3}):(\d{1,2}):(\d{1,2})$')
         self._line_parser = CueLineParser()
         self._lines = None
         self._cuesheet = None

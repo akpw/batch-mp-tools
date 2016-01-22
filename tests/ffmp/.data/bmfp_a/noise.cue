@@ -10,14 +10,14 @@ FILE "01 background noise.aiff" AIFF
     INDEX 01 00:02:00
   TRACK 03 AUDIO
     TITLE "Noise 0\3"
-    INDEX 01 00:04:00
+    INDEX 01 0:4:00
 FILE "03 background noise.flac" FLAC
   TRACK 04 AUDIO
     TITLE "Noise 0%1"
     INDEX 01 00:00:00
   TRACK 05 AUDIO
     TITLE "Noise 02"
-    INDEX 01 00:02:00
+    INDEX 01 0:2:0
   TRACK 06 AUDIO
     TITLE "Noise 03"
     INDEX 01 00:04:00
