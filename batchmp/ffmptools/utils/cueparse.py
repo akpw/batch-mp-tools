@@ -89,7 +89,10 @@ class CueParser:
         self._cuesheet = None
 
     def parse(self, filepath, encoding = 'utf-8'):
-        self._read_data(filepath, encoding = encoding)
+        try:
+            self._read_data(filepath, encoding = encoding)
+        except CueParseReadDataEncodingError:
+            raise
         self._cuesheet = CueSheet()
 
         for line in self._lines:

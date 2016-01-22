@@ -20,7 +20,7 @@ from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, LogLevel
 from batchmp.commons.taskprocessor import TaskResult
 from batchmp.ffmptools.ffutils import FFH
-from batchmp.ffmptools.utils.cueparse import CueParser
+from batchmp.ffmptools.utils.cueparse import CueParser, CueParseReadDataEncodingError
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.ffmptools.ffcommands.convert import ConvertorTask
 from batchmp.commons.descriptors import PropertyDescriptor
@@ -199,7 +199,12 @@ class CueSplitter(FFMPRunner):
         cue_tagholders = []
         for cue_fpath in cue_fpaths:
             cue_parser = CueParser()
-            cue_sheet = cue_parser.parse(cue_fpath, encoding = encoding)
+            try:
+                cue_sheet = cue_parser.parse(cue_fpath, encoding = encoding)
+            except CueParseReadDataEncodingError:
+                print('\nUnable to read data from the "{0}" file using encoding: {1}'.format(cue_fpath, encoding))
+                print('Use the \'-en\' encoding option to specify correct encoding, e.g.: -en \'latin-1\'\n')
+                exit(1)
 
             for file in cue_sheet.files:
                 for track in file.tracks:
