@@ -28,7 +28,7 @@
           .. add_date   Adds date to files and directories names
           .. add_text   Adds text to files and directories names
           .. remove     Removes n characters from files and directories names
-          .. replace    RegExp-based replace in files and directories names
+          .. replace    RegExp-based replace in files and directories names, with support for expandable templates
           .. capitalize Capitalizes words in files / directories names
           .. flatten    Flatten all folders below target level, moving the files up
                             at the target level. By default, deletes all empty flattened folders
@@ -244,16 +244,21 @@ class RenameArgParser(BatchMPArgParser):
 
         # Replace
         replace_parser = subparsers.add_parser(RenamerCommands.REPLACE,
-                                            description = 'RegExp-based replace in files and directories names',
+                                            description = 'RegExp-based replace in files and directories names. ' \
+                                                   'Supports exandable templates, such as ' \
+                                                   '$dirname, $atime, $ctime, etc.',
                                             formatter_class = BatchMPHelpFormatter)
         replace_parser.add_argument('-fs', '--find-string', dest = 'find_str',
                 help = "Find pattern to look for",
                 type = str,
                 required=True)
         replace_parser.add_argument('-rs', '--replace-string', dest = 'replace_str',
-                help = "Replace pattern to replace with.\
+                help = 'Replace pattern to replace with.\
                         If not specified and there is a match from the find pattern, \
-                        the entire string will be replaced with that match",
+                        the entire string will be replaced with that match. ' \
+                        'Supports the following exandable templates: ' \
+                                                   '$dirname, $adtime, $cdtime, $mdtime, ' \
+                                                   '$atime, $ctime, $mtime, $adate, $cdate, $mdate',
                 type = str)
         replace_parser.add_argument('-ic', '--ignore-case', dest = 'ignore_case',
                 help = 'Case insensitive',

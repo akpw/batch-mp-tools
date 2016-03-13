@@ -14,6 +14,7 @@
 
 import os, re, datetime, string
 from collections import namedtuple
+from string import Template
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
 from batchmp.commons.utils import MiscHelpers
@@ -64,8 +65,8 @@ class DirsIndexInfo:
 class Renamer(object):
     ''' Renames FS entries
     '''
-    @staticmethod
-    def add_index(src_dir, as_prefix = False, join_str = '_',
+    @classmethod
+    def add_index(cls, src_dir, as_prefix = False, join_str = '_',
                             start_from = 1, min_digits = 1,
                             sequential = False, by_directory = False,
                             end_level = 0,
@@ -192,8 +193,8 @@ class Renamer(object):
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_index_transform, quiet = quiet)
-    @staticmethod
-    def capitalize(src_dir,
+    @classmethod
+    def capitalize(cls, src_dir,
                     end_level = 0,
                     sort = None, nested_indent = None,
                     include = None, exclude = None,
@@ -227,8 +228,8 @@ class Renamer(object):
                                     formatter = capitalize_transform, quiet = quiet, check_unique = False)
 
 
-    @staticmethod
-    def add_date(src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
+    @classmethod
+    def add_date(cls, src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
                                 end_level = 0,
                                 sort = None, nested_indent = None,
                                 include = None, exclude = None,
@@ -267,8 +268,8 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_date_transform, quiet = quiet)
 
-    @staticmethod
-    def add_text(src_dir, text,
+    @classmethod
+    def add_text(cls, src_dir, text,
                     as_prefix = False, join_str = ' ',
                     end_level = 0,
                     sort = None, nested_indent = None,
@@ -308,8 +309,8 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = add_text_transform, quiet = quiet)
 
-    @staticmethod
-    def remove_n_characters(src_dir,
+    @classmethod
+    def remove_n_characters(cls, src_dir,
                             sort = None, nested_indent = None,
                             num_chars = 0, from_head = True,
                             end_level = 0, include = None, exclude = None,
@@ -348,8 +349,8 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = remove_n_chars_transform, quiet = quiet)
 
-    @staticmethod
-    def replace(src_dir,
+    @classmethod
+    def replace(cls, src_dir,
                     find_str, replace_str, case_insensitive=False,
                     include_extension = False,
                     end_level = 0,
@@ -377,7 +378,9 @@ class Renamer(object):
             match = p.search(entry.basename if include_extension else name_base)
             if match:
                 if replace_str is not None:
-                    res = p.sub(replace_str, entry.basename if include_extension else name_base)
+                    # expand templates
+                    replace_str_expanded = cls._expand_templates(entry, replace_str)
+                    res = p.sub(replace_str_expanded, entry.basename if include_extension else name_base)
                 else:
                     res = match.group()
                 return '{0}{1}'.format(res, '' if include_extension else name_ext)
@@ -397,8 +400,8 @@ class Renamer(object):
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = replace_transform, quiet = quiet)
 
-    @staticmethod
-    def delete(src_dir, *,
+    @classmethod
+    def delete(cls, src_dir, *,
                 non_media_files_only = True,
                 end_level = 0,
                 sort = None, nested_indent = None,
@@ -442,6 +445,34 @@ class Renamer(object):
                                     include = include, exclude = exclude,
                                     filter_dirs = filter_dirs, filter_files = filter_files,
                                     formatter = delete_transform, quiet = quiet)
+
+    @classmethod
+    def _expand_templates(cls, entry, value):
+        ''' expands template values
+        '''
+        template = Template(value)
+        return template.safe_substitute(cls._substitute_dictionary(entry))
+
+    @classmethod
+    def _substitute_dictionary(cls, entry):
+        ''' internal template value substitution
+        '''
+        sd = {}
+        sd['dirname'] = os.path.basename(os.path.dirname(entry.realpath))
+
+        sd['adtime'] = datetime.datetime.fromtimestamp(os.path.getatime(entry.realpath))
+        sd['cdtime'] = datetime.datetime.fromtimestamp(os.path.getctime(entry.realpath))
+        sd['mdtime'] = datetime.datetime.fromtimestamp(os.path.getmtime(entry.realpath))
+
+        sd['atime'] = datetime.datetime.fromtimestamp(os.path.getatime(entry.realpath)).time()
+        sd['ctime'] = datetime.datetime.fromtimestamp(os.path.getctime(entry.realpath)).time()
+        sd['mtime'] = datetime.datetime.fromtimestamp(os.path.getmtime(entry.realpath)).time()
+
+        sd['adate'] = datetime.datetime.fromtimestamp(os.path.getatime(entry.realpath)).date()
+        sd['cdate'] = datetime.datetime.fromtimestamp(os.path.getctime(entry.realpath)).date()
+        sd['mdate'] = datetime.datetime.fromtimestamp(os.path.getmtime(entry.realpath)).date()
+
+        return sd
 
 
 

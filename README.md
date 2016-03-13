@@ -33,7 +33,7 @@ By default the tools always visualize targeted changes (whenever possible) befor
 
 A little bit more details on each utility:
 
-[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
+[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as template processing during replace, multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
 At its simplest, Renamer can be used to print out the content of current directory:
 ```
     $ renamer
@@ -156,7 +156,7 @@ I will follow up with more examples and common use-cases in future blogs.
           .. add_date   Adds date to files and directories names
           .. add_text   Adds text to files and directories names
           .. remove     Removes n characters from files and directories names
-          .. replace    RegExp-based replace in files and directories names
+          .. replace    RegExp-based replace in files and directories names, with support for template processing
           .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
 
