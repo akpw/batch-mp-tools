@@ -28,7 +28,8 @@
           .. add_date   Adds date to files and directories names
           .. add_text   Adds text to files and directories names
           .. remove     Removes n characters from files and directories names
-          .. replace    RegExp-based replace in files and directories names, with support for expandable templates
+          .. replace    RegExp-based replace in files and directories names,
+                                        with support for expandable templates
           .. capitalize Capitalizes words in files / directories names
           .. flatten    Flatten all folders below target level, moving the files up
                             at the target level. By default, deletes all empty flattened folders
