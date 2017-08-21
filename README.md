@@ -2,20 +2,20 @@
 **Status:**
 A rainy weekends project under occasional development :)
 
-####Requirements:
+#### Requirements:
 - [Python 3.4.x](https://www.python.org/download/releases/3.4.1/) or later
 
-####Install:
+#### Install:
 - from [PyPI](https://pypi.python.org/pypi/batchmp): `$ pip install batchmp`
 - latest from source repository: `$ pip install git+https://github.com/akpw/batch-mp-tools.git`
 
-####Blogs:
+#### Blogs:
 - [Practical BatchMP](http://www.akpdev.com/tags.html#BatchMP+Tools)
 - [BatchMP Tools Tutorial](http://www.akpdev.com/articles/2015/04/10/batchmp-tutorial-part-i.html)
 - [The BatchMP Tools Project](http://www.akpdev.com/articles/2015/03/21/the-batchmp-project.html)
 - [Parallel batch media processing with FFmpeg and Python](http://www.akpdev.com/articles/2014/11/24/batch-media-processing-ffmpeg-python.html)
 
-##Description
+## Description
 
 Batch management of media files, from base properties such as file names through tags / artwork metadata to advanced operations on the media content.
 
@@ -138,8 +138,8 @@ From a brief glance, all looks OK. BMFP used FFmpeg to do the actual conversion,
 I will follow up with more examples and common use-cases in future blogs.
 
 
-##Full description of CLI Commands
-###renamer
+## Full description of CLI Commands
+### renamer
     Batch renaming of files and directories
       . source directory or source file modes
       . visualises original / targeted folders structure before actual processing
@@ -186,7 +186,7 @@ I will follow up with more examples and common use-cases in future blogs.
         {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}
         $ renamer {command} -h  #run this for detailed help on individual commands
 
-###tagger
+### tagger
 ###### Supported formats:
 'MP3', 'MP4', 'M4A', M4V', 'AIFF', 'ASF', 'QuickTime / MOV',
 'FLAC', 'MonkeysAudio', 'Musepack',
@@ -245,7 +245,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         {print, set, copy, index, remove, replace, capitalize, detauch, version, info}
         $ tagger {command} -h #run this for detailed help on individual commands
 
-###bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
+### bmfp (requires [FFmpeg](http://ffmpeg.org/download.html))
     Batch processing of media files
       . Uses multiprocessing to utilize available CPU cores
       . source directory / source file modes
@@ -313,7 +313,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
         $ bmfp {command} -h  #run this for detailed help on individual commands
 
 
-##Installing Development version
+## Installing Development version
 - Clone the repo, then run: `$ python setup.py develop`
 
 **Running Tests**
