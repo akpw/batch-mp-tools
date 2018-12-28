@@ -33,8 +33,8 @@
                             Supports expandable templates. To specify a template value,
                             use the long tag field name preceded by $:
                                 $ tagger set --title '$title, $track of $tracktotal'
-                            In addition to tag fields templates, file names are also supported:
-                                $ tagger set --title '$filename'...
+                            In addition to tag fields templates, file system names are also supported:
+                                $ tagger set --title '$filename' --album '$dirname' --artist '$pardirname'...
           .. copy       Copies tags from a specified media file
           .. index      Indexes Track / Track Total tags
           .. remove     Removes tags from media files
@@ -116,7 +116,7 @@ class TaggerArgParser(BatchMPArgParser):
         artwork. It can read and write metadata across
         many different formats, with support for advanced
         metadata manipulation such as regexp-based replace
-        in tags, template processing, etc.
+        in tags, expandable template processing, etc.
 
         As default behavior, Tagger first visualises targeted
         changes and ask for confirmation before actually
@@ -159,7 +159,7 @@ class TaggerArgParser(BatchMPArgParser):
         # Set Tags
         set_tags_parser = subparsers.add_parser(TaggerCommands.SET,
                                     description = 'Sets specified tags in media files. ' \
-                                                   'Supports templates, such as $filename, $title, $album, ... ',
+                                                   'Supports expandable templates, such as $filename, $dirname, $pardirname, $title, $album, ... ',
                                     formatter_class = BatchMPHelpFormatter)
         set_tags_parser.add_argument('-ti', '--title', dest='title',
                 help = "Sets the Title tag",

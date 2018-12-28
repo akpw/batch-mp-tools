@@ -17,10 +17,11 @@ from collections import namedtuple
 from string import Template
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.fsutils import DWalker
+from batchmp.fstools.fsutils import DWalker
 from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
-
+from batchmp.tags.output.formatters import TagOutputFormatter
 
 class DirsIndexInfo:
     ''' A helper class,
@@ -458,7 +459,9 @@ class Renamer(object):
         ''' internal template value substitution
         '''
         sd = {}
-        sd['dirname'] = os.path.basename(os.path.dirname(entry.realpath))
+        full_dir_name = os.path.dirname(entry.realpath)
+        sd['dirname'] = os.path.basename(full_dir_name)
+        sd['pardirname'] = os.path.basename(os.path.dirname(full_dir_name))
 
         sd['adtime'] = datetime.datetime.fromtimestamp(os.path.getatime(entry.realpath))
         sd['cdtime'] = datetime.datetime.fromtimestamp(os.path.getctime(entry.realpath))
@@ -472,7 +475,19 @@ class Renamer(object):
         sd['cdate'] = datetime.datetime.fromtimestamp(os.path.getctime(entry.realpath)).date()
         sd['mdate'] = datetime.datetime.fromtimestamp(os.path.getmtime(entry.realpath)).date()
 
+        # for media files, update with the base tags values
+        sd.update(cls._get_tags(entry))        
+
         return sd
 
-
+    @classmethod
+    def _get_tags(cls, entry):
+        ''' media tags values for template value substitution
+        '''
+        tags = {}
+        handler = MutagenTagHandler() + FFmpegTagHandler()
+        if handler.can_handle(entry.realpath):
+            for field in TagOutputFormatter.COMPACT_FIELDS:
+                tags[field] = getattr(handler.tag_holder, field, '')
+        return tags
 

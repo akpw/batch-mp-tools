@@ -246,8 +246,10 @@ class RenameArgParser(BatchMPArgParser):
         # Replace
         replace_parser = subparsers.add_parser(RenamerCommands.REPLACE,
                                             description = 'RegExp-based replace in files and directories names. ' \
-                                                   'Supports exandable templates, such as ' \
-                                                   '$dirname, $atime, $ctime, etc.',
+                                                   'Supports expandable templates, such as ' \
+                                                   '$dirname, $pardirname, $atime, $ctime, etc. ' \
+                                                   'For media files, also support tag-based templates such as ' \
+                                                   '$title, $album, $artist, $albumartist, $genre, $year, $track, etc.',
                                             formatter_class = BatchMPHelpFormatter)
         replace_parser.add_argument('-fs', '--find-string', dest = 'find_str',
                 help = "Find pattern to look for",
@@ -257,10 +259,12 @@ class RenameArgParser(BatchMPArgParser):
                 help = 'Replace pattern to replace with.\
                         If not specified and there is a match from the find pattern, \
                         the entire string will be replaced with that match. ' \
-                        'Supports the following exandable templates: ' \
-                                                   '$dirname, $adtime, $cdtime, $mdtime, ' \
-                                                   '$atime, $ctime, $mtime, $adate, $cdate, $mdate',
-                type = str)
+                        'Supports the following expandable templates: ' \
+                                                   '$dirname, $pardirname, $adtime, $cdtime, $mdtime, ' \
+                                                   '$atime, $ctime, $mtime, $adate, $cdate, $mdate. ' \
+                                                   'For media files, also support tag-based templates such as ' \
+                                                   '$title, $album, $artist, $albumartist, $genre, $year, $track, etc.',
+                        type = str)
         replace_parser.add_argument('-ic', '--ignore-case', dest = 'ignore_case',
                 help = 'Case insensitive',
                 action = 'store_true')

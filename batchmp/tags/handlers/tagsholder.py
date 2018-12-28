@@ -240,7 +240,10 @@ class TagHolder:
         sd['bitdepth'] = self.bitdepth if self.bitdepth else ''
         sd['format'] = self.format if self.format else ''
 
-        sd['filename'] = os.path.splitext(os.path.basename(self.filepath))[0] if self.filepath else ''
+        if self.filepath:
+            sd['filename'] = os.path.splitext(os.path.basename(self.filepath))[0]
+            full_dir_name = os.path.dirname(self.filepath)
+            sd['dirname'] = os.path.basename(full_dir_name)
+            sd['pardirname'] = os.path.basename(os.path.dirname(full_dir_name))
 
         return sd
-
