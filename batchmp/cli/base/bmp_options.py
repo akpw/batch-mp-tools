@@ -181,8 +181,9 @@ class BatchMPArgParser:
                     print ('Start Level parameter requires a source directory\n Ignoring requested Start Level...')
                     args['start_level'] = 0
                 elif args['end_level'] < args['start_level']:
-                    print ('Start Level should be greater than or equal to the Recursion End Level Global Option\n'
+                    ''' print ('Start Level should be greater than or equal to the Recursion End Level Global Option\n'
                            '... Adjusting End Level to: {}'.format(args['start_level']))
+                    '''
                     args['end_level'] = args['start_level']
 
 

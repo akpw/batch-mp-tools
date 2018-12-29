@@ -25,15 +25,15 @@ The project is written in [Python 3.4](https://www.python.org/download/releases/
     $ tagger -h
     $ bmfp -h
 ```
-That will show the global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `tagger capitalize` command:
+That will show the global options along with specific commands for each tool. Getting more info on the commands level can be done using a similar approach, e.g. to learn more about the `renamer replace` command:
 ```
-    $ tagger capitalize -h
+    $ renamer replace -h
 ```
 By default the tools always visualize targeted changes (whenever possible) before actual processing.
 
 A little bit more details on each utility:
 
-[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as template processing during replace, multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
+[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as expandable template processing during replace, multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
 At its simplest, Renamer can be used to print out the content of current directory:
 ```
     $ renamer
@@ -64,7 +64,7 @@ Sequential indexing is supported as well using the `-sq` switch.  An important d
 
 
 
-[**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any practically imaginable audio / video media formats. While easy to use, Tagger supports advanced metadata manipulation such as regexp-based replace, template processing, etc. For example, to set the title tag to respective file names followed by the values of track and tracktotal tags:
+[**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any practically imaginable audio / video media formats. While easy to use, Tagger supports advanced metadata manipulation such as regexp-based replace, expandable template processing, etc. For example, to set the title tag to respective file names followed by the values of track and tracktotal tags:
 ```
     $ tagger -r -in '*BWV816 1*' set --title '$filename, $track of $tracktotal'
     Targeted after processing:
@@ -98,7 +98,7 @@ For example, to convert all files from the above example from M4A to FLAC:
 ```
 The `-tf` switch specifies the target format, while `-la` explicitly tells BMFP to do a lossless conversion.
 
-To check on the result, lets's just use the [tagger](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
+To check on the result, lets's just use the [tagger's](https://github.com/akpw/batch-mp-tools#tagger) ability to print media files info:
 ```
     $ tagger -r -in '*BWV816 1*' print -st -ss
     /Users/AKPower/Desktop/_test/Gould
@@ -138,7 +138,7 @@ From a brief glance, all looks OK. BMFP used FFmpeg to do the actual conversion,
 I will follow up with more examples and common use-cases in future blogs.
 
 
-## Full description of CLI Commands
+## Brief Description of CLI Commands (use -h to expand on details for individual commands)
 ### renamer
     Batch renaming of files and directories
       . source directory or source file modes
@@ -150,13 +150,16 @@ I will follow up with more examples and common use-cases in future blogs.
           .. by size/date, ascending/descending
       . action commands:
           .. print      Prints source directory
-          .. flatten    Flatten all folders below target level, moving the files up
-                            at the target level. By default, deletes all empty flattened folders
+          .. flatten    Flatten all folders below target level, moving the
+                        files up at the target level. By default, deletes all empty flattened folders
           .. index      Adds index to files and directories names
+          .. replace    RegExp-based replace in files and directories names. Supports expandable templates, 
+                        such as $dirname, $pardirname, $atime, $ctime, etc. For media files, also can process 
+                        tag-based templates such as $title, $album, $artist, $albumartist, $genre, $year, $track, 
+                        etc.
           .. add_date   Adds date to files and directories names
           .. add_text   Adds text to files and directories names
           .. remove     Removes n characters from files and directories names
-          .. replace    RegExp-based replace in files and directories names, with support for template processing
           .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
 
@@ -208,8 +211,8 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
                             Supports expandable templates. To specify a template value,
                             use the long tag field name preceded by $:
                                 $ tagger set --title '$title, $track of $tracktotal'
-                            In addition to tag fields templates, file names are also supported:
-                                $ tagger set --title '$filename'...
+                            In addition to tag fields templates, file system names are also supported:
+                                $ tagger set --title '$filename' --album '$dirname' --artist '$pardirname'...
           .. copy       Copies tags from a specified media file
           .. index      Indexes Track / Track Total tags
           .. remove     Removes tags from media files

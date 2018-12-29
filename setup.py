@@ -11,15 +11,24 @@
 ## GNU General Public License for more details.
 
 from setuptools import setup, find_packages
+from os import path
+
+# read the README.md contents
+pkg_dir = path.abspath(path.dirname(__file__))
+with open(path.join(pkg_dir, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='batchmp',
-    version='0.85',
+    version='0.86',
 
     url='https://github.com/akpw/batch-mp-tools',
 
     author='Arseniy Kuznetsov',
     author_email='k.arseniy@gmail.com',
+
+    long_description=long_description,
+    long_description_content_type='text/markdown',
 
     description=('Command-line tools for batch media processing'),
     license='GNU General Public License v2 (GPLv2)',
