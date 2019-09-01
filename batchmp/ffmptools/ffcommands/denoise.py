@@ -131,18 +131,14 @@ class DenoiserTask(FFMPRunnerTask):
         task_result.add_report_msg(self.fpath)
         return task_result
 
+
 class Denoiser(FFMPRunner):
     DEFAULT_HIGHPASS = 200
     DEFAULT_LOWPASS = 3000
     DEFAULT_NUM_PASSES = 1
 
-    def apply_af_filters(self, src_dir,
-                            end_level = sys.maxsize, include = None, exclude = None,
-                            filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                            num_passes = None, highpass = None, lowpass = None,
-                            target_dir = None, log_level = None,
-                            ff_general_options = None, ff_other_options = None,
-                            preserve_metadata = False):
+    def apply_af_filters(self, ff_entry_params,
+                            num_passes = None, highpass = None, lowpass = None):
 
         ''' Reduce of background audio noise in media files
             via filtering out highpass / low-pass frequencies
@@ -150,24 +146,21 @@ class Denoiser(FFMPRunner):
         if not highpass:
             highpass = self.DEFAULT_HIGHPASS
         if not lowpass:
-            highpass = self.DEFAULT_LOWPASS
+            lowpass = self.DEFAULT_LOWPASS
         if not num_passes:
-            highpass = self.DEFAULT_NUM_PASSES
+            num_passes = self.DEFAULT_NUM_PASSES
 
-        media_files, target_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        target_dir = target_dir, target_dir_prefix = 'denoised')
+        ff_entry_params.target_dir_prefix = 'denoised'
+        media_files, target_dirs = self._prepare_files(ff_entry_params)
 
         msg = None if len(media_files) == 0 else \
                                 '{0} media files to process, ({1} {2} each)'.format(
                                                             len(media_files), num_passes,
-                                                           'passes' if num_passes > 1 else 'pass')
+                                                            'passes' if num_passes > 1 else 'pass')
         # build tasks
         tasks = []
-        tasks_params = [(media_file, target_dir_path, log_level,
-                            ff_general_options, ff_other_options, preserve_metadata,
+        tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
+                            ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
                             highpass, lowpass, num_passes)
                                 for media_file, target_dir_path in zip(media_files, target_dirs)]
         for task_param in tasks_params:
@@ -175,6 +168,6 @@ class Denoiser(FFMPRunner):
             tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
 

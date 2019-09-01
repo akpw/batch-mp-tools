@@ -141,49 +141,36 @@ class FFMPRunner:
 
     ## Internal helpers
     @staticmethod
-    def _prepare_files(src_dir, *,
-                        end_level = sys.maxsize,
-                        include = None, exclude = None,
-                        filter_dirs = True, filter_files = True,
-                        target_dir = None, target_dir_prefix = None,
-                        pass_filter = None):
+    def _prepare_files(ff_entry_params, pass_filter = None):
         ''' Builds a list of matching media files to process,
             along with their respective target out dirs
         '''
-        media_files = [fpath for fpath in FFH.media_files(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        pass_filter = pass_filter)]
+        media_files = [fpath for fpath in FFH.media_files(ff_entry_params, pass_filter = pass_filter)]
 
-        target_dirs = FFMPRunner._setup_target_dirs(src_dir = src_dir,
-                                                target_dir = target_dir, target_dir_prefix = target_dir_prefix,
-                                                fpathes = media_files)
+        target_dirs = FFMPRunner._setup_target_dirs(ff_entry_params, fpathes = media_files)
 
         return media_files, target_dirs
 
     @staticmethod
-    def _setup_target_dirs(src_dir, *,
-                            target_dir = None, target_dir_prefix = None,
-                            fpathes = None):
+    def _setup_target_dirs(ff_entry_params, fpathes = None):
         # check inputs
         # target dir prefix
         DEFAULT_TARGET_DIR_PREFIX = 'processed'
-        if target_dir_prefix is None:
-            target_dir_prefix = DEFAULT_TARGET_DIR_PREFIX
+        if ff_entry_params.target_dir_prefix is None:
+            ff_entry_params.target_dir_prefix = DEFAULT_TARGET_DIR_PREFIX
         # target dir
-        if target_dir is None:
-            target_dir = os.path.dirname(src_dir)
+        if ff_entry_params.target_dir is None:
+            ff_entry_params.target_dir = os.path.dirname(ff_entry_params.src_dir)
 
         # target path (within the target dir)
-        target_dir_name = '{0}_{1}'.format(os.path.basename(src_dir), target_dir_prefix)
-        target_dir_name = UniqueDirNamesChecker(target_dir).unique_name(target_dir_name)
-        target_path_dir = os.path.join(target_dir, target_dir_name)
+        target_dir_name = '{0}_{1}'.format(os.path.basename(ff_entry_params.src_dir), ff_entry_params.target_dir_prefix)
+        target_dir_name = UniqueDirNamesChecker(ff_entry_params.target_dir).unique_name(target_dir_name)
+        target_path_dir = os.path.join(ff_entry_params.target_dir, target_dir_name)
 
         # target dirs
         target_dirs = []
         for fpath in fpathes:
-            relpath = os.path.relpath(os.path.dirname(fpath), src_dir)
+            relpath = os.path.relpath(os.path.dirname(fpath), ff_entry_params.src_dir)
             if relpath.startswith(os.pardir):
                 raise ValueError('File not in specified source directory or its subfolders')
             elif relpath.endswith('{}'.format(os.path.curdir)):

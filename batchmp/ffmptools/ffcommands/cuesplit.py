@@ -130,66 +130,45 @@ class CueSplitterTask(ConvertorTask):
 
 
 class CueSplitter(FFMPRunner):
-    def cue_split(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None,
-                    target_dir = None, log_level = None,
-                    ff_general_options = None, ff_other_options = None,
-                    preserve_metadata = False,
-                    encoding = 'utf-8'):
+    def cue_split(self, ff_entry_params, encoding = 'utf-8'):
 
         ''' Converts media to specified format
         '''
         tasks = []
-        if target_format:
-            if not target_format.startswith('.'):
-                target_format = '.{}'.format(target_format)
-            target_dir_prefix = '{}'.format(target_format[1:])
+        if ff_entry_params.target_format:
+            if not ff_entry_params.target_format.startswith('.'):
+                ff_entry_params.target_format = '.{}'.format(ff_entry_params.target_format)
+            ff_entry_params.target_dir_prefix = '{}'.format(ff_entry_params.target_format[1:])
 
-            cue_tagholders, target_dirs = self._prepare_cue_data(src_dir,
-                                            end_level = end_level,
-                                            include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files,
-                                            target_dir = target_dir, target_dir_prefix = target_dir_prefix,
-                                            encoding = encoding)
+            cue_tagholders, target_dirs = self._prepare_cue_data(ff_entry_params, encoding = encoding)
             # build tasks
-            tasks_params = [(cue_tag_holder, target_dir_path, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata,
-                                target_format)
+            tasks_params = [(cue_tag_holder, target_dir_path, ff_entry_params.log_level,
+                                ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
+                                ff_entry_params.target_format)
                                     for cue_tag_holder, target_dir_path in zip(cue_tagholders, target_dirs)]
             for task_param in tasks_params:
                 task = CueSplitterTask(*task_param)
                 tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
 
     ## Internal helpers
     @staticmethod
-    def _prepare_cue_data(src_dir, *,
-                        end_level = sys.maxsize,
-                        include = None, exclude = None,
-                        filter_dirs = True, filter_files = True,
-                        target_dir = None, target_dir_prefix = None,
+    def _prepare_cue_data(fs_entry_params,                        
                         pass_filter = None,
                         encoding = 'utf-8'):
         ''' Builds a list of target media files and their tagholder attributes corresponding to found .cue files.
             Prepares their respective target output dirs
         '''
         pass_filter = lambda fpath: fpath.endswith('.cue')
-        cue_fpaths = [fpath for fpath in FFH.media_files(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        pass_filter = pass_filter)]
+        cue_fpaths = [fpath for fpath in FFH.media_files(fs_entry_params, pass_filter = pass_filter)]
 
         cue_tagholders = CueSplitter._prepare_tagholders(cue_fpaths, encoding = encoding)
 
-        target_dirs = FFMPRunner._setup_target_dirs(src_dir = src_dir,
-                            target_dir = target_dir, target_dir_prefix = target_dir_prefix,
-                            fpathes = [cue_tagholder.cue_virt_fpath for cue_tagholder in cue_tagholders])
+        target_dirs = FFMPRunner._setup_target_dirs(fs_entry_params,
+                        fpathes = [cue_tagholder.cue_virt_fpath for cue_tagholder in cue_tagholders])
 
         return cue_tagholders, target_dirs
 

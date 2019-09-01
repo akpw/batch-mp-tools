@@ -18,7 +18,7 @@ from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.processors.basetp import BaseTagProcessor
-
+from batchmp.fstools.builders.fsentry import FSEntryParamsExt
 from .test_tag_base import TagsTest
 
 class TagsTests(TagsTest):
@@ -67,10 +67,11 @@ class TagsTests(TagsTest):
 
     def test_set_tags(self):
         # test setting tags from test data
-        BaseTagProcessor().set_tags_visual(self.src_dir,
-                                            tag_holder = self.test_tags_holder,
-                                            quiet = True)
-
+        fs_entry_params = FSEntryParamsExt()
+        fs_entry_params.src_dir = self.src_dir
+        fs_entry_params.quiet = True
+        BaseTagProcessor().set_tags_visual(fs_entry_params,
+                                            tag_holder = self.test_tags_holder)
         handler = MutagenTagHandler() + FFmpegTagHandler()
         for mfpath in self.mfpathes:
             if handler.can_handle(mfpath):
@@ -82,10 +83,12 @@ class TagsTests(TagsTest):
 
     def test_remove_tags(self):
         # test removing tags
-        BaseTagProcessor().set_tags_visual(self.src_dir,
-                                            tag_holder = self.test_tags_holder,
-                                            quiet = True)
-        BaseTagProcessor().remove_tags(self.src_dir, quiet = True)
+        fs_entry_params = FSEntryParamsExt()
+        fs_entry_params.src_dir = self.src_dir
+        fs_entry_params.quiet = True
+        BaseTagProcessor().set_tags_visual(fs_entry_params,
+                                            tag_holder = self.test_tags_holder)
+        BaseTagProcessor().remove_tags(fs_entry_params)
 
         handler = MutagenTagHandler() + FFmpegTagHandler()
         tag_holder =  TagHolder()

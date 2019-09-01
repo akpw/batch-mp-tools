@@ -99,40 +99,31 @@ class ConvertorTask(FFMPRunnerTask):
 
 
 class Convertor(FFMPRunner):
-    def convert(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_format = None,
-                    target_dir = None, log_level = None,
-                    ff_general_options = None, ff_other_options = None,
-                    preserve_metadata = False):
+    def convert(self, ff_entry_params):
 
         ''' Converts media to specified format
         '''
         tasks = []
-        if target_format:
-            if target_format.startswith('.'):
-                target_dir_prefix = '{}'.format(target_format[1:])
+        if ff_entry_params.target_format:
+            if ff_entry_params.target_format.startswith('.'):
+                target_dir_prefix = '{}'.format(ff_entry_params.target_format[1:])
             else:
-                target_dir_prefix = '{}'.format(target_format)
-                target_format = '.{}'.format(target_format)
+                target_dir_prefix = '{}'.format(ff_entry_params.target_format)
+                target_format = '.{}'.format(ff_entry_params.target_format)
+            ff_entry_params.target_dir_prefix = target_dir_prefix
 
-            media_files, target_dirs = self._prepare_files(src_dir,
-                                            end_level = end_level,
-                                            include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files,
-                                            target_dir = target_dir, target_dir_prefix = target_dir_prefix)
+            media_files, target_dirs = self._prepare_files(ff_entry_params)
             # build tasks
-            tasks_params = [(media_file, target_dir_path, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata,
-                                target_format)
+            tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
+                                ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
+                                ff_entry_params.target_format)
                                     for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
                 task = ConvertorTask(*task_param)
                 tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
 
 

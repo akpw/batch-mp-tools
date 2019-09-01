@@ -15,24 +15,20 @@
 import os, sys
 from collections import namedtuple, Iterable
 from distutils.util import strtobool
-from batchmp.fstools.fsutils import DWalker, FSH
+from batchmp.fstools.walker import DWalker
+from batchmp.fstools.fsutils import FSH
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsExt
 
 
 class DHandler:
     ''' FS Directory level utilities
     '''
     @staticmethod
-    def print_dir(src_dir, *,
-                        start_level = 0, end_level = sys.maxsize,
-                        include = None, exclude = None,
-                        sort = None, nested_indent = None,
-                        filter_dirs = True, filter_files = True,
-                        flatten = False, ensure_uniq = False,
-                        show_size = False, formatter = None, selected_files_description = None):
+    def print_dir(fs_entry_params, formatter = None, selected_files_description = None):
         """ Prints content of given directory
             Supports additional display name processing via formatter supplied by the caller
         """
-        if not os.path.exists(src_dir):
+        if not os.path.exists(fs_entry_params.src_dir):
             raise ValueError('Not a valid path')
 
         if formatter is None:
@@ -44,12 +40,8 @@ class DHandler:
         # print the dir tree
         fcnt = dcnt = 0
         total_size = 0
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    start_level = start_level, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    sort = sort, nested_indent = nested_indent,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    flatten = flatten, ensure_uniq = ensure_uniq):
+
+        for entry in DWalker.entries(fs_entry_params):
             # get formatted output
             formatted_output = ''
             if isinstance(formatter, Iterable):
@@ -63,15 +55,15 @@ class DHandler:
 
             if formatted_output:
                 size = ''
-                if entry.type == DWalker.ENTRY_TYPE_FILE:
+                if entry.type == FSEntry.ENTRY_TYPE_FILE:
                     fcnt += 1
-                    if show_size:
+                    if fs_entry_params.show_size:
                         fsize = os.path.getsize(entry.realpath)
                         size = ' {} '.format(FSH.fs_size(fsize))
                         total_size += fsize
-                elif entry.type == DWalker.ENTRY_TYPE_DIR:
+                elif entry.type == FSEntry.ENTRY_TYPE_DIR and not entry.isEnclosingEntry:
                     dcnt += 1
-                    if show_size:
+                    if fs_entry_params.show_size:
                         dsize = FSH.dir_size(entry.realpath)
                         size = ' {} '.format(FSH.fs_size(dsize))
 
@@ -81,38 +73,34 @@ class DHandler:
         print('{0} {1}{2}, {3} folder{4}'.format(fcnt,
                                                     selected_files_description, '' if fcnt == 1 else 's',
                                                     dcnt, '' if dcnt == 1 else 's'))
-        if show_size:
+        if fs_entry_params.show_size:
             print('Total selected files size: {}'.format(FSH.fs_size(total_size)))
 
         return fcnt, dcnt
 
     @staticmethod
-    def dir_stats(src_dir, *,
-                        start_level = 0, end_level = sys.maxsize, flatten = False,
-                        include = None, exclude = None,
-                        filter_dirs = True, filter_files = True,
-                        include_size = False,
-                        file_pass_filter = None, dir_pass_filter = None):
+    def dir_stats(fs_entry_params, 
+                    include_size = False,
+                    file_pass_filter = None, dir_pass_filter = None):
         """ Returns base stats for given directory
         """
-        if not os.path.exists(src_dir):
+        if not os.path.exists(fs_entry_params.src_dir):
             raise ValueError('Not a valid path')
 
         # count number of files, folders, and their total size
         fcnt = dcnt = total_size = 0
-        for entry in DWalker.entries(src_dir = src_dir,
-                                        start_level = start_level, end_level = end_level,
-                                        flatten=flatten, include=include, exclude=exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files):
+        for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == DWalker.ENTRY_TYPE_FILE:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE:
                 if file_pass_filter and (not file_pass_filter(entry.realpath)):
                     continue
                 fcnt += 1
-            elif entry.type == DWalker.ENTRY_TYPE_DIR:
+            elif entry.type == FSEntry.ENTRY_TYPE_DIR:
+                if entry.isEnclosingEntry:
+                    continue
                 if dir_pass_filter and (not dir_pass_filter(entry.realpath)):
                     continue
-                if FSH.level_from_root(src_dir, entry.realpath) > start_level:
+                if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) > fs_entry_params.start_level:
                     dcnt += 1
 
             if include_size:
@@ -140,43 +128,30 @@ class DHandler:
         return answer
 
     @staticmethod
-    def visualise_changes(src_dir, *,
-                                before_msg = 'Current source directory:',
-                                after_msg = 'Targeted after processing:',
-                                orig_end_level = sys.maxsize, target_end_level = 0,
-                                include = None, exclude = None,
-                                sort = None, nested_indent = None,
-                                filter_dirs = True, filter_files = True,
-                                include_dirs = False, include_files = True,
-                                flatten = False, ensure_uniq = False,
-                                preformatter = None, formatter = None, reset_formatters = None,
-                                display_current = True, selected_files_description = None):
+    def visualise_changes(fs_entry_params, 
+                            before_msg = 'Current source directory:',
+                            after_msg = 'Targeted after processing:',                
+                            preformatter = None, formatter = None, reset_formatters = None,
+                            selected_files_description = None, fs_preprocess_entry_params = None):
 
         ''' Displays targeted changes and gets users' confirmation on futher processing
         '''
+        if not fs_preprocess_entry_params: 
+            fs_preprocess_entry_params = fs_entry_params
 
-        if display_current:
+        if fs_preprocess_entry_params.display_current:
             print(before_msg)
-            DHandler.print_dir(src_dir = src_dir,
-                                    end_level = orig_end_level,
-                                    sort = sort, nested_indent = nested_indent,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = preformatter,
-                                    selected_files_description = selected_files_description)
+            DHandler.print_dir(fs_preprocess_entry_params,
+                                formatter = preformatter,
+                                selected_files_description = selected_files_description)
             if reset_formatters:
                 reset_formatters()
             print()
 
         print(after_msg)
-        fcnt, dcnt = DHandler.print_dir(src_dir = src_dir,
-                                end_level = target_end_level,
-                                sort = sort, nested_indent = nested_indent,
-                                include = include, exclude = exclude,
-                                filter_dirs = filter_dirs, filter_files = filter_files,
-                                flatten = flatten, ensure_uniq = ensure_uniq,
-                                formatter = formatter,
-                                selected_files_description = selected_files_description)
+        fcnt, dcnt = DHandler.print_dir(fs_entry_params,
+                                            formatter = formatter,
+                                            selected_files_description = selected_files_description)
         if fcnt == dcnt == 0:
             print ('Nothing to process')
             return False
@@ -184,64 +159,44 @@ class DHandler:
             return DHandler.get_user_input()
 
     @staticmethod
-    def flatten_folders(src_dir, *,
-                                target_level = sys.maxsize, end_level = sys.maxsize,
-                                sort = None, nested_indent = None,
-                                include = None, exclude = None,
-                                filter_dirs = True, filter_files = True,
-                                remove_folders = True, remove_non_empty_folders = False,
-                                display_current = True, quiet = False):
-
-        ''' Flatten all folders below target level, moving the files up at the target level
+    def flatten_folders(ff_entry_params, 
+                        remove_folders = True, remove_non_empty_folders = False):
+        ''' Flattens all folders below target level, moving the files up at the target level
         '''
+        fs_preprocess_entry_params = FSEntryParamsExt()
+        fs_preprocess_entry_params.copy_params(ff_entry_params)
 
-        if end_level < target_level:
-            end_level = target_level
-
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                        orig_end_level = end_level,
-                                        target_end_level = target_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        sort = sort, nested_indent = nested_indent,
-                                        flatten = True, ensure_uniq = True, display_current = display_current)
+        proceed = True if ff_entry_params.quiet else DHandler.visualise_changes(ff_entry_params, fs_preprocess_entry_params = fs_preprocess_entry_params)
         if proceed:
             # OK to go
             flattened_dirs_cnt = flattened_files_cnt = 0
-            for entry in DWalker.entries(src_dir = src_dir,
-                                        start_level = target_level, end_level=target_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        flatten = True, ensure_uniq = True):
-
-                if entry.type in (DWalker.ENTRY_TYPE_DIR, DWalker.ENTRY_TYPE_ROOT):
-                    if FSH.level_from_root(src_dir, entry.realpath) == target_level:
+            target_dir_path = ''
+            for entry in DWalker.entries(ff_entry_params):
+                if entry.type in (FSEntry.ENTRY_TYPE_DIR, FSEntry.ENTRY_TYPE_ROOT):
+                    if FSH.level_from_root(ff_entry_params.src_dir, entry.realpath) == ff_entry_params.target_level:
                         target_dir_path = entry.realpath
                 else:
-                    # files
-                    if FSH.level_from_root(src_dir, entry.realpath) - 1 > target_level:
+                    # files                    
+                    if target_dir_path and (FSH.level_from_root(ff_entry_params.src_dir, entry.realpath) - 1 > ff_entry_params.target_level):
                         target_fpath = os.path.join(target_dir_path, entry.basename)
                         if FSH.move_FS_entry(entry.realpath, target_fpath):
                             flattened_files_cnt += 1
 
             # remove excessive folders
-            if remove_folders:
-                flattened_dirs_cnt = FSH.remove_folders_below_target_level(src_dir,
-                                                       target_level = target_level,
-                                                       empty_only = not remove_non_empty_folders)
+            if ff_entry_params.remove_folders:
+                flattened_dirs_cnt = FSH.remove_folders_below_target_level(ff_entry_params.src_dir,
+                                                       target_level = ff_entry_params.target_level,
+                                                       empty_only = not ff_entry_params.remove_non_empty_folders)
             # print summary
-            if not quiet:
+            if not ff_entry_params.quiet:
                 print('Flattened: {0} files, {1} folders'.format(flattened_files_cnt, flattened_dirs_cnt))
 
-        if not quiet:
+        if not ff_entry_params.quiet:
             print('\nDone')
 
     @staticmethod
-    def rename_entries(src_dir, *,
-                            start_level = 0, end_level = sys.maxsize,
-                            include = None, exclude = None,
-                            filter_dirs = True, filter_files = True,
-                            formatter = None, quiet = False, check_unique = True):
+    def rename_entries(fs_entry_params,
+                        formatter = None, check_unique = True):
 
         """ Renames directory entries via applying formatter function supplied by the caller
         """
@@ -251,12 +206,9 @@ class DHandler:
         fcnt = dcnt = 0
         DirEntry = namedtuple('DirEntry', ['orig_path', 'target_path'])
         dir_entries = []
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    start_level = start_level, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files):
+        for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 continue
 
             target_name = formatter(entry)
@@ -265,11 +217,11 @@ class DHandler:
 
             target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
 
-            if entry.type == DWalker.ENTRY_TYPE_DIR:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR:
                 # for dirs, need to postpone
                 dir_entries.append(DirEntry(entry.realpath, target_path))
 
-            elif entry.type == DWalker.ENTRY_TYPE_FILE:
+            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
                 # for files, just rename
                 if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
                     fcnt += 1
@@ -280,15 +232,12 @@ class DHandler:
                 dcnt += 1
 
         # print summary
-        if not quiet:
+        if not fs_entry_params.quiet:
             print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
 
     @staticmethod
-    def remove_entries(src_dir, *,
-                            start_level = 0, end_level = sys.maxsize,
-                            include = None, exclude = None,
-                            filter_dirs = True, filter_files = True,
-                            formatter = None, quiet = False):
+    def remove_entries(fs_entry_params,
+                        formatter = None):
 
         """ Removes entries with formatter function supplied by the caller
         """
@@ -297,34 +246,31 @@ class DHandler:
 
         fcnt = dcnt = 0
         dir_entries = []
-        for entry in DWalker.entries(src_dir = src_dir,
-                                    start_level = start_level, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files):
+        for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT or entry.isEnclosingEntry:
                 continue
 
             if formatter(entry) is None:
                 continue
 
-            if entry.type == DWalker.ENTRY_TYPE_DIR:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR:
                 # for dirs, need to postpone
                 dir_entries.append(entry.realpath)
 
-            elif entry.type == DWalker.ENTRY_TYPE_FILE:
+            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
                 # for files, OK to remove now
                 FSH.remove_FS_entry(entry.realpath)
                 fcnt += 1
 
         #rename the dirs
         for dir_entry in reversed(dir_entries):
-            if FSH.remove_FS_entry(dir_entry):
-                dcnt += 1
+            FSH.remove_FS_entry(dir_entry)
+            dcnt += 1
 
         # print summary
-        if not quiet:
-            print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
+        if not fs_entry_params.quiet:
+            print('Removed: {0} files, {1} folders'.format(fcnt, dcnt))
 
 
 

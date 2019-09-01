@@ -127,13 +127,10 @@ class SilenceSplitter(FFMPRunner):
     DEFAULT_SILENCE_MIN_DURATION_IN_SECS = 2
     DEFAULT_SILENCE_NOISE_TOLERANCE = 0.005
 
-    def silence_split(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    target_dir = None, log_level = None,
-                    ff_general_options = None, ff_other_options = None,
-                    reset_timestamps = False, preserve_metadata = False,
-                    silence_min_duration = None, silence_noise_tolerance_amplitude_ratio = None):
+    def silence_split(self, ff_entry_params,
+                            reset_timestamps = False, 
+                            silence_min_duration = None, 
+                            silence_noise_tolerance_amplitude_ratio = None):
 
         ''' Segment media file by specified silence
         '''
@@ -142,15 +139,13 @@ class SilenceSplitter(FFMPRunner):
         if not silence_noise_tolerance_amplitude_ratio:
             silence_noise_tolerance_amplitude_ratio = self.DEFAULT_SILENCE_NOISE_TOLERANCE
 
-        media_files, target_dirs = self._prepare_files(src_dir,
-                                        end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                        target_dir = target_dir, target_dir_prefix = 'silence_split')
+        ff_entry_params.target_dir_prefix = 'silence_split'
+        media_files, target_dirs = self._prepare_files(ff_entry_params)
+
         # build tasks
         tasks = []
-        tasks_params = [(media_file, target_dir_path, log_level,
-                            ff_general_options, ff_other_options, preserve_metadata,
+        tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
+                            ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
                             reset_timestamps, silence_min_duration, silence_noise_tolerance_amplitude_ratio)
                                 for media_file, target_dir_path in zip(media_files, target_dirs)]
         for task_param in tasks_params:
@@ -158,4 +153,4 @@ class SilenceSplitter(FFMPRunner):
             tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)

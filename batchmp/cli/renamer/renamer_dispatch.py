@@ -16,7 +16,8 @@ from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
 from batchmp.cli.renamer.renamer_options import RenameArgParser, RenamerCommands
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-
+from batchmp.fstools.builders.fsentry import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
+from batchmp.fstools.builders.fsb import FSEntryBuilderBase
 
 class RenameDispatcher(BatchMPDispatcher):
     ''' Renamer Commands Dispatcher
@@ -65,101 +66,50 @@ class RenameDispatcher(BatchMPDispatcher):
 
     # Dispatched Methods
     def print_dir(self, args):
-        DHandler.print_dir(src_dir = args['dir'],
-                start_level = args['start_level'], end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                show_size = args['show_size'])
+        fs_entry_params = FSEntryParamsBase(args)
+        DHandler.print_dir(fs_entry_params)
 
     def flatten(self, args):
-            remove_folders = True if args['discard_flattened'] in ('de', 'da') else False
-            remove_all_folders = True if args['discard_flattened'] == 'da' else False
-
-            DHandler.flatten_folders(src_dir = args['dir'],
-                end_level = args['end_level'],
-                target_level = args['target_level'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                remove_folders = remove_folders, remove_non_empty_folders = remove_all_folders,
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsFlatten(args)
+        DHandler.flatten_folders(fs_entry_params)
 
     def add_index(self, args):
-        Renamer.add_index(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.add_index(fs_entry_params, 
                 as_prefix = not args['as_suffix'], join_str = args['join_str'],
                 start_from = args['start_from'], min_digits = args['min_digits'],
-                sequential = args['sequential'], by_directory = args['by_directory'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+                sequential = args['sequential'], by_directory = args['by_directory'])
 
     def add_date(self, args):
-        Renamer.add_date(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                as_prefix = args['as_prefix'], join_str = args['join_str'],
-                format = args['format'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.add_date(fs_entry_params, 
+                as_prefix = args['as_prefix'], join_str = args['join_str'], format = args['format'])
 
     def add_text(self, args):
-        Renamer.add_text(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                text = args['text'],
-                as_prefix = args['as_prefix'], join_str = args['join_str'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.add_text(fs_entry_params,
+                text = args['text'], as_prefix = args['as_prefix'], join_str = args['join_str'])
 
     def remove(self, args):
-        Renamer.remove_n_characters(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                num_chars = args['num_chars'], from_head = not args['from_tail'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.remove_n_characters(fs_entry_params, num_chars = args['num_chars'], from_head = not args['from_tail'])
 
     def replace(self, args):
-        Renamer.replace(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.replace(fs_entry_params, 
                 find_str = args['find_str'],
                 replace_str = args['replace_str'] if 'replace_str' in args else None,
                 case_insensitive = args['ignore_case'],
-                include_extension = args['include_extension'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+                include_extension = args['include_extension'])
 
     def capitalize(self, args):
-        Renamer.capitalize(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.capitalize(fs_entry_params)
 
     def delete(self, args):
-        Renamer.delete(src_dir = args['dir'],
-                non_media_files_only = args['non_media_files_only'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                include_dirs = args['include_dirs'], include_files = not args['exclude_files'],
-                display_current = args['display_current'], quiet = args['quiet'])
+        fs_entry_params = FSEntryParamsExt(args)
+        Renamer.delete(fs_entry_params, non_media_files_only = args['non_media_files_only'])
+
 
 def main():
     ''' Renamer entry point

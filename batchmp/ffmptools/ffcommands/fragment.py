@@ -86,26 +86,19 @@ class FragmenterTask(FFMPRunnerTask):
 
 
 class Fragmenter(FFMPRunner):
-    def fragment(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    fragment_starttime = None, fragment_duration = None,
-                    target_dir = None, log_level = None,
-                    ff_general_options = None, ff_other_options = None,
-                    preserve_metadata = False):
+    def fragment(self, ff_entry_params,
+                    fragment_starttime = None, fragment_duration = None):
 
         ''' Fragment media file by specified starttime & duration
         '''
         tasks = []
         if (fragment_starttime is not None) and (fragment_duration is not None):
-            media_files, target_dirs = self._prepare_files(src_dir,
-                                            end_level = end_level,
-                                            include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files,
-                                            target_dir = target_dir, target_dir_prefix = 'fragmented')
+            ff_entry_params.target_dir_prefix = 'fragmented'
+            media_files, target_dirs = self._prepare_files(ff_entry_params)
+            
             # build tasks
-            tasks_params = [(media_file, target_dir_path, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata,
+            tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
+                                ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
                                 fragment_starttime, fragment_duration)
                                     for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
@@ -113,6 +106,6 @@ class Fragmenter(FFMPRunner):
                 tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
 

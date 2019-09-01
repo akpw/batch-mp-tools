@@ -14,8 +14,6 @@
 
 import os, sys, fnmatch, shutil
 import hashlib
-from collections import namedtuple
-
 
 class UniqueDirNamesChecker:
     ''' Unique file names Helper
@@ -57,6 +55,11 @@ class FSH:
         return path if path else None
 
     @staticmethod
+    def path_components(path):
+        path = FSH.full_path(path)
+        return path.split(os.path.sep) if path else None        
+
+    @staticmethod
     def is_subdir(subdir_path, parent_path):
         subdir_path = FSH.full_path(subdir_path)
         parent_path = FSH.full_path(parent_path)
@@ -86,12 +89,14 @@ class FSH:
         '''
         folders_removed = 0
         for tpath in FSH.folders_at_level(src_dir, target_level):
-            for r,d,f in os.walk(tpath, topdown = False):
-                for dname in d:
-                    dpath = os.path.join(r,dname)
+            for crpath, dnames, _ in os.walk(tpath, topdown = False):
+                for dname in dnames:
+                    dpath = os.path.join(crpath, dname)
                     if not (empty_only and os.listdir(dpath)):
                         folders_removed +=1
                         shutil.rmtree(dpath)
+                    else:
+                        print('not empty: {}'.format(dpath))
         return folders_removed
 
     @staticmethod
@@ -226,223 +231,10 @@ class FSH:
             shutil.rmtree(entry_path, onerror = onerror)
 
 
-class DWalker:
-    ''' Walks content of a directory, generating
-        a sequence of structured FS elements (FSEntry)
-    '''
-    ENTRY_TYPE_ROOT = 'R'
-    ENTRY_TYPE_DIR = 'D'
-    ENTRY_TYPE_FILE = 'F'
+# Quick dev test
+if __name__ == '__main__':
+    pass
 
-    DEFAULT_NESTED_INDENT = '  '
-    DEFAULT_INCLUDE = '*'
-    DEFAULT_EXCLUDE = '.*' #exclude hidden files
-    DEFAULT_SORT = 'na'
 
-    FSEntry = namedtuple('FSEntry', ['type', 'basename', 'realpath', 'indent'])
 
-    @staticmethod
-    def entries(src_dir, *,
-                    start_level = 0, end_level = sys.maxsize,
-                    include = None, exclude = None,
-                    sort = None, nested_indent = None,
-                    filter_dirs = True, filter_files = True,
-                    flatten = False, ensure_uniq = False, unique_fnames = FSH.unique_fnames):
-        ''' generates a sequence of FSEntries elements
-            supports recursion to end_level
-            supports slicing directory by folder levels
-            supports flattening beyond end_level, with optional checking for unique file names
-            include / exclude patterns (Unix style)
-            sorting:
-                'na' / 'nd': by name / by name descending
-                'sa' / 'sd': by size / by size descending
-        '''
-        # check inputs
-        if nested_indent is None:
-            nested_indent = DWalker.DEFAULT_NESTED_INDENT
-        if include is None:
-            include = DWalker.DEFAULT_INCLUDE
-        if exclude is None:
-            exclude = DWalker.DEFAULT_EXCLUDE
-        if sort is None:
-            sort = DWalker.DEFAULT_SORT
-
-        src_dir = FSH.full_path(src_dir)
-
-        # sorting
-        reversed = True if sort.endswith('d') else False
-        by_size = True if sort.startswith('s') else False
-
-        # filtering
-        def include_match(fsname):
-            for include_pattern in include.split(';'):
-                if fnmatch.fnmatch(fsname, include_pattern):
-                    return True
-            return False
-
-        def exclude_match(fsname):
-            for exclude_pattern in exclude.split(';'):
-                if fnmatch.fnmatch(fsname, exclude_pattern):
-                    return True
-            return False
-
-        passed_filters = lambda fs_name: include_match(fs_name) and (not exclude_match(fs_name))
-
-        # let's walk
-        for r, dnames, fnames in os.walk(src_dir):
-            # check the levels
-            current_level = FSH.level_from_root(src_dir, r)
-            if current_level < start_level:
-                continue
-            if current_level > end_level and not flatten:
-                return
-
-            # indents
-            current_indent  = '{0}{1}'.format(nested_indent * (current_level), '|- ')
-            siblings_indent = '{0}{1}'.format(nested_indent * (current_level + 1), '|- ')
-
-            # yield the current folder
-            rpath = FSH.full_path(r)
-            if current_level == 0:
-                # src dir goes in full and without indent
-                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_ROOT,
-                                            os.path.basename(rpath), rpath,
-                                                os.path.dirname(rpath) + os.path.sep)
-            else:
-                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
-                                            os.path.basename(rpath), rpath,
-                                                current_indent[:-1] + os.path.sep)
-            yield entry
-
-            ## Files processing ##
-            # filter non-matching
-            if filter_files:
-                fnames = [fname for fname in fnames if passed_filters(fname)]
-
-            # flattening folders?
-            flattening = flatten and (current_level == end_level)
-            if flattening:
-                # need to postpone yielding / check for file name uniqueness
-                flattens = []
-                if ensure_uniq:
-                    unique_fname = unique_fnames()
-            else:
-                # OK to sort now
-                if by_size:
-                    sort_key = lambda fname: os.path.getsize(os.path.join(rpath,fname))
-                else:
-                    sort_key = lambda fname: fname.lower()
-                fnames.sort(key = sort_key, reverse = reversed)
-
-            for fname in fnames:
-                fpath = os.path.join(rpath, fname)
-                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE, fname, fpath, siblings_indent)
-                if not flattening:
-                    yield entry
-                else:
-                    flattens.append(entry)
-                    if ensure_uniq:
-                        # store the name generator init values
-                        next(unique_fname)
-                        unique_fname.send(fname)
-
-            ## Directories processing ##
-            # remove non-matching
-            if filter_dirs:
-                dnames[:] = [dname for dname in dnames if passed_filters(dname)]
-            # Sort
-            if by_size:
-                dirs_sort_key = lambda dname: FSH.dir_size(os.path.join(rpath, dname))
-            else:
-                dirs_sort_key = lambda dname: dname.lower()
-            dnames.sort(key = dirs_sort_key, reverse = reversed)
-
-            for dname in dnames[:]:
-                dpath = os.path.join(rpath, dname)
-
-                # check the current_level from root
-                if current_level == end_level:
-                    # not going any deeper
-                    if not flattening:
-                        # yield the dir
-                        entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_DIR,
-                                            dname, dpath, siblings_indent[:-1] + os.path.sep)
-                        yield entry
-                    else:
-                        # flattening, yield the underlying files instead
-                        for dr, _, dfnames in os.walk(dpath):
-                            # filter non-matching files
-                            if filter_files:
-                                dfnames = (fname for fname in dfnames if passed_filters(fname))
-                            for fname in dfnames:
-                                fpath = FSH.full_path(os.path.join(dr, fname))
-                                if ensure_uniq:
-                                    next(unique_fname)
-                                    fname = unique_fname.send(fname)
-                                entry = DWalker.FSEntry(DWalker.ENTRY_TYPE_FILE,
-                                                    fname, fpath, siblings_indent)
-                                flattens.append(entry)
-                    dnames.remove(dname)
-
-            # if flattening, time to render
-            if flattening:
-                # OK to sort now
-                if by_size:
-                    sort_key = lambda entry: os.path.getsize(entry.realpath)
-                else:
-                    # for sorting need to still derive basename from realpath
-                    # as for flattened it might be different from entry.basename
-                    sort_key = lambda entry: os.path.basename(entry.realpath).lower()
-                for entry in sorted(flattens, key = sort_key, reverse = reversed):
-                    yield entry
-
-    @staticmethod
-    def file_entries(src_dir, *,
-                    sort = None, nested_indent = None,
-                    start_level = 0, end_level = sys.maxsize,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True,
-                    pass_filter = None):
-
-        if not pass_filter:
-            pass_filter = lambda f: True
-
-        for entry in DWalker.entries(src_dir,
-                                        sort = sort, nested_indent = nested_indent,
-                                        start_level = start_level, end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files):
-
-            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_DIR):
-                continue
-
-            if not pass_filter(entry.realpath):
-                continue
-            else:
-                yield entry
-
-    @staticmethod
-    def dir_entries(src_dir, *,
-                    sort = None, nested_indent = None,
-                    start_level = 0, end_level = sys.maxsize,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True,
-                    pass_filter = None):
-
-        if not pass_filter:
-            pass_filter = lambda f: True
-
-        for entry in DWalker.entries(src_dir,
-                                        sort = sort, nested_indent = nested_indent,
-                                        start_level = start_level, end_level = end_level,
-                                        include = include, exclude = exclude,
-                                        filter_dirs = filter_dirs, filter_files = filter_files):
-
-            if entry.type in (DWalker.ENTRY_TYPE_ROOT, DWalker.ENTRY_TYPE_FILE):
-                continue
-
-            if not pass_filter(entry.realpath):
-                continue
-            else:
-                yield entry
 

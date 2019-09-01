@@ -23,7 +23,6 @@ class FSTest(test_base.BMPTest):
 
     def get_last_digit_from_shell_cmd(self, cmd):
         cmd_output, _ = run_cmd(cmd, shell = True)
-
         p = re.compile('(\d+)(?!.*\d)')
         match = p.search(cmd_output)
         if match:

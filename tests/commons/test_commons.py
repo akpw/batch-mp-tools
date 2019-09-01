@@ -15,7 +15,8 @@
 import unittest, weakref, gc
 from batchmp.commons.descriptors import (
          PropertyDescriptor,
-         LazyTypedPropertyDescriptor,
+         LazyClassPropertyDescriptor,
+         LazyInstancePropertyDescriptor,
          LazyFunctionPropertyDescriptor,
          FunctionPropertyDescriptor,
          WeakMethodPropertyDescriptor,
@@ -37,10 +38,10 @@ class DescriptorTests(unittest.TestCase):
         gc.collect()
         self.assertIsNone(r())
 
-    def test_LazyTypedPropertyDescriptor(self):
+    def test_LazyInstancePropertyDescriptor(self):
         from batchmp.tags.handlers.tagsholder import TagHolder
         class AClass:
-            tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+            tag_holder = LazyInstancePropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
         a, b = AClass(), AClass()
         test_value = 'A Test Artist'
         a.tag_holder.artist = test_value
@@ -151,12 +152,12 @@ class DescriptorTests(unittest.TestCase):
 
 # quick dev test
 if __name__ == '__main__':
-    DescriptorTests().test_PropertyDescriptor
-    DescriptorTests().test_LazyFunctionPropertyDescriptor()
-    DescriptorTests().test_LazyTypedPropertyDescriptor
-    DescriptorTests().test_BooleanPropertyDescriptor()
-    DescriptorTests().test_FunctionPropertyDescriptor()
-    DescriptorTests().test_WeakMethodPropertyDescriptor()
+    #DescriptorTests().test_PropertyDescriptor()
+    #DescriptorTests().test_LazyFunctionPropertyDescriptor()
+    DescriptorTests().test_LazyInstancePropertyDescriptor()
+    #DescriptorTests().test_BooleanPropertyDescriptor()
+    #DescriptorTests().test_FunctionPropertyDescriptor()
+    #DescriptorTests().test_WeakMethodPropertyDescriptor()
 
 
 

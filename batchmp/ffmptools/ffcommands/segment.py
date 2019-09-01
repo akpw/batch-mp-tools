@@ -111,13 +111,10 @@ class SegmenterTask(FFMPRunnerTask):
 
 
 class Segmenter(FFMPRunner):
-    def segment(self, src_dir,
-                    end_level = sys.maxsize, include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, quiet = False, serial_exec = False,
-                    segment_size_MB = 0.0, segment_length_secs = 0.0,
-                    target_dir = None, log_level = None,
-                    ff_general_options = None, ff_other_options = None,
-                    reset_timestamps = False, preserve_metadata = False):
+    def segment(self, ff_entry_params, 
+                    segment_size_MB = 0.0, 
+                    segment_length_secs = 0.0,
+                    reset_timestamps = False):
 
         ''' Segment media file by specified size | duration
         '''
@@ -130,15 +127,12 @@ class Segmenter(FFMPRunner):
                 # simple media selection by size
                 pass_filter = lambda fpath: FFH.supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
 
-            media_files, target_dirs = self._prepare_files(src_dir,
-                                            end_level = end_level,
-                                            include = include, exclude = exclude,
-                                            filter_dirs = filter_dirs, filter_files = filter_files,
-                                            target_dir = target_dir, target_dir_prefix = 'segmented',
-                                            pass_filter = pass_filter)
+            ff_entry_params.target_dir_prefix = 'segmented'
+            media_files, target_dirs = self._prepare_files(ff_entry_params, pass_filter = pass_filter)
+
             # build tasks
-            tasks_params = [(media_file, target_dir_path, log_level,
-                                ff_general_options, ff_other_options, preserve_metadata,
+            tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
+                                ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
                                 reset_timestamps, segment_size_MB, segment_length_secs)
                                     for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
@@ -146,7 +140,7 @@ class Segmenter(FFMPRunner):
                 tasks.append(task)
 
         # run tasks
-        self.run_tasks(tasks, serial_exec = serial_exec, quiet = quiet)
+        self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
 
     # Internal Helpers

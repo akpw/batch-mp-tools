@@ -286,10 +286,10 @@ class RenameArgParser(BatchMPArgParser):
                                             description = 'Delete selected files and directories',
                                             formatter_class = BatchMPHelpFormatter)
         delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',
-                help = 'Delete all non-media files only',
+                help = 'Delete non-media files only',
                 action = 'store_true')
-        self._add_arg_display_curent_state_mode(delete_parser)
         _add_include_mode_group(delete_parser)
+        self._add_arg_display_curent_state_mode(delete_parser)
 
 
     # Args Checking
@@ -307,8 +307,8 @@ class RenameArgParser(BatchMPArgParser):
             if args['file']:
                 parser.error('This operation requires a source directory')
             if args['end_level'] < args['target_level']:
-                print ('Target Level should be greater than or equal to the End Level Global Option\n'
-                           '... Adjusting End Level to: {}'.format(args['target_level']))
+                # print ('Target Level should be greater than or equal to the End Level Global Option\n'
+                #           '... Adjusting End Level to: {}'.format(args['target_level']))
                 args['end_level'] = args['target_level']
 
         elif args['sub_cmd'] == 'delete':

@@ -15,57 +15,68 @@
 ''' Properties Descriptors Types
 '''
 from importlib import import_module
+import inspect
 from types import MethodType, FunctionType
 from weakref import WeakKeyDictionary, WeakMethod
 
 
 class PropertyDescriptor:
-    ''' Base Property Descriptor
-    '''
-    def __init__(self):
-        self.data = WeakKeyDictionary()
+    ''' Base Property Descriptor (Python 3.6+)
+    ''' 
+    # the python 3.6 initializer:
+    def __set_name__(self, owner, name):
+        self.name = name    
 
-    def __get__(self, instance, type=None):
-        return self.data.get(instance)
+    def __get__(self, instance, owner):
+        if instance is None: 
+            return self
+        return instance.__dict__.get(self.name, None)
 
     def __set__(self, instance, value):
-        self.data[instance] = value
-
-    def __delete__(self, instance):
-        if self.data.get(instance):
-            del self.data[instance]
+        instance.__dict__[self.name] = value
 
 
-class LazyTypedPropertyDescriptor(PropertyDescriptor):
-    ''' Dynamically instantiates property of a given custom type
+class LazyClassPropertyDescriptor(PropertyDescriptor):
+    ''' Dynamically loads class property of a given custom type
         Example:
-          tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+          fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderBase')
     '''
-    def __init__(self, property_type_classpath):
+    def __init__(self, property_type_classpath, initialize = True):
         super().__init__()
         self._pt_cpath = property_type_classpath
 
-    def __get__(self, instance, type=None):
-        value = super().__get__(instance, type = type)
+    def __get__(self, instance, owner=None):
+        value = super().__get__(instance, owner = owner)
         if not value:
-            value = self.__load_lazy_property_class()
+            value = self.load_lazy_property_class()
             self.__set__(instance, value)
         return value
 
     def __set__(self, instance, value):
-        classpath = '.'.join((value.__module__, value.__class__.__name__))
+        classname = value.__name__ if inspect.isclass(value) else value.__class__.__name__
+        classpath = '.'.join((value.__module__, classname))
         if classpath == self._pt_cpath:
             super().__set__(instance, value)
         else:
             raise TypeError("Type error: {0} is not {1}".format(classpath, self._pt_cpath))
 
     # Helpers
-    def __load_lazy_property_class(self):
+    def load_lazy_property_class(self):
         split_path = self._pt_cpath.split('.')
         module_path = '.'.join(split_path[:-1])
         class_name = split_path[-1:][0]
         module = import_module(module_path)
-        return getattr(module, class_name)()
+        return getattr(module, class_name)
+
+
+class LazyInstancePropertyDescriptor(LazyClassPropertyDescriptor):
+    ''' Dynamically loads instance property of a given custom type
+        Example:
+          tag_holder = LazyInstancePropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+    '''    
+    # Helpers
+    def load_lazy_property_class(self):
+        return super().load_lazy_property_class()()
 
 
 class LazyFunctionPropertyDescriptor:
@@ -73,7 +84,7 @@ class LazyFunctionPropertyDescriptor:
     '''
     def __init__(self, func):
         self._func = func
-    def __get__(self, instance, type=None):
+    def __get__(self, instance, owner=None):
         if instance is None:
             return self
         # this method will only be called when
@@ -98,12 +109,22 @@ class FunctionPropertyDescriptor(PropertyDescriptor):
             raise TypeError("Not a Function Type: {}".format(value))
 
 
+class ClassPropertyDescriptor(PropertyDescriptor):
+    ''' A function type property descriptor
+    '''
+    def __set__(self, instance, value):
+        if (value is None) or inspect.isclass(value):
+            super().__set__(instance, value)
+        else:
+            raise TypeError("Not a Class: {}".format(instance.__class__))
+
+
 class WeakMethodPropertyDescriptor(PropertyDescriptor):
     ''' A bound method type property descriptor
         Uses WeakMethod to prevent reference cycles
     '''
-    def __get__(self, instance, type=None):
-        value = super().__get__(instance, type = type)
+    def __get__(self, instance, owner=None):
+        value = super().__get__(instance, owner = owner)
         if value:
             return value()
         else:
@@ -130,4 +151,23 @@ class BooleanPropertyDescriptor(PropertyDescriptor):
 
 
 
+
+# class PropertyDescriptor:
+#     ''' Base Property Descriptor
+#     '''
+#     def __init__(self):
+#         self.data = WeakKeyDictionary()
+# 
+#     def __get__(self, instance, type=None):
+#         return self.data.get(instance)
+# 
+#     def __set__(self, instance, value):
+#         self.data[instance] = value
+# 
+#     def __delete__(self, instance):
+#         if self.data.get(instance):
+#             del self.data[instance]
+# 
+#     def __set_name__(self, owner, name):
+#         self.name = '_' + name
 

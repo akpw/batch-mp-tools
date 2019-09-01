@@ -21,6 +21,9 @@ class FFmpegCommands:
     MAP_ALL_STREAMS = ' -map 0'
     COPY_CODECS = ' -c copy'
 
+    # queue size
+    MUXING_QUEUE_SIZE = ' -max_muxing_queue_size 1024'
+
     # excluding streams
     DISABLE_VIDEO = ' -vn'
     DISABLE_AUDIO = ' -an'
@@ -58,6 +61,8 @@ class FFmpegBitMaskOptions(IntEnum):
     MAP_ALL_STREAMS = (1<<0)
     COPY_CODECS = (1<<1)
 
+    MUXING_QUEUE_SIZE = (1<<4)
+
     DISABLE_VIDEO = (1<<5)
     DISABLE_AUDIO = (1<<6)
     DISABLE_SUBTITLES = (1<<7)
@@ -84,6 +89,8 @@ class FFmpegBitMaskOptions(IntEnum):
             return FFmpegCommands.DISABLE_AUDIO
         elif bm_option == FFmpegBitMaskOptions.DISABLE_SUBTITLES:
             return FFmpegCommands.DISABLE_SUBTITLES
+        elif bm_option == FFmpegBitMaskOptions.MUXING_QUEUE_SIZE:
+            return FFmpegCommands.MUXING_QUEUE_SIZE
 
         else:
             return ''
@@ -96,6 +103,7 @@ if __name__ == '__main__':
     if copy_codecs:
         options |= FFmpegBitMaskOptions.COPY_CODECS
     options |= FFmpegBitMaskOptions.DISABLE_VIDEO
+    options |= FFmpegBitMaskOptions.MUXING_QUEUE_SIZE
     print(FFmpegBitMaskOptions.ff_general_options(options))
 
     exclude_stream = 1

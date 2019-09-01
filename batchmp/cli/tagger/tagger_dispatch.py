@@ -18,7 +18,7 @@ from batchmp.commons.utils import ImageLoader
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
-
+from batchmp.fstools.builders.fsentry import FSEntryParamsExt
 
 class TagsDispatcher(BatchMPDispatcher):
     ''' Tagger CLI Commands Dispatcher
@@ -64,12 +64,9 @@ class TagsDispatcher(BatchMPDispatcher):
 
     # Dispatched Methods
     def print_dir(self, args):
-        BaseTagProcessor().print_dir(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                start_level = args['start_level'], end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                show_size = args['show_size'], show_stats = args['show_stats'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().print_dir(fs_entry_params, 
+                show_stats = args['show_stats'],
                 format = OutputFormatType.FULL if args['full_format'] else OutputFormatType.COMPACT)
 
     def set_tags(self, args):
@@ -98,72 +95,45 @@ class TagsDispatcher(BatchMPDispatcher):
         if art:
             tag_holder.art = art
 
-        BaseTagProcessor().set_tags_visual(args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().set_tags_visual(fs_entry_params,
                 tag_holder = tag_holder,
-                display_current = args['display_current'], quiet = args['quiet'],
                 diff_tags_only = args['diff_tags_only'])
 
     def copy_tags(self, args):
-        BaseTagProcessor().copy_tags(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().copy_tags(fs_entry_params,
                 tag_holder_path = args['tagholder'],
-                display_current = args['display_current'], quiet = args['quiet'],
                 diff_tags_only = args['diff_tags_only'])
 
     def index(self, args):
-        BaseTagProcessor().index(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                diff_tags_only = args['diff_tags_only'], start_from = args['start_from'])
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().index(fs_entry_params,
+                diff_tags_only = args['diff_tags_only'], 
+                start_from = args['start_from'])
 
     def remove_tags(self, args):
-        BaseTagProcessor().remove_tags(src_dir = args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().remove_tags(fs_entry_params,
                 tag_fields = args['tag_fields'],
                 diff_tags_only = args['diff_tags_only'])
 
     def replace_tags(self, args):
-        BaseTagProcessor().replace_tags(args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().replace_tags(fs_entry_params,
                 tag_fields = args['tag_fields'], ignore_case = args['ignore_case'],
                 find_str = args['find_str'], replace_str = args['replace_str'],
                 diff_tags_only = args['diff_tags_only'])
 
     def capitalize_tags(self, args):
-        BaseTagProcessor().capitalize_tags(args['dir'],
-                sort = args['sort'], nested_indent = args['nested_indent'],
-                end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                display_current = args['display_current'], quiet = args['quiet'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().capitalize_tags(fs_entry_params,
                 tag_fields = args['tag_fields'],
                 diff_tags_only = args['diff_tags_only'])
 
     def detauch_art(self, args):
-        BaseTagProcessor().detauch_art(args['dir'],
-                sort = args['sort'],
-                end_level = args['end_level'],
-                quiet = args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
+        fs_entry_params = FSEntryParamsExt(args)
+        BaseTagProcessor().detauch_art(fs_entry_params,
                 target_dir = args['target_dir'])
 
 def main():

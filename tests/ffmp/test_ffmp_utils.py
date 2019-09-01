@@ -20,6 +20,7 @@ from batchmp.commons.utils import (
     run_cmd,
     CmdProcessingError
 )
+from batchmp.fstools.builders.fsentry import FSEntryParamsExt
 
 
 class FFMPUtilsTests(FFMPTest):
@@ -31,9 +32,14 @@ class FFMPUtilsTests(FFMPTest):
         media_info = {'00 Background noise.mp3': 6,
                            '01 Background noise.mp4': 116,
                            '02 Background noise.mp4': 175}
+        
+        fs_entry_params = FSEntryParamsExt()
+        fs_entry_params.src_dir = self.src_dir
+        fs_entry_params.exclude = 'bmfp*'
+   
 
         media_files = [os.path.basename(fpath)
-            for fpath in FFH.media_files(self.src_dir, exclude = 'bmfp*')]
+            for fpath in FFH.media_files(fs_entry_params)]
 
         self.assertTrue(set(media_files) == set(media_info.keys()))
 

@@ -16,8 +16,7 @@ import os, re, datetime, string
 from collections import namedtuple
 from string import Template
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.fsutils import DWalker
-from batchmp.fstools.fsutils import DWalker
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase
 from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -36,7 +35,6 @@ class DirsIndexInfo:
                         file_pass_filter = None, dir_pass_filter = None):
         self.dirs_info = {}
         self.start_from = start_from
-
         self.include = include
         self.exclude = exclude
         self.file_pass_filter = file_pass_filter
@@ -45,9 +43,15 @@ class DirsIndexInfo:
     def fetch_dir_stats(self, dirname):
         ''' Fetches stats for a directory
         '''
+        args = {        
+            'dir' : dirname,
+            'include' : self.include,
+            'exclude' : self.exclude,
+            'quiet' : True
+        }
+        fs_entry_params = FSEntryParamsBase(args) 
         if not dirname in self.dirs_info.keys():
-            total_files, total_dirs, _ = DHandler.dir_stats(src_dir = dirname, end_level = 0,
-                                                            include = self.include, exclude = self.exclude,
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params,
                                                             file_pass_filter = self.file_pass_filter,
                                                             dir_pass_filter = self.dir_pass_filter)
             dir_info = self.DirStats(total_files, total_dirs, self.start_from, self.start_from)
@@ -67,15 +71,10 @@ class Renamer(object):
     ''' Renames FS entries
     '''
     @classmethod
-    def add_index(cls, src_dir, as_prefix = False, join_str = '_',
-                            start_from = 1, min_digits = 1,
-                            sequential = False, by_directory = False,
-                            end_level = 0,
-                            sort = None, nested_indent = None,
-                            include = None, exclude = None,
-                            filter_dirs = True, filter_files = True,
-                            include_dirs = False, include_files = True,
-                            display_current = True, quiet = False):
+    def add_index(cls, fs_entry_params, 
+                        as_prefix = False, join_str = '_',
+                        start_from = 1, min_digits = 1,
+                        sequential = False, by_directory = False):
         ''' adds indexing
             automatically figures out right number of min_digits
         '''
@@ -93,18 +92,17 @@ class Renamer(object):
         if (sequential or by_directory):
             # for sequential indexing, just use counters
             dirs_cnt = files_cnt = start_from
-            total_files, total_dirs, _ = DHandler.dir_stats(src_dir = src_dir, end_level = 0,
-                                                                include = include, exclude = exclude)
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
             def index_sequential(entry):
                 nonlocal dirs_cnt, files_cnt
                 addition = None
-                if entry.type == DWalker.ENTRY_TYPE_DIR:
+                if entry.type == FSEntry.ENTRY_TYPE_DIR:
                     addition = str(dirs_cnt).zfill(num_digits(total_dirs))
 
                     # update the dirs counter
                     dirs_cnt += 1
 
-                elif entry.type == DWalker.ENTRY_TYPE_FILE:
+                elif entry.type == FSEntry.ENTRY_TYPE_FILE:
                     if by_directory:
                         # indexing via adding respective directory counter
                         fcnt = dirs_cnt - 1
@@ -120,13 +118,13 @@ class Renamer(object):
                 return addition
         else:
             # for multilevel indexing, need the DirsIndexInfo helper
-            dir_info = DirsIndexInfo(start_from = start_from, include = include, exclude = exclude)
+            dir_info = DirsIndexInfo(start_from = start_from, include = fs_entry_params.include, exclude = fs_entry_params.exclude)
             def index_multilevel(entry):
                 addition = None
                 parent_dir = os.path.dirname(entry.realpath)
                 dir_stats = dir_info.fetch_dir_stats(parent_dir)
 
-                if entry.type == DWalker.ENTRY_TYPE_DIR:
+                if entry.type == FSEntry.ENTRY_TYPE_DIR:
                     addition = str(dir_stats.dirs_cnt).zfill(num_digits(dir_stats.total_dirs))
 
                     # need to update the dirs counter
@@ -134,7 +132,7 @@ class Renamer(object):
                                                         dir_stats.files_cnt, dir_stats.dirs_cnt + 1)
                     dir_info.update_dir_stats(parent_dir, dir_stats)
 
-                elif entry.type == DWalker.ENTRY_TYPE_FILE:
+                elif entry.type == FSEntry.ENTRY_TYPE_FILE:
                     addition = str(dir_stats.files_cnt).zfill(num_digits(dir_stats.total_files))
 
                     # need to update the files counter
@@ -149,11 +147,11 @@ class Renamer(object):
         def add_index_transform(entry):
             addition = None
             # src dir
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 pass
             # dirs
-            elif entry.type == DWalker.ENTRY_TYPE_DIR:
-                if not include_dirs:
+            elif entry.type == FSEntry.ENTRY_TYPE_DIR:
+                if not fs_entry_params.include_dirs:
                     if by_directory:
                         # here still need to update dirs counter
                         index_function(entry)
@@ -161,8 +159,8 @@ class Renamer(object):
                 else:
                     addition = index_function(entry)
             # files
-            elif entry.type == DWalker.ENTRY_TYPE_FILE:
-                if not include_files:
+            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+                if not fs_entry_params.include_files:
                     return entry.basename
                 else:
                     addition = index_function(entry)
@@ -176,12 +174,7 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_index_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_index_transform)
         if proceed:
             # reset counters
             if (sequential or by_directory):
@@ -190,64 +183,41 @@ class Renamer(object):
                 dir_info.reset_counters()
 
             # ...and rename
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_index_transform, quiet = quiet)
+            DHandler.rename_entries(fs_entry_params, formatter = add_index_transform)
+
     @classmethod
-    def capitalize(cls, src_dir,
-                    end_level = 0,
-                    sort = None, nested_indent = None,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True,
-                    include_dirs = False, include_files = True,
-                    display_current = True, quiet = False):
+    def capitalize(cls, fs_entry_params):
         ''' capitalizes names of FS entries
         '''
 
         def capitalize_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return entry.basename
-
             return string.capwords(entry.basename)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = capitalize_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = capitalize_transform)
         if proceed:
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = capitalize_transform, quiet = quiet, check_unique = False)
+            DHandler.rename_entries(fs_entry_params, formatter = capitalize_transform, check_unique = False)
 
 
     @classmethod
-    def add_date(cls, src_dir, as_prefix = False, join_str = '_', format = '%Y-%m-%d',
-                                end_level = 0,
-                                sort = None, nested_indent = None,
-                                include = None, exclude = None,
-                                filter_dirs = True, filter_files = True,
-                                include_dirs = False, include_files = True,
-                                display_current = True, quiet = False):
+    def add_date(cls, fs_entry_params, as_prefix = False, join_str = '_', format = '%Y-%m-%d'):
         ''' adds current date
         '''
         addition = datetime.datetime.now().strftime(format)
         join_str = str(join_str)
 
         def add_date_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             if as_prefix:
@@ -257,38 +227,23 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_date_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_date_transform)
         if proceed:
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_date_transform, quiet = quiet)
+            DHandler.rename_entries(fs_entry_params, formatter = add_date_transform)
 
     @classmethod
-    def add_text(cls, src_dir, text,
-                    as_prefix = False, join_str = ' ',
-                    end_level = 0,
-                    sort = None, nested_indent = None,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True,
-                    include_dirs = False, include_files = True,
-                    display_current = True, quiet = False):
+    def add_text(cls, fs_entry_params, text, as_prefix = False, join_str = ' '):
         ''' adds text
         '''
         addition = text
         join_str = str(join_str)
 
         def add_text_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             if as_prefix:
@@ -298,36 +253,22 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_text_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_text_transform)
         if proceed:
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = add_text_transform, quiet = quiet)
+            DHandler.rename_entries(fs_entry_params, formatter = add_text_transform)
 
     @classmethod
-    def remove_n_characters(cls, src_dir,
-                            sort = None, nested_indent = None,
-                            num_chars = 0, from_head = True,
-                            end_level = 0, include = None, exclude = None,
-                            filter_dirs = True, filter_files = True,
-                            include_dirs = False, include_files = True,
-                            display_current = True, quiet = False):
+    def remove_n_characters(cls, fs_entry_params, num_chars = 0, from_head = True):
         ''' removes n first characters
         '''
         num_chars = abs(num_chars)
 
         def remove_n_chars_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             name_base, name_ext = os.path.splitext(entry.basename)
@@ -338,28 +279,12 @@ class Renamer(object):
             return ''.join((name_base, name_ext))
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = remove_n_chars_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = remove_n_chars_transform)
         if proceed:
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = remove_n_chars_transform, quiet = quiet)
+            DHandler.rename_entries(fs_entry_params, formatter = remove_n_chars_transform)
 
     @classmethod
-    def replace(cls, src_dir,
-                    find_str, replace_str, case_insensitive=False,
-                    include_extension = False,
-                    end_level = 0,
-                    sort = None, nested_indent = None,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True,
-                    include_dirs = False, include_files = True,
-                    display_current = True, quiet = False):
+    def replace(cls, fs_entry_params, find_str, replace_str, case_insensitive=False, include_extension = False):
         ''' Regexp-base replace
         '''
         flags = re.UNICODE
@@ -368,11 +293,11 @@ class Renamer(object):
         p = re.compile(find_str, flags)
 
         def replace_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             name_base, name_ext = os.path.splitext(entry.basename)
@@ -389,41 +314,25 @@ class Renamer(object):
                 return entry.basename
 
         # visualise changes and proceed if confirmed
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = replace_transform, display_current = display_current)
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = replace_transform)
         if proceed:
-            DHandler.rename_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = replace_transform, quiet = quiet)
+            DHandler.rename_entries(fs_entry_params, formatter = replace_transform)
 
     @classmethod
-    def delete(cls, src_dir, *,
-                non_media_files_only = True,
-                end_level = 0,
-                sort = None, nested_indent = None,
-                include = None, exclude = None,
-                filter_dirs = True, filter_files = True,
-                include_dirs = False, include_files = True,
-                display_current = True, quiet = False):
+    def delete(cls, fs_entry_params, non_media_files_only = False):
 
         ''' Deletes selected files
             Support detection of non-media files
-        '''
-
+        '''        
         if non_media_files_only:
             handler = MutagenTagHandler() + FFmpegTagHandler()
 
         def delete_transform(entry):
-            if entry.type == DWalker.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
                 return entry.basename
-            if entry.type == DWalker.ENTRY_TYPE_DIR and not include_dirs:
+            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
                 return None
-            if entry.type == DWalker.ENTRY_TYPE_FILE and not include_files:
+            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
                 return None
 
             if non_media_files_only:
@@ -433,19 +342,12 @@ class Renamer(object):
             # these are to be gone soon...
             return entry.basename
 
-        proceed = True if quiet else DHandler.visualise_changes(src_dir = src_dir,
-                                    sort = sort, nested_indent = nested_indent,
-                                    orig_end_level = end_level, target_end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = delete_transform, display_current = display_current,
+        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, 
+                                    formatter = delete_transform, 
                                     after_msg = 'The following files / folders will be deleted')
 
         if proceed:
-            DHandler.remove_entries(src_dir = src_dir, end_level = end_level,
-                                    include = include, exclude = exclude,
-                                    filter_dirs = filter_dirs, filter_files = filter_files,
-                                    formatter = delete_transform, quiet = quiet)
+            DHandler.remove_entries(fs_entry_params, formatter = delete_transform)
 
     @classmethod
     def _expand_templates(cls, entry, value):

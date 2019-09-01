@@ -16,7 +16,7 @@ import os, subprocess, shlex, sys
 import time, datetime, json, re
 from functools import wraps
 from collections import namedtuple
-import batchmp.fstools.fsutils as fsutils
+from batchmp.fstools.walker import DWalker
 from batchmp.commons.utils import (
     run_cmd,
     CmdProcessingError,
@@ -171,20 +171,13 @@ class FFH:
             return True
 
     @staticmethod
-    def media_files(src_dir,
-                    start_level = 0, end_level = sys.maxsize,
-                    include = None, exclude = None,
-                    filter_dirs = True, filter_files = True, pass_filter = None):
+    def media_files(fs_entry_params, pass_filter = None):
         """ Return a list of media files that are supported by FFmpeg
         """
         if not pass_filter:
             pass_filter = lambda fpath: FFH.supported_media(fpath)
 
-        media_files = [entry.realpath for entry in fsutils.DWalker.file_entries(src_dir,
-                                                        start_level = start_level, end_level = end_level,
-                                                        include = include, exclude = exclude,
-                                                        filter_dirs = filter_dirs, filter_files = filter_files,
-                                                        pass_filter = pass_filter)]
+        media_files = [entry.realpath for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter)]
         return media_files
 
     @staticmethod

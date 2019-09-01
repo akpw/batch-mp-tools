@@ -23,7 +23,7 @@ from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
 from batchmp.ffmptools.ffcommands.cuesplit import CueSplitter
 from batchmp.ffmptools.processors.basefp import BaseFFProcessor
 from batchmp.tags.output.formatters import OutputFormatType
-
+from batchmp.ffmptools.processors.ffentry import FFEntryParams, FFEntryParamsExt
 
 class BMFPDispatcher(BatchMPDispatcher):
     ''' BMFP commands Dispatcher
@@ -69,93 +69,50 @@ class BMFPDispatcher(BatchMPDispatcher):
 
     # Dispatched Methods
     def print_dir(self, args):
-        BaseFFProcessor().print_dir(src_dir = args['dir'],
-                start_level = args['start_level'], end_level = args['end_level'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                show_size = args['show_size'], show_stats = True,
+        ff_entry_params = FFEntryParams(args)
+        BaseFFProcessor().print_dir(ff_entry_params,
+                show_stats = True,
                 format = OutputFormatType.STATS if not args['show_tags'] else OutputFormatType.FULL,
                 show_volume = args['show_volume'], show_silence = args['show_silence'])
 
     def convert(self, args):
-        Convertor().convert(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                serial_exec = args['serial_exec'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                target_format = args['target_format'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
+        ff_entry_params = FFEntryParamsExt(args)
+        Convertor().convert(ff_entry_params)
 
     def denoise(self, args):
-        Denoiser().apply_af_filters(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                num_passes=args['num_passes'], highpass=args['highpass'], lowpass=args['lowpass'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
+        ff_entry_params = FFEntryParamsExt(args)
+        Denoiser().apply_af_filters(ff_entry_params,
+                num_passes=args['num_passes'], 
+                highpass=args['highpass'], 
+                lowpass=args['lowpass'])
 
     def normalize(self, args):
-        PeakNormalizer().peak_normalize(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
+        ff_entry_params = FFEntryParamsExt(args)
+        PeakNormalizer().peak_normalize(ff_entry_params)
 
     def fragment(self, args):
-        Fragmenter().fragment(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
+        ff_entry_params = FFEntryParamsExt(args)
+        Fragmenter().fragment(ff_entry_params,
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
-                fragment_duration = args['fragment_duration'].total_seconds(),
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'])
+                fragment_duration = args['fragment_duration'].total_seconds())
 
     def segment(self, args):
-        Segmenter().segment(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
+        ff_entry_params = FFEntryParamsExt(args)
+        Segmenter().segment(ff_entry_params,
                 segment_size_MB = args['segment_filesize'],
                 segment_length_secs = args['segment_duration'].total_seconds(),
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                reset_timestamps = args['reset_timestamps'],
-                preserve_metadata = args['preserve_metadata'])
+                reset_timestamps = args['reset_timestamps'])
 
     def silence_split(self, args):
-        SilenceSplitter().silence_split(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                serial_exec = args['serial_exec'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'],
+        ff_entry_params = FFEntryParamsExt(args)
+        SilenceSplitter().silence_split(ff_entry_params,                
                 reset_timestamps = args['reset_timestamps'],
                 silence_min_duration = args['min_duraiton'].total_seconds(),
                 silence_noise_tolerance_amplitude_ratio = args['noise_tolerance'])
 
     def cue_split(self, args):
-        CueSplitter().cue_split(src_dir = args['dir'],
-                end_level = args['end_level'], quiet=args['quiet'],
-                include = args['include'], exclude = args['exclude'],
-                filter_dirs = args['filter_dirs'], filter_files = not args['all_files'],
-                serial_exec = args['serial_exec'],
-                target_dir = args['target_dir'], log_level = args['log_level'],
-                target_format = args['target_format'],
-                ff_general_options = args['ff_general_options'], ff_other_options = args['ffmpeg_options'],
-                preserve_metadata = args['preserve_metadata'],
-                encoding = args['encoding'])
+        ff_entry_params = FFEntryParamsExt(args)
+        CueSplitter().cue_split(ff_entry_params, encoding = args['encoding'])
 
 
 def main():

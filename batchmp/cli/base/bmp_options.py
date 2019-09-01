@@ -34,8 +34,8 @@ from argparse import ArgumentParser, HelpFormatter
 from distutils.util import strtobool
 from urllib.parse import urlparse
 from batchmp.commons.utils import MiscHelpers
-from batchmp.fstools.fsutils import FSH, DWalker
-
+from batchmp.fstools.fsutils import FSH
+from batchmp.fstools.builders.fsentry import FSEntry
 
 class BatchMPBaseCommands:
     VERSION = 'version'
@@ -116,11 +116,11 @@ class BatchMPArgParser:
         include_mode_group.add_argument("-in", "--include", dest = "include",
                     help = "Include: Unix-style name patterns separated by ';'",
                     type = str,
-                    default = DWalker.DEFAULT_INCLUDE)
+                    default = FSEntry.DEFAULT_INCLUDE)
         include_mode_group.add_argument("-ex", "--exclude", dest = "exclude",
                     help = "Exclude: Unix-style name patterns separated by ';' (excludes hidden files by default)",
                     type = str,
-                    default = DWalker.DEFAULT_EXCLUDE)
+                    default = FSEntry.DEFAULT_EXCLUDE)
         include_mode_group.add_argument("-fd", "--filter-dirs", dest = "filter_dirs",
                     help = "Enable Include/Exclude patterns on directories",
                     action = 'store_true')
@@ -274,7 +274,7 @@ class BatchMPArgParser:
                     help = "Sorting for files ('na', i.e. by name ascending by default)",
                     type = str,
                     choices = ['na', 'nd', 'sa', 'sd'],
-                    default = DWalker.DEFAULT_SORT)
+                    default = FSEntry.DEFAULT_SORT)
         misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
                     help = "Indent for printing  nested directories",
                     type = str,

@@ -15,7 +15,7 @@
 import sys, math, datetime
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.fsutils import DWalker
+from batchmp.fstools.builders.fsentry import FSEntry
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -33,11 +33,7 @@ class BaseFFProcessor:
     def handler(self):
         return self._handler
 
-    def print_dir(self, src_dir, *,
-                            start_level = 0, end_level = sys.maxsize,
-                            include = None, exclude = None,
-                            sort = None, nested_indent = DWalker.DEFAULT_NESTED_INDENT,
-                            filter_dirs = True, filter_files = True,
+    def print_dir(self, ff_entry_params,
                             show_size = False, format = None, show_stats = False,
                             show_volume = False, show_silence = False):
 
@@ -57,7 +53,7 @@ class BaseFFProcessor:
         def volume_formatter(entry):
             volume_str = ''
             if show_volume:
-                if entry.type == DWalker.ENTRY_TYPE_FILE:
+                if entry.type == FSEntry.ENTRY_TYPE_FILE:
                     if self.handler.can_handle(entry.realpath):
                         volume_entry = FFH.volume_detector(entry.realpath)
                         indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
@@ -72,7 +68,7 @@ class BaseFFProcessor:
         def silence_formatter(entry):
             silence_str = ''
             if show_silence:
-                if entry.type == DWalker.ENTRY_TYPE_FILE:
+                if entry.type == FSEntry.ENTRY_TYPE_FILE:
                     if self.handler.can_handle(entry.realpath):
                         indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
                         silence_entries = FFH.silence_detector(entry.realpath)
@@ -90,12 +86,7 @@ class BaseFFProcessor:
             return silence_str
 
 
-        DHandler.print_dir(src_dir = src_dir,
-                            start_level = start_level, end_level = end_level,
-                            include = include, exclude = exclude,
-                            sort = sort, nested_indent = nested_indent,
-                            filter_dirs = filter_dirs, filter_files = filter_files,
-                            show_size = show_size,
+        DHandler.print_dir(ff_entry_params,
                             formatter = [base_formatter, volume_formatter, silence_formatter],
                             selected_files_description = 'media file')
 

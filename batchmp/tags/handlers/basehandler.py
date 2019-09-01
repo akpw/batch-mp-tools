@@ -19,7 +19,7 @@ from enum import Enum
 from batchmp.commons.chainedhandler import ChainedHandler
 from abc import abstractmethod
 from batchmp.fstools.fsutils import UniqueDirNamesChecker
-from batchmp.commons.descriptors import LazyTypedPropertyDescriptor
+from batchmp.commons.descriptors import LazyInstancePropertyDescriptor
 
 
 class DetauchedArtType(Enum):
@@ -35,7 +35,7 @@ class DetauchedArtType(Enum):
 
 
 class TagHandler(ChainedHandler):
-    tag_holder = LazyTypedPropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
+    tag_holder = LazyInstancePropertyDescriptor('batchmp.tags.handlers.tagsholder.TagHolder')
 
     def __init__(self):
         self._media_handler = None
