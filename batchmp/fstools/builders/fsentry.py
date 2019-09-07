@@ -158,7 +158,7 @@ class FSEntryParamsBase():
                     for dir_name in dirs:
                         if self.passed_filters(dir_name):
                             self._enclosing_dnames[rpath] = rpath
-                            break # no need to check this root further                            
+                            break # no need to check this root further
 
     # Current level
     @property
@@ -217,7 +217,8 @@ class FSEntryParamsBase():
 
     @property
     def isEnclosingEntry(self):
-        return self._enclosing_dnames.has_node(self.rpath)
+        dir_name = os.path.basename(self.rpath)
+        return self._enclosing_dnames.has_node(self.rpath) and not (self.passed_filters(dir_name))
         
 
     @classmethod

@@ -79,7 +79,6 @@ class FSEntryBuilderBase(FSEntryBuilder):
                                 realpath = dpath, 
                                 indent = fs_entry_params.siblings_indent[:-1] + os.path.sep)
                yield entry
-               #fs_entry_params.dnames.passed.remove(dname)
 
 
 class FSEntryBuilderFlatten(FSEntryBuilder):
@@ -132,8 +131,6 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
                         fname = unique_fname.send(fname)
                         entry = FSEntry(FSEntry.ENTRY_TYPE_FILE, fname, fpath, fs_entry_params.siblings_indent)
                         flattens.append(entry)
-                
-                # fs_entry_params.dnames.passed.remove(dname)
 
             # OK to sort now
             if fs_entry_params.by_size:

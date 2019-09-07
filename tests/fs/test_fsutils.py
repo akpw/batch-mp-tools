@@ -41,6 +41,17 @@ class FSTests(FSTest):
         self.assertTrue(dcnt == dcnt_ref, msg = '{0} dirs, should be {1}'.format(dcnt, dcnt_ref))
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
+    def test_dir_stats_filtered_folders(self):
+        ## python -m unittest tests.fs.test_fsutils.FSTests.test_dir_stats_filtered_folders
+        fs_entry_params = self._fs_entry(include = 'nested_a*;nested_c', filter_dirs = True, filter_files = False)
+        _, dcnt, _ = DHandler.dir_stats(fs_entry_params, include_size = True)
+
+        cmd = 'find {} -type d -iname "nested_a*" -or -iname "nested_c" | wc -l'.format(shlex.quote(self.src_dir))
+        dcnt_ref = self.get_last_digit_from_shell_cmd(cmd)
+        self.assertTrue(dcnt == dcnt_ref, msg = '{0} dirs, should be {1}'.format(dcnt, dcnt_ref))
+
+
+    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_fs_flatten_folders(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_fs_flatten_folders
         fs_entry_params = self._fs_entry()
@@ -52,21 +63,6 @@ class FSTests(FSTest):
         fcnt, dcnt, _ = DHandler.dir_stats(fs_entry_params)
         self.assertTrue(fcnt == fcnt_orig, msg = '{0} files, should be {1}'.format(fcnt, fcnt_orig))
         self.assertTrue(dcnt == 0, msg = '{} directories, should be 0'.format(dcnt))
-
-
-#    @unittest.skipIf(os.name == 'nt', 'skipping for windows')
-#    def test_fs_flatten_filtered_folders(self):
-#        ## python -m unittest tests.fs.test_fsutils.FSTests.test_fs_flatten_filtered_folders
-#        fs_entry_params = self._fs_entry()
-#        fcnt_orig, _, _ = DHandler.dir_stats(fs_entry_params)
-#
-#        fsf_entry_params = self._fs_entry(flatten = True, quiet = False)
-#        DHandler.flatten_folders(fsf_entry_params, remove_non_empty_folders = True)
-#        
-#        fcnt, dcnt, _ = DHandler.dir_stats(fs_entry_params)
-#        self.assertTrue(fcnt == fcnt_orig, msg = '{0} files, should be {1}'.format(fcnt, fcnt_orig))
-#        self.assertTrue(dcnt == 0, msg = '{} directories, should be 0'.format(dcnt))
-
 
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_renamer_replace(self):
@@ -167,12 +163,12 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_delete_folders(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_delete_folders
-        # renamer -el 4 -in 'nested_c' -fd -af delete -id -dc
-        fs_entry_params_all_files = self._fs_entry(end_level = 4, filter_files = False)
+        # renamer -el 5 -in 'nested_c;nested_a*' -fd delete -id -dc
+        fs_entry_params_all_files = self._fs_entry(end_level = 5, filter_files = False)
         fcnt_all, dcnt_all, _ = DHandler.dir_stats(fs_entry_params_all_files)
 
-        fs_del_entry_params = self._fs_entry(end_level = 4, 
-                                            include = 'nested_c', 
+        fs_del_entry_params = self._fs_entry(end_level = 5, 
+                                            include = 'nested_c;nested_a*', 
                                             filter_dirs = True, filter_files = False, 
                                             include_dirs = True)        
         fcnt_del, dcnt_del, _ = DHandler.dir_stats(fs_del_entry_params)
