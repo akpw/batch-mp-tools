@@ -13,7 +13,7 @@
 
 
 import datetime, math
-from batchmp.fstools.builders.fsentry import FSEntry
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
 from enum import IntEnum
 
 
@@ -42,7 +42,7 @@ class TagOutputFormatter:
         '''
 
         # check inputs
-        if entry.type == FSEntry.ENTRY_TYPE_DIR or entry.type == FSEntry.ENTRY_TYPE_ROOT:
+        if entry.type == FSEntryType.DIR or entry.type == FSEntryType.ROOT:
             return entry.basename
         if not handler or not handler.can_handle(entry.realpath):
             return None

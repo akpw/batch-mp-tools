@@ -16,7 +16,7 @@ import os, re, datetime, string
 from collections import namedtuple
 from string import Template
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase, FSEntryType
 from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -96,13 +96,13 @@ class Renamer(object):
             def index_sequential(entry):
                 nonlocal dirs_cnt, files_cnt
                 addition = None
-                if entry.type == FSEntry.ENTRY_TYPE_DIR:
+                if entry.type == FSEntryType.DIR:
                     addition = str(dirs_cnt).zfill(num_digits(total_dirs))
 
                     # update the dirs counter
                     dirs_cnt += 1
 
-                elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+                elif entry.type == FSEntryType.FILE:
                     if by_directory:
                         # indexing via adding respective directory counter
                         fcnt = dirs_cnt - 1
@@ -124,7 +124,7 @@ class Renamer(object):
                 parent_dir = os.path.dirname(entry.realpath)
                 dir_stats = dir_info.fetch_dir_stats(parent_dir)
 
-                if entry.type == FSEntry.ENTRY_TYPE_DIR:
+                if entry.type == FSEntryType.DIR:
                     addition = str(dir_stats.dirs_cnt).zfill(num_digits(dir_stats.total_dirs))
 
                     # need to update the dirs counter
@@ -132,7 +132,7 @@ class Renamer(object):
                                                         dir_stats.files_cnt, dir_stats.dirs_cnt + 1)
                     dir_info.update_dir_stats(parent_dir, dir_stats)
 
-                elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+                elif entry.type == FSEntryType.FILE:
                     addition = str(dir_stats.files_cnt).zfill(num_digits(dir_stats.total_files))
 
                     # need to update the files counter
@@ -147,10 +147,10 @@ class Renamer(object):
         def add_index_transform(entry):
             addition = None
             # src dir
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 pass
             # dirs
-            elif entry.type == FSEntry.ENTRY_TYPE_DIR:
+            elif entry.type == FSEntryType.DIR:
                 if not fs_entry_params.include_dirs:
                     if by_directory:
                         # here still need to update dirs counter
@@ -159,7 +159,7 @@ class Renamer(object):
                 else:
                     addition = index_function(entry)
             # files
-            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+            elif entry.type == FSEntryType.FILE:
                 if not fs_entry_params.include_files:
                     return entry.basename
                 else:
@@ -191,11 +191,11 @@ class Renamer(object):
         '''
 
         def capitalize_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return entry.basename
             return string.capwords(entry.basename)
 
@@ -213,11 +213,11 @@ class Renamer(object):
         join_str = str(join_str)
 
         def add_date_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             if as_prefix:
@@ -239,11 +239,11 @@ class Renamer(object):
         join_str = str(join_str)
 
         def add_text_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             if as_prefix:
@@ -264,11 +264,11 @@ class Renamer(object):
         num_chars = abs(num_chars)
 
         def remove_n_chars_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             name_base, name_ext = os.path.splitext(entry.basename)
@@ -293,11 +293,11 @@ class Renamer(object):
         p = re.compile(find_str, flags)
 
         def replace_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return entry.basename
 
             name_base, name_ext = os.path.splitext(entry.basename)
@@ -324,15 +324,21 @@ class Renamer(object):
         ''' Deletes selected files
             Support detection of non-media files
         '''        
+
+        if fs_entry_params.filter_dirs & fs_entry_params.include_dirs:
+            fs_entry_params.filter_files = False
+            fs_entry_params.include_files = True
+
+
         if non_media_files_only:
             handler = MutagenTagHandler() + FFmpegTagHandler()
 
         def delete_transform(entry):
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 return entry.basename
-            if entry.type == FSEntry.ENTRY_TYPE_DIR and not fs_entry_params.include_dirs:
+            if entry.type == FSEntryType.DIR and not fs_entry_params.include_dirs:
                 return None
-            if entry.type == FSEntry.ENTRY_TYPE_FILE and not fs_entry_params.include_files:
+            if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return None
 
             if non_media_files_only:

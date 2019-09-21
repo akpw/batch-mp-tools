@@ -17,13 +17,15 @@ from collections import namedtuple, Iterable
 from distutils.util import strtobool
 from batchmp.fstools.walker import DWalker
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsExt
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryParamsExt
+# from profilehooks import profile
 
 
 class DHandler:
     ''' FS Directory level utilities
     '''
     @staticmethod
+#    @profile
     def print_dir(fs_entry_params, formatter = None, selected_files_description = None):
         """ Prints content of given directory
             Supports additional display name processing via formatter supplied by the caller
@@ -39,7 +41,8 @@ class DHandler:
 
         # print the dir tree
         fcnt = dcnt = 0
-        total_size = 0
+        total_file_size = 0
+        total_dir_size = 0
 
         for entry in DWalker.entries(fs_entry_params):
             # get formatted output
@@ -55,17 +58,18 @@ class DHandler:
 
             if formatted_output:
                 size = ''
-                if entry.type == FSEntry.ENTRY_TYPE_FILE:
+                if entry.type == FSEntryType.FILE:
                     fcnt += 1
                     if fs_entry_params.show_size:
                         fsize = os.path.getsize(entry.realpath)
                         size = ' {} '.format(FSH.fs_size(fsize))
-                        total_size += fsize
-                elif entry.type == FSEntry.ENTRY_TYPE_DIR and not entry.isEnclosingEntry:
+                        total_file_size += fsize
+                elif entry.type == FSEntryType.DIR and not entry.isEnclosingEntry:
                     dcnt += 1
                     if fs_entry_params.show_size:
                         dsize = FSH.dir_size(entry.realpath)
                         size = ' {} '.format(FSH.fs_size(dsize))
+                        total_dir_size += dsize
 
                 print('{0}{1}{2}'.format(entry.indent, size, formatted_output))
 
@@ -74,7 +78,9 @@ class DHandler:
                                                     selected_files_description, '' if fcnt == 1 else 's',
                                                     dcnt, '' if dcnt == 1 else 's'))
         if fs_entry_params.show_size:
-            print('Total selected files size: {}'.format(FSH.fs_size(total_size)))
+            print('Total directories size: {}'.format(FSH.fs_size(total_dir_size)))
+            if total_file_size > 0:
+                print('Total selected files size: {}'.format(FSH.fs_size(total_file_size)))
 
         return fcnt, dcnt
 
@@ -91,11 +97,11 @@ class DHandler:
         fcnt = dcnt = total_size = 0
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == FSEntry.ENTRY_TYPE_FILE:
+            if entry.type == FSEntryType.FILE:
                 if file_pass_filter and (not file_pass_filter(entry.realpath)):
                     continue
                 fcnt += 1
-            elif entry.type == FSEntry.ENTRY_TYPE_DIR:
+            elif entry.type == FSEntryType.DIR:
                 if entry.isEnclosingEntry:
                     continue
                 if dir_pass_filter and (not dir_pass_filter(entry.realpath)):
@@ -172,7 +178,7 @@ class DHandler:
             flattened_dirs_cnt = flattened_files_cnt = 0
             target_dir_path = ''
             for entry in DWalker.entries(ff_entry_params):
-                if entry.type in (FSEntry.ENTRY_TYPE_DIR, FSEntry.ENTRY_TYPE_ROOT):
+                if entry.type in (FSEntryType.DIR, FSEntryType.ROOT):
                     if FSH.level_from_root(ff_entry_params.src_dir, entry.realpath) == ff_entry_params.target_level:
                         target_dir_path = entry.realpath
                 else:
@@ -208,7 +214,7 @@ class DHandler:
         dir_entries = []
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT:
+            if entry.type == FSEntryType.ROOT:
                 continue
 
             target_name = formatter(entry)
@@ -217,11 +223,11 @@ class DHandler:
 
             target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
 
-            if entry.type == FSEntry.ENTRY_TYPE_DIR:
+            if entry.type == FSEntryType.DIR:
                 # for dirs, need to postpone
                 dir_entries.append(DirEntry(entry.realpath, target_path))
 
-            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+            elif entry.type == FSEntryType.FILE:
                 # for files, just rename
                 if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
                     fcnt += 1
@@ -248,17 +254,17 @@ class DHandler:
         dir_entries = []
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == FSEntry.ENTRY_TYPE_ROOT or entry.isEnclosingEntry:
+            if entry.type == FSEntryType.ROOT or entry.isEnclosingEntry:
                 continue
 
             if formatter(entry) is None:
                 continue
 
-            if entry.type == FSEntry.ENTRY_TYPE_DIR:
+            if entry.type == FSEntryType.DIR:
                 # for dirs, need to postpone
                 dir_entries.append(entry.realpath)
 
-            elif entry.type == FSEntry.ENTRY_TYPE_FILE:
+            elif entry.type == FSEntryType.FILE:
                 # for files, OK to remove now
                 FSH.remove_FS_entry(entry.realpath)
                 fcnt += 1

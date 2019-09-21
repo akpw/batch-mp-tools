@@ -15,7 +15,7 @@
 import sys, math, datetime
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.builders.fsentry import FSEntry
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -53,7 +53,7 @@ class BaseFFProcessor:
         def volume_formatter(entry):
             volume_str = ''
             if show_volume:
-                if entry.type == FSEntry.ENTRY_TYPE_FILE:
+                if entry.type == FSEntryType.FILE:
                     if self.handler.can_handle(entry.realpath):
                         volume_entry = FFH.volume_detector(entry.realpath)
                         indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
@@ -68,7 +68,7 @@ class BaseFFProcessor:
         def silence_formatter(entry):
             silence_str = ''
             if show_silence:
-                if entry.type == FSEntry.ENTRY_TYPE_FILE:
+                if entry.type == FSEntryType.FILE:
                     if self.handler.can_handle(entry.realpath):
                         indent = entry.indent[:-3] + TagOutputFormatter.DEFAULT_TAG_INDENT
                         silence_entries = FFH.silence_detector(entry.realpath)

@@ -13,6 +13,7 @@
 
 
 import os, sys, fnmatch, collections, pygtrie, heapq
+from enum import IntEnum
 from abc import ABCMeta, abstractmethod
 from batchmp.fstools.fsutils import FSH
 from batchmp.commons.descriptors import (
@@ -21,7 +22,6 @@ from batchmp.commons.descriptors import (
          LazyClassPropertyDescriptor,
          FunctionPropertyDescriptor,
          BooleanPropertyDescriptor)
-
 
 # FSEntry Attributes with default values
 class FSEntryDefaultValueDescriptor(LazyFunctionPropertyDescriptor):
@@ -91,7 +91,6 @@ class FSEntryRPathDescriptor(PropertyDescriptor):
             raise TypeError("Not a FSEntryParamsBase Type: {}".format(instance.__class__))
 
 
-
 class FSEntry:
     ''' File System entry representation
     '''
@@ -102,11 +101,15 @@ class FSEntry:
         self.indent = indent
         self.isEnclosingEntry = isEnclosingEntry
 
-    # FS entry constants
-    ENTRY_TYPE_ROOT = 'R'
-    ENTRY_TYPE_DIR = 'D'
-    ENTRY_TYPE_FILE = 'F'
+class FSEntryType(IntEnum):
+    ROOT = 0
+    DIR = 1
+    FILE = 2
+    IMAGE = 3
+    AUDIO = 4
+    VIDEO = 5
 
+class FSEntryDefaults:    
     DEFAULT_NESTED_INDENT = '  '
     DEFAULT_INCLUDE = '*'
     DEFAULT_EXCLUDE = '.*' #exclude hidden files
@@ -142,23 +145,35 @@ class FSEntryParamsBase():
         self.src_dir = args.get('dir')
         self.start_level = args.get('start_level', 0)
         self.end_level = args.get('end_level', sys.maxsize)
-        self.nested_indent = args.get('nested_indent', FSEntry.DEFAULT_NESTED_INDENT)
-        self.include = args.get('include', FSEntry.DEFAULT_INCLUDE)
-        self.exclude = args.get('exclude', FSEntry.DEFAULT_EXCLUDE)
-        self.sort = args.get('sort', FSEntry.DEFAULT_SORT)
-        self.filter_dirs = args.get('filter_dirs', True)
+        self.nested_indent = args.get('nested_indent', FSEntryDefaults.DEFAULT_NESTED_INDENT)
+        self.include = args.get('include', FSEntryDefaults.DEFAULT_INCLUDE)
+        self.exclude = args.get('exclude', FSEntryDefaults.DEFAULT_EXCLUDE)
+        self.sort = args.get('sort', FSEntryDefaults.DEFAULT_SORT)
+        self.filter_dirs = not args.get('all_dirs', False)
         self.filter_files = not args.get('all_files', False)   
         self.show_size = args.get('show_size', False)
 
         # enclosing directores
         self._enclosing_dnames = pygtrie.StringTrie(separator=os.path.sep)
+        self._enclosing_files_containters = set()
         if self.scan_for_enclosing_directories:
-            for rpath, dirs, _ in os.walk(self.src_dir):
+            for rpath, dirs, files in os.walk(self.src_dir):
                 if FSH.level_from_root(self.src_dir, rpath) < self.end_level:
+                    marked_enclosing = False
                     for dir_name in dirs:
                         if self.passed_filters(dir_name):
                             self._enclosing_dnames[rpath] = rpath
+                            marked_enclosing = True
                             break # no need to check this root further
+                    for file_name in files:
+                        if self.passed_filters(file_name):
+                            if not marked_enclosing:
+                                self._enclosing_dnames[rpath] = rpath
+                            self._enclosing_files_containters.add(rpath)
+                            break # no need to check this root further
+            #print(self._enclosing_dnames)
+            #print()
+            #print(self._enclosing_files_containters)
 
     # Current level
     @property
@@ -193,7 +208,7 @@ class FSEntryParamsBase():
 
     @property
     def scan_for_enclosing_directories(self):
-        return self.filter_dirs and self.include != FSEntry.DEFAULT_INCLUDE and self.end_level > 0    
+        return self.include != FSEntryDefaults.DEFAULT_INCLUDE and self.end_level > 0    
 
     @property
     def skip_iteration(self):   
@@ -218,8 +233,8 @@ class FSEntryParamsBase():
     @property
     def isEnclosingEntry(self):
         dir_name = os.path.basename(self.rpath)
-        return self._enclosing_dnames.has_node(self.rpath) and not (self.passed_filters(dir_name))
-        
+        return self._enclosing_dnames.has_node(self.rpath) and not self.passed_filters(dir_name) and not (self.rpath in self._enclosing_files_containters)
+
 
     @classmethod
     def writable_fields(cls):
@@ -260,7 +275,6 @@ class FSEntryParamsExt(FSEntryParamsBase):
         self.include_dirs = args.get('include_dirs', False)
         self.include_files = not args.get('exclude_files', False)
         self.quiet = args.get('quiet', False)       
-
 
     
 class FSEntryParamsFlatten(FSEntryParamsExt):

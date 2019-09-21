@@ -15,7 +15,7 @@
 import os, sys, unittest, shlex
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryDefaults, FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
 from .test_fs_base import FSTest
 
 
@@ -43,7 +43,7 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_dir_stats_filtered_folders(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_dir_stats_filtered_folders
-        fs_entry_params = self._fs_entry(include = 'nested_a*;nested_c', filter_dirs = True, filter_files = False)
+        fs_entry_params = self._fs_entry(include = 'nested_a*;nested_c', filter_files = False)
         _, dcnt, _ = DHandler.dir_stats(fs_entry_params, include_size = True)
 
         cmd = 'find {} -type d -iname "nested_a*" -or -iname "nested_c" | wc -l'.format(shlex.quote(self.src_dir))
@@ -92,7 +92,7 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_renamer_add_index_multilevel(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_renamer_add_index_multilevel
-        fs_entry_params = self._fs_entry(end_level = 5, include = '[!.]*', exclude = 'test_*')        
+        fs_entry_params = self._fs_entry(end_level = 5, include = '[!.]*', exclude = 'test_*', filter_dirs = False)        
         fcnt_orig, _, _ = DHandler.dir_stats(fs_entry_params)
 
         join_str = ' '
@@ -119,7 +119,7 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_add_text(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_add_text
-        fs_entry_params = self._fs_entry(end_level = 4)        
+        fs_entry_params = self._fs_entry(end_level = 4, filter_dirs = False)        
         fcnt_orig, _, _ = DHandler.dir_stats(fs_entry_params)
 
         join_str = ' '
@@ -133,7 +133,7 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_add_date(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_add_date
-        fs_entry_params = self._fs_entry(end_level = 5)        
+        fs_entry_params = self._fs_entry(end_level = 5, filter_dirs = False)        
         fcnt_orig, _, _ = DHandler.dir_stats(fs_entry_params)
 
         join_str = '_'
@@ -169,7 +169,7 @@ class FSTests(FSTest):
 
         fs_del_entry_params = self._fs_entry(end_level = 5, 
                                             include = 'nested_c;nested_a*', 
-                                            filter_dirs = True, filter_files = False, 
+                                            filter_files = False, 
                                             include_dirs = True)        
         fcnt_del, dcnt_del, _ = DHandler.dir_stats(fs_del_entry_params)
 
@@ -200,8 +200,8 @@ class FSTests(FSTest):
         self.assertTrue(fcnt == fcnt_remaining, msg = '{0} files, should be {1}'.format(fcnt, fcnt_remaining))
 
 
-    def _fs_entry(self, include = FSEntry.DEFAULT_INCLUDE, exclude = FSEntry.DEFAULT_EXCLUDE, 
-                        filter_dirs = False, filter_files = True, 
+    def _fs_entry(self, include =  FSEntryDefaults.DEFAULT_INCLUDE, exclude =  FSEntryDefaults.DEFAULT_EXCLUDE, 
+                        filter_dirs = True, filter_files = True, 
                         include_dirs = False, include_files = True, quiet = True,
                         end_level = sys.maxsize, start_level = 0, flatten = False, target_level = 0, display_current = False, show_size = False):
 
@@ -211,7 +211,7 @@ class FSTests(FSTest):
             'end_level' : end_level,
             'include' : include,
             'exclude' : exclude,
-            'filter_dirs' : filter_dirs,
+            'all_dirs' : not filter_dirs,
             'all_files' : not filter_files,
             'include_dirs' : include_dirs,
             'exclude_files' : not include_files,

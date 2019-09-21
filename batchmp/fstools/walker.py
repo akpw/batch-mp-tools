@@ -13,9 +13,8 @@
 
 
 import os, sys
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryParamsBase
 from batchmp.fstools.builders.fsb import FSEntryBuilderBase
-
 
 class DWalker:
     ''' Walks content of a directory, generating
@@ -54,7 +53,7 @@ class DWalker:
 
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type in (FSEntry.ENTRY_TYPE_ROOT, FSEntry.ENTRY_TYPE_DIR):
+            if entry.type in (FSEntryType.ROOT, FSEntryType.DIR):
                 continue
 
             if not pass_filter(entry.realpath):
@@ -69,7 +68,7 @@ class DWalker:
 
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type in (FSEntry.ENTRY_TYPE_ROOT, FSEntry.ENTRY_TYPE_FILE):
+            if entry.type in (FSEntryType.ROOT, FSEntryType.FILE):
                 continue
 
             if not pass_filter(entry.realpath):

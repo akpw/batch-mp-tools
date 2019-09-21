@@ -14,7 +14,7 @@
 import os, sys
 from abc import ABCMeta, abstractmethod
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
 
 class FSEntryBuilder(metaclass = ABCMeta):
     ''' root entry builder
@@ -24,13 +24,13 @@ class FSEntryBuilder(metaclass = ABCMeta):
         # yield the current folder
         if fs_entry_params.current_level == 0:
             # src dir goes in full and without indent
-            entry = FSEntry(type = FSEntry.ENTRY_TYPE_ROOT,
+            entry = FSEntry(type = FSEntryType.ROOT,
                                 basename = os.path.basename(fs_entry_params.rpath), 
                                 realpath = fs_entry_params.rpath,
                                 indent = os.path.dirname(fs_entry_params.rpath) + os.path.sep,
                                 isEnclosingEntry = True)
         else:
-            entry = FSEntry(FSEntry.ENTRY_TYPE_DIR,
+            entry = FSEntry(FSEntryType.DIR,
                                 basename = os.path.basename(fs_entry_params.rpath), 
                                 realpath = fs_entry_params.rpath,
                                 indent = fs_entry_params.current_indent[:-1] + os.path.sep,
@@ -60,7 +60,7 @@ class FSEntryBuilderBase(FSEntryBuilder):
         ## Files processing ##        
         for fname in fs_entry_params.fnames:
             fpath = os.path.join(fs_entry_params.rpath, fname)
-            entry = FSEntry(type = FSEntry.ENTRY_TYPE_FILE,
+            entry = FSEntry(type = FSEntryType.FILE,
                                 basename = fname, 
                                 realpath = fpath,
                                 indent = fs_entry_params.siblings_indent)
@@ -74,7 +74,7 @@ class FSEntryBuilderBase(FSEntryBuilder):
            if fs_entry_params.current_level == fs_entry_params.end_level:
                # not going any deeper
                # yield the dir
-               entry = FSEntry(type = FSEntry.ENTRY_TYPE_DIR,
+               entry = FSEntry(type = FSEntryType.DIR,
                                 basename = dname, 
                                 realpath = dpath, 
                                 indent = fs_entry_params.siblings_indent[:-1] + os.path.sep)
@@ -104,7 +104,7 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
             ## Files processing ##        
             for fname in fs_entry_params.fnames:
                 fpath = os.path.join(fs_entry_params.rpath, fname)
-                entry = FSEntry(type = FSEntry.ENTRY_TYPE_FILE, 
+                entry = FSEntry(type = FSEntryType.FILE, 
                                     basename = fname, 
                                     realpath = fpath, 
                                     indent = fs_entry_params.siblings_indent)
@@ -129,7 +129,7 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
 
                         next(unique_fname)
                         fname = unique_fname.send(fname)
-                        entry = FSEntry(FSEntry.ENTRY_TYPE_FILE, fname, fpath, fs_entry_params.siblings_indent)
+                        entry = FSEntry(FSEntryType.FILE, fname, fpath, fs_entry_params.siblings_indent)
                         flattens.append(entry)
 
             # OK to sort now

@@ -35,7 +35,7 @@ from distutils.util import strtobool
 from urllib.parse import urlparse
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryDefaults
 
 class BatchMPBaseCommands:
     VERSION = 'version'
@@ -116,13 +116,13 @@ class BatchMPArgParser:
         include_mode_group.add_argument("-in", "--include", dest = "include",
                     help = "Include: Unix-style name patterns separated by ';'",
                     type = str,
-                    default = FSEntry.DEFAULT_INCLUDE)
+                    default =  FSEntryDefaults.DEFAULT_INCLUDE)
         include_mode_group.add_argument("-ex", "--exclude", dest = "exclude",
                     help = "Exclude: Unix-style name patterns separated by ';' (excludes hidden files by default)",
                     type = str,
-                    default = FSEntry.DEFAULT_EXCLUDE)
-        include_mode_group.add_argument("-fd", "--filter-dirs", dest = "filter_dirs",
-                    help = "Enable Include/Exclude patterns on directories",
+                    default =  FSEntryDefaults.DEFAULT_EXCLUDE)
+        include_mode_group.add_argument("-ad", "--all-dirs", dest = "all_dirs",
+                    help = "Disable Include/Exclude patterns on directories",
                     action = 'store_true')
         include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
                     help = "Disable Include/Exclude patterns on files (shows hidden files excluded by default)",
@@ -169,7 +169,7 @@ class BatchMPArgParser:
             args['exclude'] = ''
             args['end_level'] = 0
             args['all_files'] = False
-            args['filter_dirs'] = True
+            args['all_dirs'] = False
 
         # check recursion
         if args['recursive'] and args['end_level'] == 0:
@@ -274,7 +274,7 @@ class BatchMPArgParser:
                     help = "Sorting for files ('na', i.e. by name ascending by default)",
                     type = str,
                     choices = ['na', 'nd', 'sa', 'sd'],
-                    default = FSEntry.DEFAULT_SORT)
+                    default = FSEntryDefaults.DEFAULT_SORT)
         misc_group.add_argument('-ni', '--nested_indent', dest = 'nested_indent',
                     help = "Indent for printing  nested directories",
                     type = str,

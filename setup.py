@@ -20,7 +20,7 @@ with open(path.join(pkg_dir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='batchmp',
-    version='0.9',
+    version='0.92',
 
     url='https://github.com/akpw/batch-mp-tools',
 
@@ -36,7 +36,7 @@ setup(
     packages=find_packages(exclude=['test*']),
     keywords = 'batch processing media video audio CLI rename tags ID3',
 
-    install_requires = ['mutagen>=1.27', 'pygtrie>=2.3.2'],
+    install_requires = ['mutagen>=1.27', 'pygtrie>=2.3.2', 'profilehooks>=1.11.0'],
 
     test_suite = 'tests.batch_mp_test_suite',
 
