@@ -14,7 +14,7 @@
 
 import os, subprocess, shlex, sys
 import time, datetime, json, re
-from functools import wraps
+from enum import IntEnum
 from collections import namedtuple
 from batchmp.fstools.walker import DWalker
 from batchmp.commons.utils import (
@@ -80,6 +80,12 @@ class FFmpegNotInstalled(Exception):
         '''.format(platforms_install_instructions)
 
 
+class FSMediaEntryType(IntEnum):
+    IMAGE = 0x2000
+    AUDIO = 0x2001
+    VIDEO = 0x2002
+    NONMEDIA = 0x2100
+
 class FFH:
     ''' FFmpeg-related utilities
     '''
@@ -109,8 +115,6 @@ class FFH:
             if full_entry.audio_streams and len(full_entry.audio_streams) > 0:
                 # if there are multiple audio streams, take the first
                 audio_stream = full_entry.audio_streams[0]
-            else:
-                return None
 
             if full_entry.artwork_streams and len(full_entry.artwork_streams) > 0:
                 # in case there are multiple art images, take the first
@@ -148,34 +152,47 @@ class FFH:
             if streams:
                 is_audio_stream = lambda stream: True if stream.get('codec_type') == 'audio' else False
                 is_video_stream = lambda stream: True if stream.get('codec_type') == 'video' else False
-                is_artwork_stream = lambda stream: True if \
+                is_image_stream = lambda stream: True if \
                         stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg') else False
+
 
                 audio_streams = [stream for stream in streams if is_audio_stream(stream)]
                 video_streams = [stream for stream in streams if \
-                                        is_video_stream(stream) and not is_artwork_stream(stream)]
+                                        is_video_stream(stream) and not is_image_stream(stream)]
                 artwork_streams = [stream for stream in streams if \
-                                        is_video_stream(stream) and is_artwork_stream(stream)]
+                                        is_video_stream(stream) and is_image_stream(stream)]
 
             format = out.get('format')
-
             return FFH.FFFullEntry(fpath, format, audio_streams, video_streams, artwork_streams)
 
     @staticmethod
-    def supported_media(fpath):
+    def ffmpeg_supported_media(fpath = None, ffentry = None):
         ''' Determines if a file can be processed with FFmpeg
         '''
-        if not FFH.media_file_info(fpath):
-            return False
-        else:
-            return True
+        media_type = FFH.media_type(fpath = fpath, ffentry = ffentry)
+        return media_type in (FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO)
 
     @staticmethod
-    def media_files(fs_entry_params, pass_filter = None):
+    def media_type(fpath = None, ffentry = None):
+        ''' Determines if a file can be processed with FFmpeg
+        '''
+        ffentry = ffentry if ffentry else FFH.media_file_info(fpath)
+        if ffentry:
+            if hasattr(ffentry, "video")and ffentry.video:
+                return FSMediaEntryType.VIDEO
+            elif hasattr(ffentry, "audio") and ffentry.audio:
+                return FSMediaEntryType.AUDIO
+            elif hasattr(ffentry, "artwork") and ffentry.artwork:
+                return FSMediaEntryType.IMAGE
+        else:
+            return FSMediaEntryType.NONMEDIA            
+
+    @staticmethod
+    def ffmpeg_media_files(fs_entry_params, pass_filter = None):
         """ Return a list of media files that are supported by FFmpeg
         """
         if not pass_filter:
-            pass_filter = lambda fpath: FFH.supported_media(fpath)
+            pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath)
 
         media_files = [entry.realpath for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter)]
         return media_files
@@ -260,10 +277,6 @@ class FFH:
             return VolumeEntry(mean_volume, max_volume)
 
 # Quick dev test
+from batchmp.fstools.fsutils import FSH
 if __name__ == '__main__':
     print(FFmpegNotInstalled().default_message)
-
-
-
-
-

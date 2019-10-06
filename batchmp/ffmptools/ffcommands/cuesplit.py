@@ -163,7 +163,7 @@ class CueSplitter(FFMPRunner):
             Prepares their respective target output dirs
         '''
         pass_filter = lambda fpath: fpath.endswith('.cue')
-        cue_fpaths = [fpath for fpath in FFH.media_files(fs_entry_params, pass_filter = pass_filter)]
+        cue_fpaths = [fpath for fpath in FFH.ffmpeg_media_files(fs_entry_params, pass_filter = pass_filter)]
 
         cue_tagholders = CueSplitter._prepare_tagholders(cue_fpaths, encoding = encoding)
 

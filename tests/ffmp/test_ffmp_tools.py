@@ -49,7 +49,7 @@ class FFMPTests(FFMPTest):
         ## python -m unittest tests.ffmp.test_ffmp_tools.FFMPTests.test_apply_af_filters_changes
         ff_entry_params = self._ff_entry(exclude = 'bmfp*', general_options = FFmpegBitMaskOptions.MUXING_QUEUE_SIZE, end_level = 10)
 
-        media_files = [f for f in FFH.media_files(ff_entry_params)]
+        media_files = [f for f in FFH.ffmpeg_media_files(ff_entry_params)]
         self.assertNotEqual(media_files, [], msg = 'No media files selected')
 
         # get the original media files md5 hashes
@@ -61,7 +61,7 @@ class FFMPTests(FFMPTest):
                                     highpass=hpass, lowpass=lpass, num_passes=num_passes)
 
         # check that the original files differ from their denoised versions
-        media_files = [f for f in FFH.media_files(ff_entry_params)]
+        media_files = [f for f in FFH.ffmpeg_media_files(ff_entry_params)]
         self.assertNotEqual(media_files, [], msg = 'No media files selected')
 
         denoised_hashes = {os.path.basename(fname): FSH.file_md5(fname, hex=True) for fname in media_files}
@@ -270,7 +270,7 @@ class FFMPTests(FFMPTest):
         ff_entry_params.src_dir = self.target_dir      
 
 
-        media_files = [fpath for fpath in FFH.media_files(ff_entry_params)]
+        media_files = [fpath for fpath in FFH.ffmpeg_media_files(ff_entry_params)]
         self.assertEqual(len(media_files), 18)
 
         handler = MutagenTagHandler() + FFmpegTagHandler()
@@ -304,7 +304,7 @@ class FFMPTests(FFMPTest):
     def _media_entries(self, ff_entry_params):
         if ff_entry_params.src_dir is None:
             ff_entry_params.src_dir = self.src_dir
-        media_files = [fpath for fpath in FFH.media_files(ff_entry_params)]
+        media_files = [fpath for fpath in FFH.ffmpeg_media_files(ff_entry_params)]
 
         #for fpath in media_files:
         #    print(os.path.basename(fpath))

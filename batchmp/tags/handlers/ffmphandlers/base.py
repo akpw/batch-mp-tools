@@ -16,6 +16,7 @@
 """
 import os, shlex
 from batchmp.commons.chainedhandler import ChainedHandler
+from batchmp.ffmptools.ffutils import FFH
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.commons.utils import temp_dir
 from batchmp.commons.utils import (
@@ -37,8 +38,10 @@ class FFBaseFormatHandler(ChainedHandler):
         return super().__add__(tag_handler)
 
     def _can_handle(self, media_entry):
-        self.media_entry = media_entry
-        return True
+        if FFH.ffmpeg_supported_media(ffentry = media_entry):
+            self.media_entry = media_entry            
+            return True
+        return False
 
     @property
     def path(self):

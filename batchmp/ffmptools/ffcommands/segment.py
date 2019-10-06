@@ -125,7 +125,7 @@ class Segmenter(FFMPRunner):
                 pass_filter = lambda fpath: self._media_duration(fpath) > segment_length_secs
             elif segment_size_MB:
                 # simple media selection by size
-                pass_filter = lambda fpath: FFH.supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
+                pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
 
             ff_entry_params.target_dir_prefix = 'segmented'
             media_files, target_dirs = self._prepare_files(ff_entry_params, pass_filter = pass_filter)

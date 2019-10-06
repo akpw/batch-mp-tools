@@ -102,18 +102,16 @@ class FSEntry:
         self.isEnclosingEntry = isEnclosingEntry
 
 class FSEntryType(IntEnum):
-    ROOT = 0
-    DIR = 1
-    FILE = 2
-    IMAGE = 3
-    AUDIO = 4
-    VIDEO = 5
+    ROOT = 0x1000
+    DIR = 0x1001
+    FILE = 0x1002
 
 class FSEntryDefaults:    
     DEFAULT_NESTED_INDENT = '  '
     DEFAULT_INCLUDE = '*'
     DEFAULT_EXCLUDE = '.*' #exclude hidden files
     DEFAULT_SORT = 'na'
+    DEFAULT_FILE_TYPE = 'all'
 
 
 class FSEntryParamsBase():
@@ -132,6 +130,7 @@ class FSEntryParamsBase():
     exclude = PropertyDescriptor()
     nested_indent = PropertyDescriptor()
     sort = PropertyDescriptor()
+    type = PropertyDescriptor()
 
     fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderBase')
 

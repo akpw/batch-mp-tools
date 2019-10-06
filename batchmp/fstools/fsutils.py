@@ -230,6 +230,10 @@ class FSH:
         elif os.path.isdir(entry_path):
             shutil.rmtree(entry_path, onerror = onerror)
 
+    @staticmethod
+    def fs_entry(fpath):
+        pass
+
 # Quick dev test
 if __name__ == '__main__':
     pass

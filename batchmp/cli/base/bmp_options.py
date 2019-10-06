@@ -127,6 +127,12 @@ class BatchMPArgParser:
         include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
                     help = "Disable Include/Exclude patterns on files (shows hidden files excluded by default)",
                     action = 'store_true')
+        include_mode_group.add_argument("-ft", "--file-type", dest = "file_type",
+                    help = "File Type",
+                    type = str,
+                    choices = ['all', 'image', 'video', 'audio', 'nonmedia'],
+                    default =  FSEntryDefaults.DEFAULT_FILE_TYPE)
+
 
         # Add Default Miscellaneous Group
         self._add_arg_misc_group(parser)

@@ -39,7 +39,7 @@ class FFMPUtilsTests(FFMPTest):
    
 
         media_files = [os.path.basename(fpath)
-            for fpath in FFH.media_files(fs_entry_params)]
+            for fpath in FFH.ffmpeg_media_files(fs_entry_params)]
 
         self.assertTrue(set(media_files) == set(media_info.keys()))
 

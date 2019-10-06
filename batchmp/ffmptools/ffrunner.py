@@ -145,7 +145,7 @@ class FFMPRunner:
         ''' Builds a list of matching media files to process,
             along with their respective target out dirs
         '''
-        media_files = [fpath for fpath in FFH.media_files(ff_entry_params, pass_filter = pass_filter)]
+        media_files = [fpath for fpath in FFH.ffmpeg_media_files(ff_entry_params, pass_filter = pass_filter)]
 
         target_dirs = FFMPRunner._setup_target_dirs(ff_entry_params, fpathes = media_files)
 
