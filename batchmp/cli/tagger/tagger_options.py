@@ -75,7 +75,7 @@
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.fstools.fsutils import FSH
-
+from batchmp.fstools.builders.fsentry import FSEntryDefaults
 
 class TaggerCommands(BatchMPBaseCommands):
     SET = 'set'
@@ -316,19 +316,23 @@ class TaggerArgParser(BatchMPArgParser):
                                 'Supported tag fields: {1}'.format(tag_field, ', '.join(supported_fields)))
             return fields
 
-        if args['sub_cmd'] == 'index':
+        # only consider playable media files by default
+        if args['file_type'] == FSEntryDefaults.DEFAULT_FILE_TYPE:
+            args['file_type'] = FSEntryDefaults.DEFAULT_MEDIA_TYPE
+
+        if args['sub_cmd'] == TaggerCommands.INDEX:
             if args['start_from'] < 1:
                 parser.error('Track indexing should start from 1, or a larger int number')
 
-        elif args['sub_cmd'] == 'remove':
+        elif args['sub_cmd'] == TaggerCommands.REMOVE:
             if args['tag_fields'] is not None:
                 args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
                                                       self.SUPPORTED_TAGGABLE_FIELDS)
 
-        elif args['sub_cmd'] in ('replace', 'capitalize'):
+        elif args['sub_cmd'] in (TaggerCommands.REPLACE, TaggerCommands.CAPITALIZE):
             args['tag_fields'] = parse_tag_fields(args['tag_fields'], \
                                                       self.SUPPORTED_TEXTUAL_TAGGABLE_FIELDS)
 
-        elif args['sub_cmd'] == 'detauch':
+        elif args['sub_cmd'] == TaggerCommands.DETAUCH:
             if args['target_dir'] is None:
                 args['target_dir'] = args['dir']

@@ -12,7 +12,7 @@
 ## GNU General Public License for more details.
 
 import subprocess, shlex, time, tempfile, shutil
-import datetime, math
+import datetime, math, functools
 from functools import wraps
 from urllib.parse import urlparse
 import urllib.request, urllib.error
@@ -101,6 +101,33 @@ class MiscHelpers:
             td_str = '{}00'.format(td_str)
         return td_str
 
+    @staticmethod
+    def percentile(values, percent):
+        '''
+        Find the percentile for a list of values
+        '''
+        if not values:
+            return None
+        else:
+            values.sort()
+
+        dv = (len(values) - 1) * percent / 100
+        floor = math.floor(dv)
+
+        ceil = math.ceil(dv)
+        if floor == ceil:
+            return values[int(dv)]
+
+        dc = values[int(floor)] * (ceil - dv)
+        dt = values[int(ceil)] * (dv - floor)
+
+        return dc + dt
+
+    @staticmethod
+    def median(l):
+        # the 50th percentile
+        return functools.partial(MiscHelpers.percentile, percent=50)(l)
+
 
 class ImageLoader:
     @staticmethod
@@ -156,3 +183,7 @@ if __name__ == '__main__':
     print(td)
     print(MiscHelpers.time_delta_str(td.total_seconds(), num_miliseconds = -1))
 
+    a = [2.08, 2.11, 2.18, 2.18, 2.2, 2.2, 2.21, 2.21, 2.3, 2.8, 2.97, 3.21, 3.4, 3.71, 3.8, 3.9, 4.21, 4.3, 4.4]
+    print(MiscHelpers.median(a))
+
+    print(MiscHelpers.percentile(a, 25))

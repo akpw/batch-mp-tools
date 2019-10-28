@@ -38,7 +38,7 @@ class FFBaseFormatHandler(ChainedHandler):
         return super().__add__(tag_handler)
 
     def _can_handle(self, media_entry):
-        if FFH.ffmpeg_supported_media(ffentry = media_entry):
+        if media_entry and FFH.ffmpeg_supported_media(ffentry = media_entry):
             self.media_entry = media_entry            
             return True
         return False

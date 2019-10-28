@@ -17,7 +17,8 @@ from collections import namedtuple, Iterable
 from distutils.util import strtobool
 from batchmp.fstools.walker import DWalker
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryParamsExt
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt
 # from profilehooks import profile
 
 

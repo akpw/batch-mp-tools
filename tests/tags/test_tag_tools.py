@@ -18,7 +18,7 @@ from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.processors.basetp import BaseTagProcessor
-from batchmp.fstools.builders.fsentry import FSEntryParamsExt
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt
 from .test_tag_base import TagsTest
 
 class TagsTests(TagsTest):

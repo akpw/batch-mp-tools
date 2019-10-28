@@ -23,7 +23,7 @@ from batchmp.ffmptools.ffcommands.normalize_peak import PeakNormalizer
 from batchmp.ffmptools.ffcommands.cuesplit import CueSplitter
 from batchmp.ffmptools.processors.basefp import BaseFFProcessor
 from batchmp.tags.output.formatters import OutputFormatType
-from batchmp.ffmptools.processors.ffentry import FFEntryParams, FFEntryParamsExt
+from batchmp.ffmptools.processors.ffentry import FFEntryParams, FFEntryParamsExt, FFEntryParamsSilenceSplit
 
 class BMFPDispatcher(BatchMPDispatcher):
     ''' BMFP commands Dispatcher
@@ -104,11 +104,8 @@ class BMFPDispatcher(BatchMPDispatcher):
                 reset_timestamps = args['reset_timestamps'])
 
     def silence_split(self, args):
-        ff_entry_params = FFEntryParamsExt(args)
-        SilenceSplitter().silence_split(ff_entry_params,                
-                reset_timestamps = args['reset_timestamps'],
-                silence_min_duration = args['min_duraiton'].total_seconds(),
-                silence_noise_tolerance_amplitude_ratio = args['noise_tolerance'])
+        ff_entry_params = FFEntryParamsSilenceSplit(args)
+        SilenceSplitter().silence_split(ff_entry_params)               
 
     def cue_split(self, args):
         ff_entry_params = FFEntryParamsExt(args)

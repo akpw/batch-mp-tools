@@ -15,7 +15,8 @@
 import os, sys, unittest, shlex
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryDefaults, FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryDefaults
+from batchmp.fstools.builders.fsprms import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
 from .test_fs_base import FSTest
 
 
@@ -186,14 +187,14 @@ class FSTests(FSTest):
     @unittest.skipIf(os.name == 'nt', 'skipping for windows')
     def test_delete_non_media(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_delete_non_media
-        # renamer -el 1 -in '*week*' delete -nm
-        fs_entry_params_all_files = self._fs_entry(end_level = 1)
+        # renamer -ft media -el 5 -in '*week*' delete
+        fs_entry_params_all_files = self._fs_entry(end_level = 5, file_type = 'media')
         fcnt_all, dcnt_all, _ = DHandler.dir_stats(fs_entry_params_all_files)
 
-        fs_del_entry_params = self._fs_entry(end_level = 1, include = '*week*')        
+        fs_del_entry_params = self._fs_entry(end_level = 5, file_type = 'media')
         fcnt_del, _, _ = DHandler.dir_stats(fs_del_entry_params)
 
-        Renamer.delete(fs_del_entry_params, non_media_files_only = True)
+        Renamer.delete(fs_del_entry_params)
 
         fcnt, _, _ = DHandler.dir_stats(fs_entry_params_all_files)
         fcnt_remaining = fcnt_all - fcnt_del
@@ -202,6 +203,7 @@ class FSTests(FSTest):
 
     def _fs_entry(self, include =  FSEntryDefaults.DEFAULT_INCLUDE, exclude =  FSEntryDefaults.DEFAULT_EXCLUDE, 
                         filter_dirs = True, filter_files = True, 
+                        file_type = FSEntryDefaults.DEFAULT_FILE_TYPE,
                         include_dirs = False, include_files = True, quiet = True,
                         end_level = sys.maxsize, start_level = 0, flatten = False, target_level = 0, display_current = False, show_size = False):
 
@@ -211,6 +213,7 @@ class FSTests(FSTest):
             'end_level' : end_level,
             'include' : include,
             'exclude' : exclude,
+            'file_type' : file_type,
             'all_dirs' : not filter_dirs,
             'all_files' : not filter_files,
             'include_dirs' : include_dirs,

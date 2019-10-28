@@ -20,7 +20,7 @@ with open(path.join(pkg_dir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='batchmp',
-    version='0.92',
+    version='0.96',
 
     url='https://github.com/akpw/batch-mp-tools',
 

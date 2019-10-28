@@ -88,9 +88,9 @@ from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter,
 from batchmp.ffmptools.ffrunner import LogLevel
 from batchmp.ffmptools.ffcommands.silencesplit import SilenceSplitter
 from batchmp.ffmptools.ffcommands.denoise import Denoiser
-from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
+from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled, FFHDefaults
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
-
+from batchmp.fstools.builders.fsentry import FSEntryDefaults
 
 class BMFPCommands(BatchMPBaseCommands):
     CONVERT = 'convert'
@@ -280,16 +280,19 @@ class BMFPArgParser(BatchMPArgParser):
                                                 description = 'Splits media files into segments via detecting specified silence',
                                                 formatter_class = BatchMPHelpFormatter)
         silencesplit_group = silencesplit_parser.add_argument_group('Silence detection parameters')
-        silencesplit_group.add_argument('-md', '--min-duraiton', dest='min_duraiton',
+        silencesplit_group.add_argument('-md', '--min-duration', dest='min_duration',
                 help = 'Minimal silence duration, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
-                                                .format(SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS),
+                                                .format(FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS),
                 type = lambda md: self._is_timedelta(parser, md),
-                default = timedelta(seconds = SilenceSplitter.DEFAULT_SILENCE_MIN_DURATION_IN_SECS))
+                default = timedelta(seconds = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS))
+        silencesplit_group.add_argument('-ad', '--auto-duration', dest='auto_duration',
+                help = 'Automatically selects representative silence duration',
+                action='store_true')        
         silencesplit_group.add_argument('-nt', '--noise-tolerance', dest='noise_tolerance',
                 help = 'Silence noise tolerance, specified as amplitude ratio (default is {})' \
-                                                .format(SilenceSplitter.DEFAULT_SILENCE_NOISE_TOLERANCE),
+                                                .format(FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE),
                 type = float,
-                default = SilenceSplitter.DEFAULT_SILENCE_NOISE_TOLERANCE)
+                default = FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE)
         silencesplit_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
                     help = "Reset timestamps at the begin of each segment, so that it "
                             "starts with near-zero timestamps and therefore there are minimum pauses "
@@ -362,6 +365,10 @@ class BMFPArgParser(BatchMPArgParser):
             if not args['target_dir']:
                 args['target_dir'] = os.path.dirname(args['file'])
 
+        # only consider playable media files by default
+        if args['file_type'] == FSEntryDefaults.DEFAULT_FILE_TYPE and args['sub_cmd'] != BMFPCommands.CUESPLIT:
+            args['file_type'] = FSEntryDefaults.DEFAULT_MEDIA_TYPE
+
         # Compile FF global options
         ff_general_options = 0
         if args['all_streams']:
@@ -390,12 +397,12 @@ class BMFPArgParser(BatchMPArgParser):
                     sys.exit(0)
 
         # Segment attributes check
-        elif args['sub_cmd'] == 'segment':
+        elif args['sub_cmd'] == BMFPCommands.SEGMENT:
             if not args['segment_filesize'] and not args['segment_duration'].total_seconds():
                 parser.error('bmfp segment:\n\t'
                              'One of the command parameters needs to be specified: <filesize | duration>')
 
-        elif args['sub_cmd'] in ('convert', 'cuesplit'):
+        elif args['sub_cmd'] in (BMFPCommands.CONVERT, BMFPCommands.CUESPLIT):
             # Convert attributes check
             args['target_format'] = args['target_format'].lower()
             if not args['target_format'].startswith('.'):
@@ -406,7 +413,7 @@ class BMFPArgParser(BatchMPArgParser):
                     # takes priority over default settings
                     args['ffmpeg_options'] = FFmpegCommands.CONVERT_LOSSLESS
 
-                if args['sub_cmd'] == 'convert' and args['change_container']:
+                if args['sub_cmd'] == BMFPCommands.CONVERT and args['change_container']:
                     # takes priority over default settings or lossless
                     args['ffmpeg_options'] = FFmpegCommands.CONVERT_CHANGE_CONTAINER
 

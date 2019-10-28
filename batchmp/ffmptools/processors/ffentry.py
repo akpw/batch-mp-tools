@@ -11,7 +11,10 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-from batchmp.fstools.builders.fsentry import FSEntryParamsExt
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt
+from batchmp.ffmptools.ffutils import FFHDefaults
+from batchmp.ffmptools.ffrunner import LogLevel
+from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands
 from batchmp.commons.descriptors import (
          PropertyDescriptor,
          BooleanPropertyDescriptor)
@@ -19,6 +22,7 @@ from batchmp.commons.descriptors import (
 
 class FFEntryParams(FSEntryParamsExt):
     pass
+
 
 
 class FFEntryParamsExt(FFEntryParams):
@@ -35,10 +39,38 @@ class FFEntryParamsExt(FFEntryParams):
     def __init__(self, args = {}):
         super().__init__(args)
         self.target_dir = args.get('target_dir')
-        self.log_level = args.get('log_level')
+        self.log_level = args.get('log_level', LogLevel.QUIET)
         self.serial_exec = args.get('serial_exec', False)
 
         self.target_format = args.get('target_format') 
         self.ff_general_options = args.get('ff_general_options', 0)
-        self.ff_other_options = args.get('ffmpeg_options')
+        self.ff_other_options = args.get('ffmpeg_options', FFmpegCommands.CONVERT_COPY_VBR_QUALITY)
         self.preserve_metadata = args.get('preserve_metadata', True)
+
+
+
+class FFEntryParamsSilenceSplit(FFEntryParamsExt):
+    reset_timestamps = BooleanPropertyDescriptor()
+    silence_auto_settings = BooleanPropertyDescriptor()
+    silence_min_duration = PropertyDescriptor() 
+    silence_noise_tolerance_amplitude_ratio = PropertyDescriptor() 
+
+
+    def __init__(self, args = {}):
+        super().__init__(args)
+        self.reset_timestamps = args.get('reset_timestamps', False)
+        self.silence_auto_settings = args.get('auto_duration', False)
+
+        self.silence_noise_tolerance_amplitude_ratio = args.get('noise_tolerance', FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE)
+        
+        min_duration = args.get('min_duration')
+        self.silence_min_duration = min_duration.total_seconds() if min_duration else FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS
+
+
+
+
+
+
+
+
+

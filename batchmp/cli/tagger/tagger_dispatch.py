@@ -18,7 +18,7 @@ from batchmp.commons.utils import ImageLoader
 from batchmp.tags.processors.basetp import BaseTagProcessor
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.tags.output.formatters import OutputFormatType
-from batchmp.fstools.builders.fsentry import FSEntryParamsExt
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt
 
 class TagsDispatcher(BatchMPDispatcher):
     ''' Tagger CLI Commands Dispatcher

@@ -1,4 +1,4 @@
-# coding=utf8
+    # coding=utf8
 ## Copyright (c) 2014 Arseniy Kuznetsov
 ##
 ## This program is free software; you can redistribute it and/or
@@ -21,7 +21,6 @@ from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
 from functools import partial
-
 
 class BaseTagProcessor:
     ''' Base Tag Processing
@@ -142,6 +141,7 @@ class BaseTagProcessor:
                                         include = fs_entry_params.include, 
                                         exclude = fs_entry_params.exclude,
                                         file_pass_filter = pass_filter)
+        print('getting directory statistics')
         for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter):
             # get the directory info
             dir_info.fetch_dir_stats(os.path.dirname(entry.realpath))
@@ -165,6 +165,7 @@ class BaseTagProcessor:
         def reset_tag_holder_builder():
             dir_info.reset_counters()
 
+        print('showing tags')
         self.set_tags_visual(fs_entry_params,
                         diff_tags_only = diff_tags_only,
                         tag_holder_builder = tag_holder_builder,

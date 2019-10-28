@@ -16,7 +16,7 @@ from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
 from batchmp.cli.renamer.renamer_options import RenameArgParser, RenamerCommands
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-from batchmp.fstools.builders.fsentry import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
+from batchmp.fstools.builders.fsprms import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
 from batchmp.fstools.builders.fsb import FSEntryBuilderBase
 
 class RenameDispatcher(BatchMPDispatcher):
@@ -108,7 +108,7 @@ class RenameDispatcher(BatchMPDispatcher):
 
     def delete(self, args):
         fs_entry_params = FSEntryParamsExt(args)
-        Renamer.delete(fs_entry_params, non_media_files_only = args['non_media_files_only'])
+        Renamer.delete(fs_entry_params)
 
 
 def main():

@@ -14,6 +14,7 @@
 
 import os, sys, shlex
 from enum import IntEnum
+from batchmp.fstools.walker import DWalker
 from batchmp.commons.utils import MiscHelpers
 from batchmp.commons.taskprocessor import Task, TasksProcessor
 from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
@@ -145,7 +146,10 @@ class FFMPRunner:
         ''' Builds a list of matching media files to process,
             along with their respective target out dirs
         '''
-        media_files = [fpath for fpath in FFH.ffmpeg_media_files(ff_entry_params, pass_filter = pass_filter)]
+        if not pass_filter:
+            pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath)
+        
+        media_files = [entry.realpath for entry in DWalker.file_entries(ff_entry_params, pass_filter = pass_filter)]
 
         target_dirs = FFMPRunner._setup_target_dirs(ff_entry_params, fpathes = media_files)
 

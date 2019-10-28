@@ -15,12 +15,13 @@
 
 import unittest, os, sys
 from .test_ffmp_base import FFMPTest
+from batchmp.fstools.walker import DWalker
 from batchmp.ffmptools.ffutils import FFH
 from batchmp.commons.utils import (
     run_cmd,
     CmdProcessingError
 )
-from batchmp.fstools.builders.fsentry import FSEntryParamsExt
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt
 
 
 class FFMPUtilsTests(FFMPTest):
@@ -38,8 +39,8 @@ class FFMPUtilsTests(FFMPTest):
         fs_entry_params.exclude = 'bmfp*'
    
 
-        media_files = [os.path.basename(fpath)
-            for fpath in FFH.ffmpeg_media_files(fs_entry_params)]
+        pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath)
+        media_files = [entry.basename for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter)]
 
         self.assertTrue(set(media_files) == set(media_info.keys()))
 

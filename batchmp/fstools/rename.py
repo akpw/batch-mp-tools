@@ -16,7 +16,8 @@ import os, re, datetime, string
 from collections import namedtuple
 from string import Template
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryParamsBase, FSEntryType
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsprms import FSEntryParamsBase
 from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
@@ -319,7 +320,7 @@ class Renamer(object):
             DHandler.rename_entries(fs_entry_params, formatter = replace_transform)
 
     @classmethod
-    def delete(cls, fs_entry_params, non_media_files_only = False):
+    def delete(cls, fs_entry_params):
 
         ''' Deletes selected files
             Support detection of non-media files
@@ -330,9 +331,6 @@ class Renamer(object):
             fs_entry_params.include_files = True
 
 
-        if non_media_files_only:
-            handler = MutagenTagHandler() + FFmpegTagHandler()
-
         def delete_transform(entry):
             if entry.type == FSEntryType.ROOT:
                 return entry.basename
@@ -340,10 +338,6 @@ class Renamer(object):
                 return None
             if entry.type == FSEntryType.FILE and not fs_entry_params.include_files:
                 return None
-
-            if non_media_files_only:
-                if handler.can_handle(entry.realpath):
-                    return None
 
             # these are to be gone soon...
             return entry.basename

@@ -36,6 +36,8 @@ from urllib.parse import urlparse
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.fsutils import FSH
 from batchmp.fstools.builders.fsentry import FSEntry, FSEntryDefaults
+from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
+
 
 class BatchMPBaseCommands:
     VERSION = 'version'
@@ -127,11 +129,16 @@ class BatchMPArgParser:
         include_mode_group.add_argument("-af", "--all-files", dest = "all_files",
                     help = "Disable Include/Exclude patterns on files (shows hidden files excluded by default)",
                     action = 'store_true')
-        include_mode_group.add_argument("-ft", "--file-type", dest = "file_type",
-                    help = "File Type",
+
+        media_types_group = parser.add_argument_group('File media types')
+        media_types_group.add_argument("-ft", "--file-type", dest = "file_type",
+                    help = "File Media Type",
                     type = str,
-                    choices = ['all', 'image', 'video', 'audio', 'nonmedia'],
+                    choices = ['image', 'video', 'audio', 'playable', 'media', 'nonmedia', 'any'],
                     default =  FSEntryDefaults.DEFAULT_FILE_TYPE)
+        media_types_group.add_argument("-ms", "--media-scan", dest = "media_scan",
+                    help = "Scan for media types, instead of using file extensions (can take a long time)",
+                    action = 'store_true')
 
 
         # Add Default Miscellaneous Group
@@ -181,7 +188,14 @@ class BatchMPArgParser:
         if args['recursive'] and args['end_level'] == 0:
             args['end_level'] = sys.maxsize
 
-        if args['sub_cmd'] == 'print':
+
+        if args['media_scan']:
+            if not FFH.ffmpeg_installed():
+                print('Advanced media-related operations require FFmpeg')
+                print(FFmpegNotInstalled().default_message)
+                sys.exit(0)
+
+        if args['sub_cmd'] == BatchMPBaseCommands.PRINT:
             if args['start_level'] != 0:
                 if args['file']:
                     print ('Start Level parameter requires a source directory\n Ignoring requested Start Level...')
@@ -191,7 +205,6 @@ class BatchMPArgParser:
                            '... Adjusting End Level to: {}'.format(args['start_level']))
                     '''
                     args['end_level'] = args['start_level']
-
 
     # Internal Helpers
     @staticmethod

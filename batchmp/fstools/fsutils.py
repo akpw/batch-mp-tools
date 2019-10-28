@@ -60,6 +60,11 @@ class FSH:
         return path.split(os.path.sep) if path else None        
 
     @staticmethod
+    def path_extension(path):
+        components = FSH.path_components(path)
+        return os.path.splitext(components[-1])[1][1:] if components else None    
+
+    @staticmethod
     def is_subdir(subdir_path, parent_path):
         subdir_path = FSH.full_path(subdir_path)
         parent_path = FSH.full_path(parent_path)
@@ -237,7 +242,6 @@ class FSH:
 # Quick dev test
 if __name__ == '__main__':
     pass
-
 
 
 

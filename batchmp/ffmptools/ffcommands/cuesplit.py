@@ -19,7 +19,7 @@ from datetime import timedelta
 from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, LogLevel
 from batchmp.commons.taskprocessor import TaskResult
-from batchmp.ffmptools.ffutils import FFH
+from batchmp.fstools.walker import DWalker
 from batchmp.ffmptools.utils.cueparse import CueParser, CueParseReadDataEncodingError
 from batchmp.tags.handlers.tagsholder import TagHolder
 from batchmp.ffmptools.ffcommands.convert import ConvertorTask
@@ -156,18 +156,19 @@ class CueSplitter(FFMPRunner):
 
     ## Internal helpers
     @staticmethod
-    def _prepare_cue_data(fs_entry_params,                        
+    def _prepare_cue_data(ff_entry_params,                        
                         pass_filter = None,
                         encoding = 'utf-8'):
         ''' Builds a list of target media files and their tagholder attributes corresponding to found .cue files.
             Prepares their respective target output dirs
         '''
         pass_filter = lambda fpath: fpath.endswith('.cue')
-        cue_fpaths = [fpath for fpath in FFH.ffmpeg_media_files(fs_entry_params, pass_filter = pass_filter)]
+
+        cue_fpaths = [entry.realpath for entry in DWalker.file_entries(ff_entry_params, pass_filter = pass_filter)]
 
         cue_tagholders = CueSplitter._prepare_tagholders(cue_fpaths, encoding = encoding)
 
-        target_dirs = FFMPRunner._setup_target_dirs(fs_entry_params,
+        target_dirs = FFMPRunner._setup_target_dirs(ff_entry_params,
                         fpathes = [cue_tagholder.cue_virt_fpath for cue_tagholder in cue_tagholders])
 
         return cue_tagholders, target_dirs

@@ -13,7 +13,8 @@
 
 
 import os, sys
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryParamsBase
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsprms import FSEntryParamsBase
 from batchmp.fstools.builders.fsb import FSEntryBuilderBase
 
 class DWalker:

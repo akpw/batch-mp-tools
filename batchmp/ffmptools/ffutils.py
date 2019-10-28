@@ -14,14 +14,14 @@
 
 import os, subprocess, shlex, sys
 import time, datetime, json, re
-from enum import IntEnum
 from collections import namedtuple
-from batchmp.fstools.walker import DWalker
+from batchmp.fstools.builders.fsentry import FSMediaEntryType
 from batchmp.commons.utils import (
     run_cmd,
     CmdProcessingError,
     MiscHelpers
 )
+from batchmp.fstools.fsutils import FSH
 
 class FFmpegNotInstalled(Exception):
     def __init__(self, message = None):
@@ -79,17 +79,14 @@ class FFmpegNotInstalled(Exception):
         {0}
         '''.format(platforms_install_instructions)
 
-
-class FSMediaEntryType(IntEnum):
-    IMAGE = 0x2000
-    AUDIO = 0x2001
-    VIDEO = 0x2002
-    NONMEDIA = 0x2100
+class FFHDefaults:
+    DEFAULT_SILENCE_MIN_DURATION_IN_SECS = 2
+    DEFAULT_SILENCE_NOISE_TOLERANCE = 0.005
 
 class FFH:
     ''' FFmpeg-related utilities
     '''
-    FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork'])
+    FFEntry = namedtuple('FFEntry', ['path', 'format', 'audio', 'artwork', 'video'])
     FFFullEntry = namedtuple('FFFullEntry', ['path', 'format', 'audio_streams',
                                                             'video_streams', 'artwork_streams'])
 
@@ -111,16 +108,21 @@ class FFH:
         '''
         full_entry = FFH.media_file_info_full(fpath)
         if full_entry:
-            audio_stream = artwork_stream = None
+            audio_stream = artwork_stream = video_stream = None
             if full_entry.audio_streams and len(full_entry.audio_streams) > 0:
                 # if there are multiple audio streams, take the first
                 audio_stream = full_entry.audio_streams[0]
+
+            if full_entry.video_streams and len(full_entry.video_streams) > 0:
+                # in case there are multiple art images, take the first
+                video_stream = full_entry.video_streams[0]
 
             if full_entry.artwork_streams and len(full_entry.artwork_streams) > 0:
                 # in case there are multiple art images, take the first
                 artwork_stream = full_entry.artwork_streams[0]
 
-            return FFH.FFEntry(fpath, full_entry.format, audio_stream, artwork_stream)
+
+            return FFH.FFEntry(fpath, full_entry.format, audio_stream, artwork_stream, video_stream)
         else:
             return None
 
@@ -148,12 +150,14 @@ class FFH:
                 return None
 
             streams = out.get('streams')
+            format = out.get('format')
             audio_streams = video_streams = artwork_streams = None
             if streams:
                 is_audio_stream = lambda stream: True if stream.get('codec_type') == 'audio' else False
-                is_video_stream = lambda stream: True if stream.get('codec_type') == 'video' else False
+                is_video_stream = lambda stream: True if (stream.get('codec_type') == 'video' and format.get('format_name') != 'tty') else False
+
                 is_image_stream = lambda stream: True if \
-                        stream['codec_name'].lower() in ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg') else False
+                        stream['codec_name'].lower() in FFH.common_media_extensions(FSMediaEntryType.IMAGE) else False
 
 
                 audio_streams = [stream for stream in streams if is_audio_stream(stream)]
@@ -173,9 +177,20 @@ class FFH:
         return media_type in (FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO)
 
     @staticmethod
-    def media_type(fpath = None, ffentry = None):
-        ''' Determines if a file can be processed with FFmpeg
+    def media_type(fpath = None, ffentry = None, fast_scan = False):
+        ''' Determines file media type
         '''
+        if fast_scan and fpath and not ffentry:
+            fpath_ext = FSH.path_extension(fpath)
+            if fpath_ext in FFH.common_media_extensions(FSMediaEntryType.IMAGE):
+                return FSMediaEntryType.IMAGE
+            elif fpath_ext in FFH.common_media_extensions(FSMediaEntryType.AUDIO):
+                return FSMediaEntryType.AUDIO
+            elif fpath_ext in FFH.common_media_extensions(FSMediaEntryType.VIDEO):
+                return FSMediaEntryType.VIDEO
+            else:
+                return FSMediaEntryType.NONMEDIA
+
         ffentry = ffentry if ffentry else FFH.media_file_info(fpath)
         if ffentry:
             if hasattr(ffentry, "video")and ffentry.video:
@@ -184,23 +199,24 @@ class FFH:
                 return FSMediaEntryType.AUDIO
             elif hasattr(ffentry, "artwork") and ffentry.artwork:
                 return FSMediaEntryType.IMAGE
-        else:
-            return FSMediaEntryType.NONMEDIA            
+
+        return FSMediaEntryType.NONMEDIA            
+
 
     @staticmethod
-    def ffmpeg_media_files(fs_entry_params, pass_filter = None):
-        """ Return a list of media files that are supported by FFmpeg
-        """
-        if not pass_filter:
-            pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath)
+    def common_media_extensions(media_type):
+        media_types_ext_map = {
+          FSMediaEntryType.IMAGE: ('jpeg', 'png', 'gif', 'tiff', 'bmp', 'mjpeg', 'jpg'),
+          FSMediaEntryType.VIDEO: ('264', 'avi', 'mp4', 'mp4v', 'mpeg', 'mpg', 'mov ', 'mkv', 'webm', 'wmv', 'flv', 'm4v', 'mov'),
+          FSMediaEntryType.AUDIO: ('wav', 'mp3', 'ogg', 'flac', 'aiff', 'wma', 'aac', 'mid', 'm4a', 'mka', 'm4b'),
+        }
+        return media_types_ext_map.get(media_type, None)
 
-        media_files = [entry.realpath for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter)]
-        return media_files
 
     @staticmethod
     def silence_detector(fpath, *,
-                                min_duration = 2,
-                                noise_tolerance_amplitude_ratio = 0.005):
+                                min_duration = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS,
+                                noise_tolerance_amplitude_ratio = FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE):
         ''' Detects silence
             If successful, returns a list of SilenceEntry tuples
         '''
@@ -215,6 +231,7 @@ class FFH:
                             ' -vn',
                             ' -sn',
                             ' -f null - '))
+
         # print(cmd)
         try:
             output, _ = run_cmd(cmd)
@@ -276,7 +293,7 @@ class FFH:
             VolumeEntry = namedtuple('VolumeEntry', ['mean_volume', 'max_volume'])
             return VolumeEntry(mean_volume, max_volume)
 
+
 # Quick dev test
-from batchmp.fstools.fsutils import FSH
 if __name__ == '__main__':
     print(FFmpegNotInstalled().default_message)

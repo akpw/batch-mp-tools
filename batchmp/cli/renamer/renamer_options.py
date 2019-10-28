@@ -62,7 +62,6 @@
 """
 import sys
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPHelpFormatter, BatchMPBaseCommands
-from batchmp.ffmptools.ffutils import FFH, FFmpegNotInstalled
 
 
 class RenamerCommands(BatchMPBaseCommands):
@@ -285,9 +284,6 @@ class RenameArgParser(BatchMPArgParser):
         delete_parser = subparsers.add_parser(RenamerCommands.DELETE,
                                             description = 'Delete selected files and directories',
                                             formatter_class = BatchMPHelpFormatter)
-        delete_parser.add_argument('-nm', '--non-media', dest = 'non_media_files_only',
-                help = 'Delete non-media files only',
-                action = 'store_true')
         _add_include_mode_group(delete_parser)
         self._add_arg_display_curent_state_mode(delete_parser)
 
@@ -303,7 +299,7 @@ class RenameArgParser(BatchMPArgParser):
         '''
         super().check_args(args, parser)
 
-        if args['sub_cmd'] == 'flatten':
+        if args['sub_cmd'] == RenamerCommands.FLATTEN:
             if args['file']:
                 parser.error('This operation requires a source directory')
             if args['end_level'] < args['target_level']:
@@ -311,12 +307,6 @@ class RenameArgParser(BatchMPArgParser):
                 #           '... Adjusting End Level to: {}'.format(args['target_level']))
                 args['end_level'] = args['target_level']
 
-        elif args['sub_cmd'] == 'delete':
-            if args['non_media_files_only']:
-                if not FFH.ffmpeg_installed():
-                    print('Advanced media-related operations require FFmpeg')
-                    print(FFmpegNotInstalled().default_message)
-                    sys.exit(0)
 
 
 
