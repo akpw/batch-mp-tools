@@ -51,20 +51,25 @@ class FFEntryParamsExt(FFEntryParams):
 
 class FFEntryParamsSilenceSplit(FFEntryParamsExt):
     reset_timestamps = BooleanPropertyDescriptor()
-    silence_auto_settings = BooleanPropertyDescriptor()
+    silence_auto_duration = BooleanPropertyDescriptor()
+    
     silence_min_duration = PropertyDescriptor() 
     silence_noise_tolerance_amplitude_ratio = PropertyDescriptor() 
+    silence_target_trimmed_duration  = PropertyDescriptor() 
 
 
     def __init__(self, args = {}):
         super().__init__(args)
         self.reset_timestamps = args.get('reset_timestamps', False)
-        self.silence_auto_settings = args.get('auto_duration', False)
+        self.silence_auto_duration = args.get('auto_duration', False)
 
         self.silence_noise_tolerance_amplitude_ratio = args.get('noise_tolerance', FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE)
         
         min_duration = args.get('min_duration')
-        self.silence_min_duration = min_duration.total_seconds() if min_duration else FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS
+        self.silence_min_duration = min_duration.total_seconds() if min_duration else FFHDefaults.DEFAULT_SILENCE_MIN_DURATION
+
+        trimmed_duration = args.get('trimmed_duration')
+        self.silence_target_trimmed_duration = trimmed_duration.total_seconds() if trimmed_duration else FFHDefaults.DEFAULT_SILENCE_TARGET_TRIMMED_DURATION
 
 
 

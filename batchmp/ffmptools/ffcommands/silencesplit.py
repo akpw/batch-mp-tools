@@ -33,11 +33,10 @@ from batchmp.commons.utils import (
 class SilenceSplitterTask(FFMPRunnerTask):
     ''' Segment TasksProcessor task
     '''
-    DEFAULT_SILENCE_START_PADDING_IN_SECS = 2
-
     def __init__(self, fpath, target_dir, log_level,
                             ff_general_options, ff_other_options, preserve_metadata,
-                            reset_timestamps, silence_min_duration, silence_noise_tolerance_amplitude_ratio):
+                            reset_timestamps, silence_min_duration, silence_noise_tolerance_amplitude_ratio, 
+                            silence_auto_duration, silence_target_trimmed_duration):
 
         super().__init__(fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata)
@@ -45,6 +44,8 @@ class SilenceSplitterTask(FFMPRunnerTask):
         self.reset_timestamps = reset_timestamps
         self.silence_min_duration = silence_min_duration
         self.silence_noise_tolerance_amplitude_ratio = silence_noise_tolerance_amplitude_ratio
+        self.silence_auto_duration = silence_auto_duration
+        self.silence_target_trimmed_duration = silence_target_trimmed_duration
 
     def ff_cmd(self, segment_start_times):
         ''' Silence Splitter command builder
@@ -112,54 +113,64 @@ class SilenceSplitterTask(FFMPRunnerTask):
     def _segment_start_times(self):
         silence_entries = FFH.silence_detector(self.fpath,
                          min_duration = self.silence_min_duration,
-                         noise_tolerance_amplitude_ratio = self.silence_noise_tolerance_amplitude_ratio)
+                         noise_tolerance_amplitude_ratio = self.silence_noise_tolerance_amplitude_ratio)        
+        
+        # silence entry duration
+        duration = lambda silence_entry: silence_entry.silence_end - silence_entry.silence_start
+        
+        # auto-duration filter
+        if self.silence_auto_duration:            
+            durations = [duration(silence_entry) for silence_entry in silence_entries]
+            min_duration = MiscHelpers.percentile(durations, 25)        
+            silence_entries = [silence_entry for silence_entry in silence_entries if duration(silence_entry) > min_duration]
+
         segment_start_times = []
         for silence_entry in silence_entries:
-            silence_padding = (silence_entry.silence_end - silence_entry.silence_start) / 2
-            if silence_padding > self.DEFAULT_SILENCE_START_PADDING_IN_SECS:
-                silence_padding = self.DEFAULT_SILENCE_START_PADDING_IN_SECS
-
-            segment_start_times.append(str(silence_entry.silence_start + silence_padding))
+            # trim silences duration
+            silence_start = lambda silence_entry : silence_entry.silence_start \
+                    if duration(silence_entry) < self.silence_target_trimmed_duration \
+                                              else silence_entry.silence_end - self.silence_target_trimmed_duration
+            segment_start_times.append(str(silence_start(silence_entry)))
 
         return segment_start_times
 
 
 class SilenceSplitter(FFMPRunner):
     def silence_split(self, ff_entry_params):
-
         ''' Segment media file by specified silence
         '''
 
         ff_entry_params.target_dir_prefix = 'silence_split'
         media_files, target_dirs = self._prepare_files(ff_entry_params)
 
-        md = lambda fpath : ff_entry_params.silence_min_duration
-        if ff_entry_params.silence_auto_settings:
-            silence_min_durations = dict()
-            md = lambda fpath : silence_min_durations.get(fpath, ff_entry_params.silence_min_duration)
-            print ('Determining silencesplit auto-duration settings, might take a while...')
-            with progress_bar() as p_bar:                                    
-                for fpath in media_files:                    
-                    p_bar.info_msg = 'Calculating silences for ../{}'.format(os.path.basename(fpath))
-                    silences = FFH.silence_detector(fpath, min_duration = ff_entry_params.silence_min_duration, 
-                                                           noise_tolerance_amplitude_ratio = ff_entry_params.silence_noise_tolerance_amplitude_ratio)
-                    if silences:
-                        durations = [silence[1] - silence[0] for silence in silences]
-                        silence_min_durations[fpath] = MiscHelpers.percentile(durations, 25)
-                    p_bar.progress += 100 / len(media_files)
-
         # build tasks
         tasks = []        
-        tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
-                            ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
-                            ff_entry_params.reset_timestamps, md(media_file), ff_entry_params.silence_noise_tolerance_amplitude_ratio)
+        tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level, ff_entry_params.ff_general_options, 
+                            ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata, ff_entry_params.reset_timestamps, 
+                            ff_entry_params.silence_min_duration, ff_entry_params.silence_noise_tolerance_amplitude_ratio, 
+                            ff_entry_params.silence_auto_duration, ff_entry_params.silence_target_trimmed_duration)
                                 for media_file, target_dir_path in zip(media_files, target_dirs)]
 
         for task_param in tasks_params:
             task = SilenceSplitterTask(*task_param)
             tasks.append(task)
 
-
         # run tasks
         self.run_tasks(tasks, serial_exec = ff_entry_params.serial_exec, quiet = ff_entry_params.quiet)
 
+
+
+    #    md = lambda fpath : ff_entry_params.silence_min_duration
+    #    if ff_entry_params.silence_auto_duration:
+    #        silence_min_durations = dict()
+    #        md = lambda fpath : silence_min_durations.get(fpath, ff_entry_params.silence_min_duration)
+    #        print ('Determining silencesplit auto-duration settings, might take a while...')
+    #        with progress_bar() as p_bar:                                    
+    #            for fpath in media_files:                    
+    #                p_bar.info_msg = 'Calculating silences for ../{}'.format(os.path.basename(fpath))
+    #                silences = FFH.silence_detector(fpath, min_duration = ff_entry_params.silence_min_duration, 
+    #                                                       noise_tolerance_amplitude_ratio = ff_entry_params.silence_noise_tolerance_amplitude_ratio)
+    #                if silences:
+    #                    durations = [silence[1] - silence[0] for silence in silences]
+    #                    silence_min_durations[fpath] = MiscHelpers.percentile(durations, 25)
+    #                p_bar.progress += 100 / len(media_files)

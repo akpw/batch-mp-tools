@@ -80,8 +80,9 @@ class FFmpegNotInstalled(Exception):
         '''.format(platforms_install_instructions)
 
 class FFHDefaults:
-    DEFAULT_SILENCE_MIN_DURATION_IN_SECS = 2
+    DEFAULT_SILENCE_MIN_DURATION = 2
     DEFAULT_SILENCE_NOISE_TOLERANCE = 0.005
+    DEFAULT_SILENCE_TARGET_TRIMMED_DURATION = 2
 
 class FFH:
     ''' FFmpeg-related utilities
@@ -215,7 +216,7 @@ class FFH:
 
     @staticmethod
     def silence_detector(fpath, *,
-                                min_duration = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS,
+                                min_duration = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION,
                                 noise_tolerance_amplitude_ratio = FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE):
         ''' Detects silence
             If successful, returns a list of SilenceEntry tuples

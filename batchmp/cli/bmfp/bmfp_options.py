@@ -282,17 +282,23 @@ class BMFPArgParser(BatchMPArgParser):
         silencesplit_group = silencesplit_parser.add_argument_group('Silence detection parameters')
         silencesplit_group.add_argument('-md', '--min-duration', dest='min_duration',
                 help = 'Minimal silence duration, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
-                                                .format(FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS),
+                                                .format(FFHDefaults.DEFAULT_SILENCE_MIN_DURATION),
                 type = lambda md: self._is_timedelta(parser, md),
-                default = timedelta(seconds = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION_IN_SECS))
-        silencesplit_group.add_argument('-ad', '--auto-duration', dest='auto_duration',
-                help = 'Automatically selects representative silence duration',
-                action='store_true')        
+                default = timedelta(seconds = FFHDefaults.DEFAULT_SILENCE_MIN_DURATION))
         silencesplit_group.add_argument('-nt', '--noise-tolerance', dest='noise_tolerance',
                 help = 'Silence noise tolerance, specified as amplitude ratio (default is {})' \
                                                 .format(FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE),
                 type = float,
                 default = FFHDefaults.DEFAULT_SILENCE_NOISE_TOLERANCE)
+        silencesplit_group.add_argument('-ad', '--auto-duration', dest='auto_duration',
+                help = 'Automatically selects representative silence duration',
+                action='store_true')        
+        silencesplit_group.add_argument('-td', '--trim-duration', dest='trimmed_duration',
+                help = 'Trims target silence duration to a given value, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
+                                                .format(FFHDefaults.DEFAULT_SILENCE_TARGET_TRIMMED_DURATION),
+                type = lambda md: self._is_timedelta(parser, md),
+                default = timedelta(seconds = FFHDefaults.DEFAULT_SILENCE_TARGET_TRIMMED_DURATION))
+
         silencesplit_parser.add_argument("-rt", "--reset-timestamps", dest='reset_timestamps',
                     help = "Reset timestamps at the begin of each segment, so that it "
                             "starts with near-zero timestamps and therefore there are minimum pauses "
