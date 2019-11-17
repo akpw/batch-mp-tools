@@ -22,11 +22,17 @@ import threading, queue
 from contextlib import contextmanager
 
 
+class CmdProgressBarRefreshRate:
+    SLOW = 0.2
+    MODERATE = 0.1
+    FAST = 0.02
+
+
 @contextmanager
-def progress_bar(starts_from = 0):
+def progress_bar(starts_from = 0, refresh_rate = CmdProgressBarRefreshRate.MODERATE):
     ''' Enables usage via a runtime context
     '''
-    p_bar = CmdProgressBar(starts_from)
+    p_bar = CmdProgressBar(starts_from, refresh_rate)
     p_bar.start()
     try:
         yield p_bar
@@ -40,7 +46,7 @@ class CmdProgressBarUpdateTypes:
 
 
 class CmdProgressBar(object):
-    def __init__(self, start_from=0):
+    def __init__(self, start_from=0, refresh_rate = CmdProgressBarRefreshRate.MODERATE):
         self._queue = queue.Queue(1)  # used to communicate with the worker thread
         self._end_event = threading.Event()  # used to exit
 
@@ -48,7 +54,7 @@ class CmdProgressBar(object):
         self._info_msg = None
 
         self._bar_thread = threading.Thread(target=self._show_progress,
-                                            args=(start_from, self._end_event, self._queue,))
+                                            args=(start_from, refresh_rate, self._end_event, self._queue,))
         self._bar_thread.daemon = True
 
     @property
@@ -73,7 +79,7 @@ class CmdProgressBar(object):
 
     # the worker thread method
     @staticmethod
-    def _show_progress(last_known_progress, end_event, queue):
+    def _show_progress(last_known_progress, refresh_rate, end_event, queue):
         progress_values = [i for i in range(0, 110, 10)]  # [0, 10, ..., 100]
         chars = '|/-\\'
         msg = None
@@ -106,7 +112,7 @@ class CmdProgressBar(object):
             for c in chars:
                 sys.stdout.write('\r[ {0} ..{1}.. ]'.format(c, progress_info))
                 sys.stdout.flush()
-                time.sleep(0.4)
+                time.sleep(refresh_rate)
 
             if end_event.is_set():
                 break

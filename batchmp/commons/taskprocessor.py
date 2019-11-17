@@ -14,7 +14,7 @@
 
 import copyreg, types, multiprocessing
 from abc import ABCMeta, abstractmethod
-from batchmp.commons.progressbar import progress_bar
+from batchmp.commons.progressbar import progress_bar, CmdProgressBarRefreshRate
 from batchmp.commons.utils import timed, MiscHelpers
 
 
@@ -94,7 +94,7 @@ class TasksProcessor:
                 print('Processing {0} tasks with pool of {1} worker processes'.format(num_tasks, num_workers))
 
             # start showing progress
-            with progress_bar() as p_bar:
+            with progress_bar(refresh_rate = CmdProgressBarRefreshRate.MODERATE) as p_bar:
                 def _make_progress(result):
                     nonlocal cpu_core_time
                     tasks_results.append(result)

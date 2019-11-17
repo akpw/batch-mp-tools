@@ -15,11 +15,11 @@
 import sys, os, re, string
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.walker import DWalker
-from batchmp.fstools.rename import DirsIndexInfo
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.tagsholder import TagHolder
+from batchmp.commons.progressbar import progress_bar, CmdProgressBarRefreshRate
 from functools import partial
 
 class BaseTagProcessor:
@@ -45,7 +45,7 @@ class BaseTagProcessor:
                             formatter = formatter,
                             selected_files_description = 'media file')
 
-    def set_tags(self,fs_entry_params, tag_holder = None, tag_holder_builder = None):
+    def set_tags(self, fs_entry_params, total_files, total_dirs, tag_holder = None, tag_holder_builder = None):
 
         ''' Set tags from tag_holder attributes
         '''
@@ -54,13 +54,19 @@ class BaseTagProcessor:
 
         fcnt = 0
         pass_filter = lambda fpath: self.handler.can_handle(fpath)
-        for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter):
-            if tag_holder_builder:
-                tag_holder = tag_holder_builder(entry)
 
-            self.handler.copy_tags(tag_holder)
-            self.handler.save()
-            fcnt += 1
+        with progress_bar(refresh_rate = CmdProgressBarRefreshRate.FAST) as p_bar:
+            p_bar.info_msg = 'Setting tags in {} media files'.format(total_files)
+            for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter):
+                if tag_holder_builder:
+                    tag_holder = tag_holder_builder(entry)
+
+                self.handler.copy_tags(tag_holder)
+                self.handler.save()
+                fcnt += 1
+
+                p_bar.progress += 100 / total_files
+
 
         # print summary
         if not fs_entry_params.quiet:
@@ -77,8 +83,10 @@ class BaseTagProcessor:
         '''
         if not tag_holder and not tag_holder_builder:
             return
+
         if fs_entry_params.quiet:
             proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
         else:
             # visualise changes to tags and proceed if confirmed
             preformatter = partial(TagOutputFormatter.tags_formatter,
@@ -96,7 +104,7 @@ class BaseTagProcessor:
                                             show_tag_holder_values = True,
                                             diff_tags_only = diff_tags_only)
 
-            proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params,
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params,
                                             preformatter = preformatter, formatter = formatter,
                                             reset_formatters = reset_tag_holder_builder,
                                             selected_files_description = 'media file')
@@ -104,7 +112,7 @@ class BaseTagProcessor:
             if reset_tag_holder_builder:
                 reset_tag_holder_builder()
 
-            self.set_tags(fs_entry_params, 
+            self.set_tags(fs_entry_params, total_files, total_dirs,
                             tag_holder = tag_holder, 
                             tag_holder_builder = tag_holder_builder)
 
@@ -129,47 +137,25 @@ class BaseTagProcessor:
         ''' Indexes the tracks / tracktotal tags, per media files' respective directories
             Visualises changes before proceeding
         '''
-        try:
-            start_from = int(start_from)
-            if (start_from) < 1:
-                start_from = 1
-        except ValueError:
-            start_from = 1
-
-        pass_filter = lambda fpath: self.handler.can_handle(fpath)
-        dir_info = DirsIndexInfo(start_from = start_from,
-                                        include = fs_entry_params.include, 
-                                        exclude = fs_entry_params.exclude,
-                                        file_pass_filter = pass_filter)
-        print('getting directory statistics')
-        for entry in DWalker.file_entries(fs_entry_params, pass_filter = pass_filter):
-            # get the directory info
-            dir_info.fetch_dir_stats(os.path.dirname(entry.realpath))
-
+        dirs_cnt = files_cnt = start_from
+        parent_dir = None
         def tag_holder_builder(entry):
+            nonlocal dirs_cnt, files_cnt, parent_dir
+            if parent_dir != os.path.dirname(entry.realpath):
+                parent_dir = os.path.dirname(entry.realpath)
+                dirs_cnt = files_cnt = start_from
+
             tag_holder = TagHolder()
 
-            parent_dir = os.path.dirname(entry.realpath)
-            dir_stats = dir_info.fetch_dir_stats(parent_dir)
-
-            tag_holder.track = dir_stats.files_cnt
-            tag_holder.tracktotal = dir_stats.total_files
-
-            # need to update the files counter
-            dir_stats = dir_info.DirStats(dir_stats.total_files, dir_stats.total_dirs,
-                                                dir_stats.files_cnt + 1, dir_stats.dirs_cnt)
-            dir_info.update_dir_stats(parent_dir, dir_stats)
+            tag_holder.tracktotal = len(next(os.walk(parent_dir))[2])
+            tag_holder.track = files_cnt
+            files_cnt += 1
 
             return tag_holder
 
-        def reset_tag_holder_builder():
-            dir_info.reset_counters()
-
-        print('showing tags')
         self.set_tags_visual(fs_entry_params,
                         diff_tags_only = diff_tags_only,
-                        tag_holder_builder = tag_holder_builder,
-                        reset_tag_holder_builder = reset_tag_holder_builder)
+                        tag_holder_builder = tag_holder_builder)
 
     def remove_tags(self, fs_entry_params,
                         tag_fields = None,
@@ -270,8 +256,5 @@ class BaseTagProcessor:
         # print summary
         if not quiet:
             print('Detauched art from {0} media entries'.format(fcnt))
-
-
-
 
 

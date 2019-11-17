@@ -58,6 +58,9 @@ class RenameDispatcher(BatchMPDispatcher):
             elif args['sub_cmd'] == RenamerCommands.DELETE:
                 self.delete(args)
 
+            elif args['sub_cmd'] == RenamerCommands.STATS:
+                self.stats(args)
+
             else:
                 print('Nothing to dispatch')
                 return False
@@ -68,6 +71,10 @@ class RenameDispatcher(BatchMPDispatcher):
     def print_dir(self, args):
         fs_entry_params = FSEntryParamsBase(args)
         DHandler.print_dir(fs_entry_params)
+
+    def stats(self, args):
+        fs_entry_params = FSEntryParamsBase(args)
+        DHandler.stats(fs_entry_params)
 
     def flatten(self, args):
         fs_entry_params = FSEntryParamsFlatten(args)

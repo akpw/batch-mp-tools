@@ -294,7 +294,7 @@ class BMFPArgParser(BatchMPArgParser):
                 help = 'Automatically selects representative silence duration',
                 action='store_true')        
         silencesplit_group.add_argument('-td', '--trim-duration', dest='trimmed_duration',
-                help = 'Trims target silence duration to a given value, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
+                help = 'Trims target silence start durations to a given value, in seconds or in the "hh:mm:ss[.xxx]" format (default is {} seconds).' \
                                                 .format(FFHDefaults.DEFAULT_SILENCE_TARGET_TRIMMED_DURATION),
                 type = lambda md: self._is_timedelta(parser, md),
                 default = timedelta(seconds = FFHDefaults.DEFAULT_SILENCE_TARGET_TRIMMED_DURATION))

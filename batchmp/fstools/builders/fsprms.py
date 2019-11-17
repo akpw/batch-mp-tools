@@ -158,6 +158,7 @@ class FSEntryParamsBase():
         self.filter_files = not args.get('all_files', False)   
         self.show_size = args.get('show_size', False)
         self.fast_scan = not args.get('media_scan', False)
+        self._args = args
 
         #self._media_extensions_cache = set()
 
@@ -259,7 +260,10 @@ class FSEntryParamsBase():
         dir_name = os.path.basename(self.rpath)
         return self._enclosing_dnames.has_node(self.rpath) and not (self.file_type == FSMediaEntryGroupType.ANY and self.passed_filters(dir_name)) and not (self.rpath in self._enclosing_files_containters)
 
-
+    @property
+    def args(self):
+        return self._args
+    
     @classmethod
     def writable_fields(cls):
         ''' generates names of all writable tag fields
@@ -274,10 +278,11 @@ class FSEntryParamsBase():
                     yield field
 
     # Copy attributes from another entry
-    def copy_params(self, fs_entry):
-        self._enclosing_dnames = fs_entry._enclosing_dnames
+    def copy_params(self, fs_entry_params):
+        self._enclosing_dnames = fs_entry_params._enclosing_dnames
+        self._enclosing_files_containters = fs_entry_params._enclosing_files_containters
         for field in self.writable_fields():
-            value = getattr(fs_entry, field)
+            value = getattr(fs_entry_params, field)
             if value is not None:
                 setattr(self, field, value)
 

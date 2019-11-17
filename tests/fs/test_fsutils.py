@@ -31,7 +31,7 @@ class FSTests(FSTest):
     def test_dir_stats(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_dir_stats
         fs_entry_params = self._fs_entry()
-        fcnt, dcnt, total_size = DHandler.dir_stats(fs_entry_params, include_size = True)
+        fcnt, dcnt, _ = DHandler.dir_stats(fs_entry_params)
 
         cmd = 'find {} -type f | grep -v ".DS_Store" | wc -l'.format(shlex.quote(self.src_dir))
         fcnt_ref = self.get_last_digit_from_shell_cmd(cmd)
@@ -45,7 +45,7 @@ class FSTests(FSTest):
     def test_dir_stats_filtered_folders(self):
         ## python -m unittest tests.fs.test_fsutils.FSTests.test_dir_stats_filtered_folders
         fs_entry_params = self._fs_entry(include = 'nested_a*;nested_c', filter_files = False)
-        _, dcnt, _ = DHandler.dir_stats(fs_entry_params, include_size = True)
+        _, dcnt, _ = DHandler.dir_stats(fs_entry_params)
 
         cmd = 'find {} -type d -iname "nested_a*" -or -iname "nested_c" | wc -l'.format(shlex.quote(self.src_dir))
         dcnt_ref = self.get_last_digit_from_shell_cmd(cmd)

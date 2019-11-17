@@ -17,8 +17,9 @@ from collections import namedtuple, Iterable
 from distutils.util import strtobool
 from batchmp.fstools.walker import DWalker
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryDefaults
 from batchmp.fstools.builders.fsprms import FSEntryParamsExt
+from batchmp.commons.progressbar import progress_bar, CmdProgressBarRefreshRate
 # from profilehooks import profile
 
 
@@ -86,8 +87,19 @@ class DHandler:
         return fcnt, dcnt
 
     @staticmethod
+    def stats(fs_entry_params):
+        print('Overall directory statistics might take a while...')
+        print(fs_entry_params.src_dir)        
+
+        total_files, total_dirs, total_size = DHandler.dir_stats(fs_entry_params)
+        
+        print('{0}Total files: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, total_files))
+        print('{0}Total directores: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, total_dirs))
+        if fs_entry_params.show_size: 
+            print('{0}Total selected files size: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, FSH.fs_size(total_size)))
+
+    @staticmethod
     def dir_stats(fs_entry_params, 
-                    include_size = False,
                     file_pass_filter = None, dir_pass_filter = None):
         """ Returns base stats for given directory
         """
@@ -110,7 +122,7 @@ class DHandler:
                 if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) > fs_entry_params.start_level:
                     dcnt += 1
 
-            if include_size:
+            if fs_entry_params.show_size:
                 total_size += os.path.getsize(entry.realpath)
 
         return fcnt, dcnt, total_size
@@ -161,9 +173,9 @@ class DHandler:
                                             selected_files_description = selected_files_description)
         if fcnt == dcnt == 0:
             print ('Nothing to process')
-            return False
+            return False, fcnt, dcnt
         else:
-            return DHandler.get_user_input()
+            return DHandler.get_user_input(), fcnt, dcnt
 
     @staticmethod
     def flatten_folders(ff_entry_params, 
@@ -173,7 +185,11 @@ class DHandler:
         fs_preprocess_entry_params = FSEntryParamsExt()
         fs_preprocess_entry_params.copy_params(ff_entry_params)
 
-        proceed = True if ff_entry_params.quiet else DHandler.visualise_changes(ff_entry_params, fs_preprocess_entry_params = fs_preprocess_entry_params)
+        if ff_entry_params.quiet:
+            proceed = True
+        else: 
+            proceed, _, _ = DHandler.visualise_changes(ff_entry_params, fs_preprocess_entry_params = fs_preprocess_entry_params)
+        
         if proceed:
             # OK to go
             flattened_dirs_cnt = flattened_files_cnt = 0
@@ -203,6 +219,7 @@ class DHandler:
 
     @staticmethod
     def rename_entries(fs_entry_params,
+                        total_files, total_dirs,
                         formatter = None, check_unique = True):
 
         """ Renames directory entries via applying formatter function supplied by the caller
@@ -213,25 +230,30 @@ class DHandler:
         fcnt = dcnt = 0
         DirEntry = namedtuple('DirEntry', ['orig_path', 'target_path'])
         dir_entries = []
-        for entry in DWalker.entries(fs_entry_params):
+        
+        with progress_bar(refresh_rate = CmdProgressBarRefreshRate.FAST) as p_bar:
+            p_bar.info_msg = 'Renaming {} files'.format(total_files)
 
-            if entry.type == FSEntryType.ROOT:
-                continue
+            for entry in DWalker.entries(fs_entry_params):
+                if entry.type == FSEntryType.ROOT:
+                    continue
 
-            target_name = formatter(entry)
-            if target_name == entry.basename:
-                continue
+                target_name = formatter(entry)
+                if target_name == entry.basename:
+                    continue
 
-            target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
+                target_path = os.path.join(os.path.dirname(entry.realpath), target_name)
 
-            if entry.type == FSEntryType.DIR:
-                # for dirs, need to postpone
-                dir_entries.append(DirEntry(entry.realpath, target_path))
+                if entry.type == FSEntryType.DIR:
+                    # for dirs, need to postpone
+                    dir_entries.append(DirEntry(entry.realpath, target_path))
 
-            elif entry.type == FSEntryType.FILE:
-                # for files, just rename
-                if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
-                    fcnt += 1
+                elif entry.type == FSEntryType.FILE:
+                    # for files, just rename
+                    if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
+                        fcnt += 1
+
+                p_bar.progress += 100 / total_files
 
         #rename the dirs
         for dir_entry in reversed(dir_entries):
@@ -243,8 +265,7 @@ class DHandler:
             print('Renamed: {0} files, {1} folders'.format(fcnt, dcnt))
 
     @staticmethod
-    def remove_entries(fs_entry_params,
-                        formatter = None):
+    def remove_entries(fs_entry_params, formatter = None):
 
         """ Removes entries with formatter function supplied by the caller
         """

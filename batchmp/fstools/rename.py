@@ -16,58 +16,14 @@ import os, re, datetime, string
 from collections import namedtuple
 from string import Template
 from batchmp.fstools.dirtools import DHandler
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryDefaults
 from batchmp.fstools.builders.fsprms import FSEntryParamsBase
 from batchmp.commons.utils import MiscHelpers
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.output.formatters import TagOutputFormatter
 
-class DirsIndexInfo:
-    ''' A helper class,
-        multi-level indexing indexing info
-        for nested directories
-    '''
-    DirStats = namedtuple('DirStats',
-             ['total_files', 'total_dirs', 'files_cnt', 'dirs_cnt'])
 
-    def __init__(self, start_from = 0,
-                        include = None, exclude = None,
-                        file_pass_filter = None, dir_pass_filter = None):
-        self.dirs_info = {}
-        self.start_from = start_from
-        self.include = include
-        self.exclude = exclude
-        self.file_pass_filter = file_pass_filter
-        self.dir_pass_filter = dir_pass_filter
-
-    def fetch_dir_stats(self, dirname):
-        ''' Fetches stats for a directory
-        '''
-        args = {        
-            'dir' : dirname,
-            'include' : self.include,
-            'exclude' : self.exclude,
-            'quiet' : True
-        }
-        fs_entry_params = FSEntryParamsBase(args) 
-        if not dirname in self.dirs_info.keys():
-            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params,
-                                                            file_pass_filter = self.file_pass_filter,
-                                                            dir_pass_filter = self.dir_pass_filter)
-            dir_info = self.DirStats(total_files, total_dirs, self.start_from, self.start_from)
-            self.dirs_info[dirname] = dir_info
-        return self.dirs_info[dirname]
-
-    def update_dir_stats(self, dirname, dir_stats):
-        if dirname in self.dirs_info.keys():
-            self.dirs_info[dirname] = dir_stats
-
-    def reset_counters(self):
-        for key in self.dirs_info.keys():
-            dir_info = self.fetch_dir_stats(key)
-            self.dirs_info[key] = self.DirStats(dir_info.total_files, dir_info.total_dirs,
-                                                                    self.start_from, self.start_from)
 class Renamer(object):
     ''' Renames FS entries
     '''
@@ -90,9 +46,10 @@ class Renamer(object):
             return max(num_digits, min_digits)
 
         join_str = str(join_str)
+        dirs_cnt = files_cnt = start_from
+        total_files = total_dirs = 0
         if (sequential or by_directory):
-            # for sequential indexing, just use counters
-            dirs_cnt = files_cnt = start_from
+            # for sequential indexing, just use counters            
             total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
             def index_sequential(entry):
                 nonlocal dirs_cnt, files_cnt
@@ -118,28 +75,24 @@ class Renamer(object):
 
                 return addition
         else:
-            # for multilevel indexing, need the DirsIndexInfo helper
-            dir_info = DirsIndexInfo(start_from = start_from, include = fs_entry_params.include, exclude = fs_entry_params.exclude)
+            # multilevel indexing
+            parent_dir = None
             def index_multilevel(entry):
+                nonlocal dirs_cnt, files_cnt, parent_dir
                 addition = None
-                parent_dir = os.path.dirname(entry.realpath)
-                dir_stats = dir_info.fetch_dir_stats(parent_dir)
+                if parent_dir != os.path.dirname(entry.realpath):
+                    parent_dir = os.path.dirname(entry.realpath)
+                    dirs_cnt = files_cnt = start_from
 
                 if entry.type == FSEntryType.DIR:
-                    addition = str(dir_stats.dirs_cnt).zfill(num_digits(dir_stats.total_dirs))
-
-                    # need to update the dirs counter
-                    dir_stats = dir_info.DirStats(dir_stats.total_files, dir_stats.total_dirs,
-                                                        dir_stats.files_cnt, dir_stats.dirs_cnt + 1)
-                    dir_info.update_dir_stats(parent_dir, dir_stats)
+                    total_dirs =  len(next(os.walk(parent_dir))[1])
+                    addition = str(dirs_cnt).zfill(num_digits(total_dirs))
+                    dirs_cnt += 1
 
                 elif entry.type == FSEntryType.FILE:
-                    addition = str(dir_stats.files_cnt).zfill(num_digits(dir_stats.total_files))
-
-                    # need to update the files counter
-                    dir_stats = dir_info.DirStats(dir_stats.total_files, dir_stats.total_dirs,
-                                                        dir_stats.files_cnt + 1, dir_stats.dirs_cnt)
-                    dir_info.update_dir_stats(parent_dir, dir_stats)
+                    total_files =  len(next(os.walk(parent_dir))[2])
+                    addition = str(files_cnt).zfill(num_digits(total_files))
+                    files_cnt += 1
 
                 return addition
 
@@ -175,16 +128,15 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_index_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            if not (sequential or by_directory):                
+                total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = add_index_transform)
+        
         if proceed:
-            # reset counters
-            if (sequential or by_directory):
-                dirs_cnt = files_cnt = start_from
-            else:
-                dir_info.reset_counters()
-
-            # ...and rename
-            DHandler.rename_entries(fs_entry_params, formatter = add_index_transform)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = add_index_transform)
 
     @classmethod
     def capitalize(cls, fs_entry_params):
@@ -201,9 +153,14 @@ class Renamer(object):
             return string.capwords(entry.basename)
 
         # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = capitalize_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = capitalize_transform)
+
         if proceed:
-            DHandler.rename_entries(fs_entry_params, formatter = capitalize_transform, check_unique = False)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = capitalize_transform, check_unique = False)
 
 
     @classmethod
@@ -228,9 +185,14 @@ class Renamer(object):
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
         # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_date_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = add_date_transform)
+
         if proceed:
-            DHandler.rename_entries(fs_entry_params, formatter = add_date_transform)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = add_date_transform)
 
     @classmethod
     def add_text(cls, fs_entry_params, text, as_prefix = False, join_str = ' '):
@@ -253,10 +215,14 @@ class Renamer(object):
                 name_base, name_ext = os.path.splitext(entry.basename)
                 return '{0}{1}{2}{3}'.format(name_base, join_str, addition, name_ext)
 
-        # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = add_text_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = add_text_transform)
+
         if proceed:
-            DHandler.rename_entries(fs_entry_params, formatter = add_text_transform)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = add_text_transform)
 
     @classmethod
     def remove_n_characters(cls, fs_entry_params, num_chars = 0, from_head = True):
@@ -280,9 +246,14 @@ class Renamer(object):
             return ''.join((name_base, name_ext))
 
         # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = remove_n_chars_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = remove_n_chars_transform)
+
         if proceed:
-            DHandler.rename_entries(fs_entry_params, formatter = remove_n_chars_transform)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = remove_n_chars_transform)
 
     @classmethod
     def replace(cls, fs_entry_params, find_str, replace_str, case_insensitive=False, include_extension = False):
@@ -315,9 +286,14 @@ class Renamer(object):
                 return entry.basename
 
         # visualise changes and proceed if confirmed
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, formatter = replace_transform)
+        if fs_entry_params.quiet:
+            proceed = True
+            total_files, total_dirs, _ = DHandler.dir_stats(fs_entry_params)
+        else: 
+            proceed, total_files, total_dirs = DHandler.visualise_changes(fs_entry_params, formatter = replace_transform)
+
         if proceed:
-            DHandler.rename_entries(fs_entry_params, formatter = replace_transform)
+            DHandler.rename_entries(fs_entry_params, total_files, total_dirs, formatter = replace_transform)
 
     @classmethod
     def delete(cls, fs_entry_params):
@@ -342,7 +318,10 @@ class Renamer(object):
             # these are to be gone soon...
             return entry.basename
 
-        proceed = True if fs_entry_params.quiet else DHandler.visualise_changes(fs_entry_params, 
+        if fs_entry_params.quiet:
+            proceed = True
+        else: 
+            proceed, _, _ = DHandler.visualise_changes(fs_entry_params, 
                                     formatter = delete_transform, 
                                     after_msg = 'The following files / folders will be deleted')
 

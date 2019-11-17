@@ -73,6 +73,7 @@ class RenamerCommands(BatchMPBaseCommands):
     CAPITALIZE = 'capitalize'
     FLATTEN = 'flatten'
     DELETE = 'delete'
+    STATS = 'stats'
 
     @classmethod
     def commands_meta(cls):
@@ -86,6 +87,7 @@ class RenamerCommands(BatchMPBaseCommands):
                         '{}, '.format(cls.CAPITALIZE),
                         '{}, '.format(cls.FLATTEN),
                         '{}, '.format(cls.DELETE),
+                        '{}, '.format(cls.STATS),                        
                         '{}, '.format(cls.INFO),
                         '{}'.format(cls.VERSION),
                         '}'))
@@ -141,6 +143,15 @@ class RenameArgParser(BatchMPArgParser):
                 help ='Show files size',
                 action = 'store_true')
 
+        # Stats
+        stats_parser = subparsers.add_parser(RenamerCommands.STATS,
+                                                description = 'Prints directory stats',
+                                                formatter_class = BatchMPHelpFormatter)
+        stats_parser.add_argument('-ss', '--show-size', dest = 'show_size',
+                help ='Show files size',
+                action = 'store_true')
+        
+
         # Flatten
         flatten_parser = subparsers.add_parser(RenamerCommands.FLATTEN,
                 description = 'Flatten all folders below target level, moving the files up the target level. \
@@ -171,7 +182,7 @@ class RenameArgParser(BatchMPArgParser):
 
         add_index_type_group = add_index_parser.add_mutually_exclusive_group()
         add_index_type_group.add_argument('-sq', '--sequential', dest = 'sequential',
-                help = 'Index selected files sequentially. ' \
+                help = 'Index selected files sequentially across selected directores. ' \
                        'If omitted, the files will instead be indexed within their respective directories (multi-level indexing)',
                 action = 'store_true')
         add_index_type_group.add_argument('-bd', '--by-directory', dest = 'by_directory',
