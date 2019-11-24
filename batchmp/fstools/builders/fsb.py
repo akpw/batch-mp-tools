@@ -28,13 +28,15 @@ class FSEntryBuilder(metaclass = ABCMeta):
                                 basename = os.path.basename(fs_entry_params.rpath), 
                                 realpath = fs_entry_params.rpath,
                                 indent = os.path.dirname(fs_entry_params.rpath) + os.path.sep,
-                                isEnclosingEntry = True)
+                                isEnclosingEntry = True,
+                                isEnclosingFilesContainterEntry = True)
         else:
             entry = FSEntry(FSEntryType.DIR,
                                 basename = os.path.basename(fs_entry_params.rpath), 
                                 realpath = fs_entry_params.rpath,
                                 indent = fs_entry_params.current_indent[:-1] + os.path.sep,
-                                isEnclosingEntry = fs_entry_params.isEnclosingEntry)
+                                isEnclosingEntry = fs_entry_params.isEnclosingEntry,
+                                isEnclosingFilesContainterEntry = fs_entry_params.isEnclosingFilesContainterEntry)
         # debug
         # print("{}cur level:{}".format(fs_entry_params.current_indent, fs_entry_params.current_level))
         # print("{}end level:{}".format(fs_entry_params.current_indent, fs_entry_params.end_level))              
@@ -54,7 +56,7 @@ class FSEntryBuilderBase(FSEntryBuilder):
     @staticmethod
     def build_entry(fs_entry_params):
         ## not much there for enclosing entries 
-        if fs_entry_params.isEnclosingEntry: 
+        if fs_entry_params.isEnclosingEntry and not fs_entry_params.isEnclosingFilesContainterEntry: 
             return
 
         ## Files processing ##        
@@ -95,7 +97,7 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
         elif fs_entry_params.current_level > fs_entry_params.target_level:
                 return
         else:
-            if fs_entry_params.isEnclosingEntry:
+            if fs_entry_params.isEnclosingEntry and not fs_entry_params.isEnclosingFilesContainterEntry:
                 return
 
             flattens = []

@@ -134,7 +134,7 @@ class BatchMPArgParser:
         media_types_group.add_argument("-ft", "--file-type", dest = "file_type",
                     help = "File Media Type",
                     type = str,
-                    choices = ['image', 'video', 'audio', 'playable', 'media', 'nonmedia', 'any'],
+                    choices = ['image', 'video', 'audio', 'media', 'nonmedia', 'playable', 'nonplayable', 'any'],
                     default =  FSEntryDefaults.DEFAULT_FILE_TYPE)
         media_types_group.add_argument("-ms", "--media-scan", dest = "media_scan",
                     help = "Scan for media types, instead of using file extensions (can take a long time)",

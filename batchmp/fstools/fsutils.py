@@ -141,25 +141,35 @@ class FSH:
         raise ValueError('File is way too large')
 
     @staticmethod
-    def dir_size(dir_path):
+    def dir_size(dir_path, shared_cache = None):
         ''' Calculates directory size in bytes
         '''
         total_size = 0
-        seen = set()
-        for r, _, fnames in os.walk(dir_path):
+        use_shared_cache = isinstance(shared_cache, dict)
+
+        for r, _, fnames in os.walk(dir_path):   
+            # for repetitive calls, look to get from provided shared cache
+            if use_shared_cache:
+                r_size_from_cache = shared_cache.get(r)
+                if r_size_from_cache:
+                    total_size += r_size_from_cache
+                    continue
+
+            # caculate current root size
+            r_size = 0            
+            r_size += os.path.getsize(r)
             for fname in fnames:
                 fpath = os.path.join(r, fname)
                 try:
                     stat = os.stat(fpath)
                 except OSError:
                     continue
+                r_size += stat.st_size
 
-                if stat.st_ino in seen:
-                    continue
-                else:
-                    seen.add(stat.st_ino)
+            total_size += r_size
+            if use_shared_cache:
+                shared_cache[r] = r_size
 
-                total_size += stat.st_size
         return total_size
 
     @staticmethod
@@ -239,9 +249,22 @@ class FSH:
     def fs_entry(fpath):
         pass
 
+
 # Quick dev test
 if __name__ == '__main__':
-    pass
+    from batchmp.commons.utils import timed
+    path = os.path.realpath(os.path.dirname(__file__))
 
+    @timed
+    def dir_size_test(n):    
+        for i in range(n):
+            size = FSH.dir_size(path, shared_cache)
+        return size
 
+    repeat_cnt = 5000
+    shared_cache = {}
+    print(dir_size_test(repeat_cnt))    
+
+    shared_cache = None
+    print(dir_size_test(repeat_cnt))    
 

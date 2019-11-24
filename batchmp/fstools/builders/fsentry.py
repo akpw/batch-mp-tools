@@ -17,17 +17,20 @@ from enum import IntEnum
 class FSEntry:
     ''' File System entry representation
     '''
-    def __init__(self, type, basename, realpath, indent, isEnclosingEntry = False):
+    def __init__(self, type, basename, realpath, indent, isEnclosingEntry = False, isEnclosingFilesContainterEntry = False):
         self.type = type
         self.basename = basename
         self.realpath = realpath
         self.indent = indent
         self.isEnclosingEntry = isEnclosingEntry
+        self.isEnclosingFilesContainterEntry = isEnclosingFilesContainterEntry
+
 
 class FSEntryType(IntEnum):
     ROOT =  0x00000
     DIR  =  0x00001
     FILE =  0x00002
+
 
 class FSMediaEntryType(IntEnum):
     IMAGE       =  0x00010
@@ -35,10 +38,13 @@ class FSMediaEntryType(IntEnum):
     VIDEO       =  0x00012
     NONMEDIA    =  0x00013
 
+
 class FSMediaEntryGroupType(IntEnum):
     MEDIA       =  0x00100
     PLAYABLE    =  0x00101
+    NONPLAYABLE =  0x00102    
     ANY         =  0x00103
+
 
 class FSEntryDefaults:    
     DEFAULT_NESTED_INDENT = '  '

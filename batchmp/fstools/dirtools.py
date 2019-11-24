@@ -43,8 +43,8 @@ class DHandler:
 
         # print the dir tree
         fcnt = dcnt = 0
-        total_file_size = 0
-        total_dir_size = 0
+        total_size = 0
+        shared_cache = {}
 
         for entry in DWalker.entries(fs_entry_params):
             # get formatted output
@@ -65,13 +65,19 @@ class DHandler:
                     if fs_entry_params.show_size:
                         fsize = os.path.getsize(entry.realpath)
                         size = ' {} '.format(FSH.fs_size(fsize))
-                        total_file_size += fsize
+                        total_size += fsize
                 elif entry.type == FSEntryType.DIR and not entry.isEnclosingEntry:
                     dcnt += 1
                     if fs_entry_params.show_size:
-                        dsize = FSH.dir_size(entry.realpath)
-                        size = ' {} '.format(FSH.fs_size(dsize))
-                        total_dir_size += dsize
+                        display_size = FSH.dir_size(entry.realpath, shared_cache = shared_cache)
+                        size = ' {} '.format(FSH.fs_size(display_size))                        
+
+                        if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) <= fs_entry_params.end_level:
+                            dsize = os.path.getsize(entry.realpath)
+                        else:
+                            dsize = display_size
+
+                        total_size += dsize
 
                 print('{0}{1}{2}'.format(entry.indent, size, formatted_output))
 
@@ -79,10 +85,9 @@ class DHandler:
         print('{0} {1}{2}, {3} folder{4}'.format(fcnt,
                                                     selected_files_description, '' if fcnt == 1 else 's',
                                                     dcnt, '' if dcnt == 1 else 's'))
-        if fs_entry_params.show_size:
-            print('Total directories size: {}'.format(FSH.fs_size(total_dir_size)))
-            if total_file_size > 0:
-                print('Total selected files size: {}'.format(FSH.fs_size(total_file_size)))
+
+        if fs_entry_params.show_size and total_size > 0:
+                print('Total selected entries size: {}'.format(FSH.fs_size(total_size)))
 
         return fcnt, dcnt
 
@@ -96,7 +101,7 @@ class DHandler:
         print('{0}Total files: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, total_files))
         print('{0}Total directores: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, total_dirs))
         if fs_entry_params.show_size: 
-            print('{0}Total selected files size: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, FSH.fs_size(total_size)))
+            print('{0}Total size: {1}'.format(FSEntryDefaults.DEFAULT_NESTED_INDENT, FSH.fs_size(total_size)))
 
     @staticmethod
     def dir_stats(fs_entry_params, 
@@ -107,6 +112,7 @@ class DHandler:
             raise ValueError('Not a valid path')
 
         # count number of files, folders, and their total size
+        shared_cache = {}
         fcnt = dcnt = total_size = 0
         for entry in DWalker.entries(fs_entry_params):
 
@@ -114,16 +120,20 @@ class DHandler:
                 if file_pass_filter and (not file_pass_filter(entry.realpath)):
                     continue
                 fcnt += 1
+                if fs_entry_params.show_size:
+                    total_size += os.path.getsize(entry.realpath)
+
             elif entry.type == FSEntryType.DIR:
                 if entry.isEnclosingEntry:
                     continue
                 if dir_pass_filter and (not dir_pass_filter(entry.realpath)):
                     continue
-                if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) > fs_entry_params.start_level:
-                    dcnt += 1
-
-            if fs_entry_params.show_size:
-                total_size += os.path.getsize(entry.realpath)
+                dcnt += 1
+                if fs_entry_params.show_size:
+                    if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) <= fs_entry_params.end_level:
+                        total_size += os.path.getsize(entry.realpath)
+                    else:
+                        total_size += FSH.dir_size(entry.realpath, shared_cache = shared_cache)
 
         return fcnt, dcnt, total_size
 
@@ -276,7 +286,7 @@ class DHandler:
         dir_entries = []
         for entry in DWalker.entries(fs_entry_params):
 
-            if entry.type == FSEntryType.ROOT or entry.isEnclosingEntry:
+            if entry.type == FSEntryType.ROOT or (entry.type == FSEntryType.DIR and entry.isEnclosingEntry):
                 continue
 
             if formatter(entry) is None:

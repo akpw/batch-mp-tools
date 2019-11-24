@@ -109,6 +109,7 @@ class FSEntryFileTypeDescriptor(PropertyDescriptor):
               'audio': FSMediaEntryType.AUDIO,
               'nonmedia': FSMediaEntryType.NONMEDIA,
               'playable': FSMediaEntryGroupType.PLAYABLE,              
+              'nonplayable': FSMediaEntryGroupType.NONPLAYABLE,                            
               'media': FSMediaEntryGroupType.MEDIA,
               'any': FSMediaEntryGroupType.ANY              
             }
@@ -180,9 +181,9 @@ class FSEntryParamsBase():
                                 self._enclosing_dnames[rpath] = rpath
                             self._enclosing_files_containters.add(rpath)
                             break # no need to check this root further
-            # print(self._enclosing_dnames)
-            # print(self.file_type)
-            # print(self._enclosing_files_containters)
+            #print(self.file_type)
+            #print('Enclosing: {}'.format(self._enclosing_dnames))
+            #print('Enclosing File Containers: {}'.format(self._enclosing_files_containters))
 
     # Current level
     @property
@@ -222,6 +223,7 @@ class FSEntryParamsBase():
           FSMediaEntryType.VIDEO: media_type == FSMediaEntryType.VIDEO,          
           FSMediaEntryType.AUDIO: media_type == FSMediaEntryType.AUDIO,                    
           FSMediaEntryGroupType.PLAYABLE: media_type in (FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO),                    
+          FSMediaEntryGroupType.NONPLAYABLE: media_type not in (FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO),                              
           FSMediaEntryGroupType.MEDIA: media_type in (FSMediaEntryType.IMAGE, FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO),                    
           FSMediaEntryType.NONMEDIA: media_type not in (FSMediaEntryType.IMAGE, FSMediaEntryType.VIDEO, FSMediaEntryType.AUDIO)
         }[self.file_type]
@@ -245,7 +247,7 @@ class FSEntryParamsBase():
 
     @property
     def current_indent(self):
-        return '{0}{1}'.format(self.nested_indent * (self.current_level), '|-> ' if not self.isEnclosingEntry else '|.. ')
+        return '{0}{1}'.format(self.nested_indent * (self.current_level), '|-> ' if not (self.isEnclosingEntry) else '|.. ')
 
     @property
     def siblings_indent(self):
@@ -257,8 +259,16 @@ class FSEntryParamsBase():
 
     @property
     def isEnclosingEntry(self):
+        return self._enclosing_dnames.has_node(self.rpath) and not self.isMatchingDirEntry
+
+    @property
+    def isMatchingDirEntry(self):
         dir_name = os.path.basename(self.rpath)
-        return self._enclosing_dnames.has_node(self.rpath) and not (self.file_type == FSMediaEntryGroupType.ANY and self.passed_filters(dir_name)) and not (self.rpath in self._enclosing_files_containters)
+        return self.file_type == FSMediaEntryGroupType.ANY and self.passed_filters(dir_name)
+    
+    @property
+    def isEnclosingFilesContainterEntry(self):
+        return self.rpath in self._enclosing_files_containters
 
     @property
     def args(self):
