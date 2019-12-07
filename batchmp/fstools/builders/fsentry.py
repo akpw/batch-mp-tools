@@ -17,13 +17,16 @@ from enum import IntEnum
 class FSEntry:
     ''' File System entry representation
     '''
-    def __init__(self, type, basename, realpath, indent, isEnclosingEntry = False, isEnclosingFilesContainterEntry = False):
+    def __init__(self, type, basename, realpath, indent, 
+                    isEnclosingEntry = False, isEnclosingFilesContainterEntry = False,
+                    isScopeSwitchingEntry = False):
         self.type = type
         self.basename = basename
         self.realpath = realpath
         self.indent = indent
         self.isEnclosingEntry = isEnclosingEntry
         self.isEnclosingFilesContainterEntry = isEnclosingFilesContainterEntry
+        self.scopeSwitchingEntry = isScopeSwitchingEntry
 
 
 class FSEntryType(IntEnum):

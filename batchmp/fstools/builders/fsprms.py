@@ -29,8 +29,12 @@ from batchmp.commons.descriptors import (
 class FSEntryDefaultValueDescriptor(LazyFunctionPropertyDescriptor):
     pass
 
+# FSEntry Attributes with default values
+class FSEntryRuntimeAttributeDescriptor(PropertyDescriptor):
+    pass
 
-class FSEntryFilteredFilesValueDescriptor(PropertyDescriptor):
+
+class FSEntryFilteredFilesValueDescriptor(FSEntryRuntimeAttributeDescriptor):
     ''' Files property descriptor
     '''
     def __set__(self, instance, value):
@@ -58,7 +62,7 @@ class FSEntryFilteredFilesValueDescriptor(PropertyDescriptor):
 
 
 DNames = collections.namedtuple('DNames', ['passed', 'enclosing'])
-class FSEntryFilteredDirsValueDescriptor(PropertyDescriptor):
+class FSEntryFilteredDirsValueDescriptor(FSEntryRuntimeAttributeDescriptor):
     ''' Directories property descriptor
     '''
     def __set__(self, instance, value):
@@ -88,7 +92,7 @@ class FSEntryFilteredDirsValueDescriptor(PropertyDescriptor):
 
 
 
-class FSEntryRPathDescriptor(PropertyDescriptor):
+class FSEntryRPathDescriptor(FSEntryRuntimeAttributeDescriptor):
     ''' RPath property descriptor
     '''
     def __set__(self, instance, value):
@@ -235,7 +239,7 @@ class FSEntryParamsBase():
 
     @property
     def scan_for_enclosing_directories(self):
-        return (self.file_type != FSMediaEntryGroupType.ANY or self.include != FSEntryDefaults.DEFAULT_INCLUDE) and self.end_level > 0    
+        return self. filter_dirs and (self.file_type != FSMediaEntryGroupType.ANY or self.include != FSEntryDefaults.DEFAULT_INCLUDE) and self.end_level > 0    
 
     @property
     def skip_iteration(self):   
@@ -286,6 +290,15 @@ class FSEntryParamsBase():
                     yield field
                 elif isinstance(descr, PropertyDescriptor):
                     yield field
+    
+    @classmethod
+    def runtime_attributes(cls):
+        ''' generates names of all runtime fields
+        '''
+        for c in cls.__mro__:
+            for field, descr in vars(c).items():
+                if isinstance(descr, FSEntryRuntimeAttributeDescriptor):
+                    yield field
 
     # Copy attributes from another entry
     def copy_params(self, fs_entry_params):
@@ -295,6 +308,10 @@ class FSEntryParamsBase():
             value = getattr(fs_entry_params, field)
             if value is not None:
                 setattr(self, field, value)
+
+    def reset_runtime(self):
+        for field in self.runtime_attributes():
+            setattr(self, field, [])
 
     def __str__(self):
         return ('Entry of type: {}\n'.format(self.__class__.__name__) + \
@@ -325,12 +342,15 @@ class FSEntryParamsFlatten(FSEntryParamsExt):
     remove_folders = BooleanPropertyDescriptor()
     remove_non_empty_folders = BooleanPropertyDescriptor()
     unique_fnames = FunctionPropertyDescriptor()
+    non_empty_folders_mgs = PropertyDescriptor
 
     def __init__(self, args = {}):
         super().__init__(args)
         self.remove_folders = False if args.get('discard_flattened') == 'le' else True
         self.remove_non_empty_folders = True if args.get('discard_flattened') == 'da' else False
         self.unique_fnames = args.get('unique_fnames', FSH.unique_fnames)
+
+        self.non_empty_folders_mgs = 'Use --discard-flattened parameter to remove non empty folders'
 
         self.target_level = args.get('target_level', 0)
         if self.end_level < self.target_level:

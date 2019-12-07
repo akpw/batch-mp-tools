@@ -14,6 +14,7 @@
 
 import os
 from string import Template
+from batchmp.commons.utils import MiscHelpers
 from batchmp.commons.descriptors import (
         PropertyDescriptor,
         LazyFunctionPropertyDescriptor,
@@ -24,6 +25,20 @@ from batchmp.commons.descriptors import (
 # Tag Field Descriptors
 class TaggableMediaFieldDescriptor(PropertyDescriptor):
     pass
+
+class TaggableMediaTrackFieldDescriptor(TaggableMediaFieldDescriptor):
+    def __get__(self, instance, owner=None):
+        if instance is None: 
+            return self
+        value = super().__get__(instance, owner = owner)      
+        if value:        
+            trt = getattr(instance, 'tracktotal', None)
+            if trt:
+                value = '{}'.format(value)
+                return value.zfill(MiscHelpers.int_num_digits(trt))
+            return value
+        else:
+            return None
 
 class ExpandableMediaFieldDescriptor(TaggableMediaFieldDescriptor):
     def __set__(self, instance, value):
@@ -60,7 +75,7 @@ class TagHolder:
     albumartist = ExpandableMediaFieldDescriptor()
     genre = ExpandableMediaFieldDescriptor()
     composer = ExpandableMediaFieldDescriptor()
-    track = TaggableMediaFieldDescriptor()
+    track = TaggableMediaTrackFieldDescriptor()
     tracktotal = TaggableMediaFieldDescriptor()
     disc = TaggableMediaFieldDescriptor()
     disctotal = TaggableMediaFieldDescriptor()

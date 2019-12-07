@@ -13,8 +13,9 @@
 
 
 import datetime, math
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
 from enum import IntEnum
+from batchmp.commons.utils import MiscHelpers
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
 
 
 class OutputFormatType(IntEnum):
@@ -154,7 +155,7 @@ class TagOutputFormatter:
         if tag_holder.tracktotal:
             track_str = '{}/{}'.format(track, tag_holder.tracktotal)
         else:
-            track_str = tag_holder.track
+            track_str = track
         return '{0}\n{1}Track: {2}'.format(media_str, indent, track_str)
 
     @staticmethod

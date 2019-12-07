@@ -14,7 +14,8 @@
 import os, sys
 from abc import ABCMeta, abstractmethod
 from batchmp.fstools.fsutils import FSH
-from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType
+from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSMediaEntryGroupType
+
 
 class FSEntryBuilder(metaclass = ABCMeta):
     ''' root entry builder
@@ -36,7 +37,8 @@ class FSEntryBuilder(metaclass = ABCMeta):
                                 realpath = fs_entry_params.rpath,
                                 indent = fs_entry_params.current_indent[:-1] + os.path.sep,
                                 isEnclosingEntry = fs_entry_params.isEnclosingEntry,
-                                isEnclosingFilesContainterEntry = fs_entry_params.isEnclosingFilesContainterEntry)
+                                isEnclosingFilesContainterEntry = fs_entry_params.isEnclosingFilesContainterEntry,
+                                isScopeSwitchingEntry = True)
         # debug
         # print("{}cur level:{}".format(fs_entry_params.current_indent, fs_entry_params.current_level))
         # print("{}end level:{}".format(fs_entry_params.current_indent, fs_entry_params.end_level))              
@@ -80,7 +82,9 @@ class FSEntryBuilderBase(FSEntryBuilder):
                                 basename = dname, 
                                 realpath = dpath, 
                                 indent = fs_entry_params.siblings_indent[:-1] + os.path.sep)
+               #print('from build_entry!\n')
                yield entry
+
 
 
 class FSEntryBuilderFlatten(FSEntryBuilder):
@@ -94,10 +98,8 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
     def build_entry(fs_entry_params):
         if fs_entry_params.current_level < fs_entry_params.target_level:
             yield from FSEntryBuilderBase.build_entry(fs_entry_params)
-        elif fs_entry_params.current_level > fs_entry_params.target_level:
-                return
-        else:
-            if fs_entry_params.isEnclosingEntry and not fs_entry_params.isEnclosingFilesContainterEntry:
+        else: 
+            if fs_entry_params.current_level > fs_entry_params.target_level:
                 return
 
             flattens = []
@@ -118,19 +120,28 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
             
             ## Directories processing ##
             # remove non-matching
-            for dname in fs_entry_params.dnames.passed:
+            for dname in fs_entry_params.merged_dnames:
                 dpath = os.path.join(fs_entry_params.rpath, dname)
 
                 # flattening, yield the underlying files 
                 for dr, _, dfnames in os.walk(dpath):
+                    dr_path = FSH.full_path(dr)
+                    df_path = lambda fname: os.path.join(dr_path, fname)
+
                     # filter non-matching files
                     if fs_entry_params.filter_files:
                         dfnames = (fname for fname in dfnames if fs_entry_params.passed_filters(fname))
-                    for fname in dfnames:
-                        fpath = FSH.full_path(os.path.join(dr, fname))
 
+                    # file types
+                    if fs_entry_params.file_type != FSMediaEntryGroupType.ANY:
+                        dfnames = [fname for fname in dfnames if fs_entry_params.is_of_required_type(df_path(fname))]
+
+
+                    for fname in dfnames:
+                        fpath = df_path(fname)
                         next(unique_fname)
                         fname = unique_fname.send(fname)
+
                         entry = FSEntry(FSEntryType.FILE, fname, fpath, fs_entry_params.siblings_indent)
                         flattens.append(entry)
 
@@ -141,8 +152,11 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
                 # for sorting need to still derive basename from realpath
                 # as for flattened it might be different from entry.basename
                 sort_key = lambda entry: os.path.basename(entry.realpath).lower()
+
             for entry in sorted(flattens, key = sort_key, reverse = fs_entry_params.descending):
                 yield entry
+
+
 
 class FSEntryBuilderOrganize(FSEntryBuilder):
     @staticmethod

@@ -105,7 +105,7 @@ class DHandler:
 
     @staticmethod
     def dir_stats(fs_entry_params, 
-                    file_pass_filter = None, dir_pass_filter = None):
+                    file_pass_filter = None, dir_pass_filter = None, break_on_filter = False):
         """ Returns base stats for given directory
         """
         if not os.path.exists(fs_entry_params.src_dir):
@@ -115,10 +115,11 @@ class DHandler:
         shared_cache = {}
         fcnt = dcnt = total_size = 0
         for entry in DWalker.entries(fs_entry_params):
-
             if entry.type == FSEntryType.FILE:
-                if file_pass_filter and (not file_pass_filter(entry.realpath)):
-                    continue
+                if file_pass_filter and (not file_pass_filter(entry)):
+                    if break_on_filter:
+                        break
+                    continue                    
                 fcnt += 1
                 if fs_entry_params.show_size:
                     total_size += os.path.getsize(entry.realpath)
@@ -126,8 +127,11 @@ class DHandler:
             elif entry.type == FSEntryType.DIR:
                 if entry.isEnclosingEntry:
                     continue
-                if dir_pass_filter and (not dir_pass_filter(entry.realpath)):
+                if dir_pass_filter and (not dir_pass_filter(entry)):
+                    if break_on_filter:
+                        break                    
                     continue
+
                 dcnt += 1
                 if fs_entry_params.show_size:
                     if FSH.level_from_root(fs_entry_params.src_dir, entry.realpath) <= fs_entry_params.end_level:
@@ -219,7 +223,8 @@ class DHandler:
             if ff_entry_params.remove_folders:
                 flattened_dirs_cnt = FSH.remove_folders_below_target_level(ff_entry_params.src_dir,
                                                        target_level = ff_entry_params.target_level,
-                                                       empty_only = not ff_entry_params.remove_non_empty_folders)
+                                                       empty_only = not ff_entry_params.remove_non_empty_folders,
+                                                       non_empty_msg = ff_entry_params.non_empty_folders_mgs)
             # print summary
             if not ff_entry_params.quiet:
                 print('Flattened: {0} files, {1} folders'.format(flattened_files_cnt, flattened_dirs_cnt))
@@ -229,12 +234,12 @@ class DHandler:
 
     @staticmethod
     def rename_entries(fs_entry_params,
-                        total_files, total_dirs,
+                        num_entries = 0,
                         formatter = None, check_unique = True):
 
         """ Renames directory entries via applying formatter function supplied by the caller
         """
-        if not formatter:
+        if not formatter or num_entries <= 0:
             return
 
         fcnt = dcnt = 0
@@ -242,7 +247,7 @@ class DHandler:
         dir_entries = []
         
         with progress_bar(refresh_rate = CmdProgressBarRefreshRate.FAST) as p_bar:
-            p_bar.info_msg = 'Renaming {} files'.format(total_files)
+            p_bar.info_msg = 'Renaming {} entries'.format(num_entries)
 
             for entry in DWalker.entries(fs_entry_params):
                 if entry.type == FSEntryType.ROOT:
@@ -263,7 +268,7 @@ class DHandler:
                     if FSH.move_FS_entry(entry.realpath, target_path, check_unique = check_unique):
                         fcnt += 1
 
-                p_bar.progress += 100 / total_files
+                p_bar.progress += 100 / num_entries
 
         #rename the dirs
         for dir_entry in reversed(dir_entries):

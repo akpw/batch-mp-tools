@@ -15,6 +15,7 @@
 import sys, os, re, string
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.walker import DWalker
+from batchmp.fstools.rename import DirCounters
 from batchmp.tags.output.formatters import TagOutputFormatter, OutputFormatType
 from batchmp.tags.handlers.mtghandler import MutagenTagHandler
 from batchmp.tags.handlers.ffmphandler import FFmpegTagHandler
@@ -137,25 +138,30 @@ class BaseTagProcessor:
         ''' Indexes the tracks / tracktotal tags, per media files' respective directories
             Visualises changes before proceeding
         '''
-        dirs_cnt = files_cnt = start_from
-        parent_dir = None
+
+        counters = {}
+        def reset_counts():
+            counters.clear()
+
         def tag_holder_builder(entry):
-            nonlocal dirs_cnt, files_cnt, parent_dir
-            if parent_dir != os.path.dirname(entry.realpath):
-                parent_dir = os.path.dirname(entry.realpath)
-                dirs_cnt = files_cnt = start_from
+            nonlocal counters
+
+            parent_dir = os.path.dirname(entry.realpath)            
+            if not counters.get(parent_dir):
+                counters[parent_dir] = DirCounters(start_from, start_from, 0, 0)
 
             tag_holder = TagHolder()
-
-            tag_holder.tracktotal = len(next(os.walk(parent_dir))[2])
-            tag_holder.track = files_cnt
-            files_cnt += 1
+            tag_holder.tracktotal = len(fs_entry_params.fnames)
+            
+            tag_holder.track = counters[parent_dir].files_cnt
+            counters[parent_dir].files_cnt += 1
 
             return tag_holder
 
         self.set_tags_visual(fs_entry_params,
                         diff_tags_only = diff_tags_only,
-                        tag_holder_builder = tag_holder_builder)
+                        tag_holder_builder = tag_holder_builder,
+                        reset_tag_holder_builder = reset_counts)
 
     def remove_tags(self, fs_entry_params,
                         tag_fields = None,

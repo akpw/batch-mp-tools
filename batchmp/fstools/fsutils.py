@@ -89,7 +89,7 @@ class FSH:
                 yield FSH.full_path(r)
 
     @staticmethod
-    def remove_folders_below_target_level(src_dir, target_level=sys.maxsize, empty_only=True):
+    def remove_folders_below_target_level(src_dir, target_level=sys.maxsize, empty_only=True, non_empty_msg = None):
         ''' removes folders below target level
         '''
         folders_removed = 0
@@ -102,6 +102,8 @@ class FSH:
                         shutil.rmtree(dpath)
                     else:
                         print('not empty: {}'.format(dpath))
+                        if non_empty_msg:
+                            print(non_empty_msg)
         return folders_removed
 
     @staticmethod
