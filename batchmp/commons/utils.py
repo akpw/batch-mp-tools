@@ -66,6 +66,11 @@ class MiscHelpers:
     def int_num_digits(num):
         ''' Number of digits in an int number
         '''
+        if not isinstance(num, int):
+            try:
+                num = int(num)
+            except ValueError as e:
+                return 0
         num_digits = 1
         while (int(abs(num)/(10**num_digits)) > 0):
             num_digits += 1

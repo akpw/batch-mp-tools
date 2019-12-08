@@ -63,6 +63,7 @@ class TagsTests(TagsTest):
         self._fields_check(MutagenTagHandler())
 
     def test_ffhandler_fields(self):
+        ## python -m unittest tests.tags.test_tag_tools.TagsTests.test_ffhandler_fields
         self._fields_check(FFmpegTagHandler())
 
     def test_set_tags(self):
