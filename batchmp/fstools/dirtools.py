@@ -13,7 +13,8 @@
 
 
 import os, sys
-from collections import namedtuple, Iterable
+from collections import namedtuple
+from collections.abc import Iterable
 from distutils.util import strtobool
 from batchmp.fstools.walker import DWalker
 from batchmp.fstools.fsutils import FSH

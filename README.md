@@ -317,7 +317,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
 
 ## Installing Development version
-- Clone the repo, then run: `$ python setup.py develop`
+- Clone the repo, then run: `$ python -m pip install .`
 
 **Running Tests**
 - Run via: `$ python setup.py test`
