@@ -252,11 +252,11 @@ class BMFPArgParser(BatchMPArgParser):
                 type = lambda f: self._is_timedelta(parser, f),
                 required = True)
         group.add_argument('-fd', '--duration', dest='fragment_duration',
-                help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
+                help = 'Fragment duration (default is full media length), in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: self._is_timedelta(parser, f),
                 default = timedelta(days = 380))
         group.add_argument('-ft', '--trim', dest='fragment_trim',
-                help = 'Fragment trimming at the end, in seconds or in the "hh:mm:ss[.xxx]" format',
+                help = 'Fragment trimming at the end (optional), in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: self._is_timedelta(parser, f),
                 default = timedelta(0))
 
