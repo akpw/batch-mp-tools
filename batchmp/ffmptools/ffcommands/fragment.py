@@ -19,6 +19,7 @@ from batchmp.commons.utils import temp_dir
 from batchmp.ffmptools.ffrunner import FFMPRunner, FFMPRunnerTask, LogLevel
 from batchmp.commons.taskprocessor import TaskResult
 from batchmp.ffmptools.ffcommands.cmdopt import FFmpegCommands, FFmpegBitMaskOptions
+from batchmp.ffmptools.ffcommands.segment import Segmenter
 from batchmp.commons.utils import (
     timed,
     run_cmd,
@@ -30,10 +31,11 @@ class FragmenterTask(FFMPRunnerTask):
     '''
     def __init__(self, fpath, target_dir, log_level,
                             ff_general_options, ff_other_options, preserve_metadata,
-                            fragment_starttime, fragment_duration):
+                            fragment_starttime, fragment_duration, fragment_trim):
 
         self.fragment_starttime = fragment_starttime
         self.fragment_duration = fragment_duration
+        self.fragment_trim = fragment_trim
 
         super().__init__(fpath, target_dir, log_level,
                                 ff_general_options, ff_other_options, preserve_metadata)
@@ -42,6 +44,9 @@ class FragmenterTask(FFMPRunnerTask):
     def ff_cmd(self):
         ''' Fragment command builder
         '''
+        if self.fragment_trim:
+            media_duration = Segmenter._media_duration(self.fpath)
+            self.fragment_duration = media_duration - self.fragment_trim - self.fragment_starttime
         return ''.join((super().ff_cmd,
                             ' -ss {}'.format(self.fragment_starttime),
                             ' -t {}'.format(self.fragment_duration)
@@ -65,6 +70,11 @@ class FragmenterTask(FFMPRunnerTask):
 
             # run ffmpeg command as a subprocess
             try:
+                if self.fragment_duration < 0:
+                    raise CmdProcessingError('A problem while processing media file {0}: \
+                                            Negative media duration {1}s, check your input parameters to add up correctly'\
+                                            .format(self.fpath, int(self.fragment_duration)))                
+
                 _, task_elapsed = run_cmd(p_in)
                 task_result.add_task_step_duration(task_elapsed)
             except CmdProcessingError as e:
@@ -87,7 +97,7 @@ class FragmenterTask(FFMPRunnerTask):
 
 class Fragmenter(FFMPRunner):
     def fragment(self, ff_entry_params,
-                    fragment_starttime = None, fragment_duration = None):
+                    fragment_starttime = None, fragment_duration = None, fragment_trim = None):
 
         ''' Fragment media file by specified starttime & duration
         '''
@@ -99,7 +109,7 @@ class Fragmenter(FFMPRunner):
             # build tasks
             tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,
                                 ff_entry_params.ff_general_options, ff_entry_params.ff_other_options, ff_entry_params.preserve_metadata,
-                                fragment_starttime, fragment_duration)
+                                fragment_starttime, fragment_duration, fragment_trim)
                                     for media_file, target_dir_path in zip(media_files, target_dirs)]
             for task_param in tasks_params:
                 task = FragmenterTask(*task_param)

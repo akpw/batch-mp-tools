@@ -333,6 +333,17 @@ class Renamer:
         if proceed:
             DHandler.remove_entries(fs_entry_params, formatter = delete_transform)
 
+
+    @classmethod
+    def organize(cls, fs_entry_params):
+
+        ''' Organizes files by selected attributes
+            Support detection of non-media files
+        '''        
+        print('to be organized')
+
+
+
     @classmethod
     def _expand_templates(cls, entry, value):
         ''' expands template values

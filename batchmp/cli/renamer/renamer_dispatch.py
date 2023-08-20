@@ -61,6 +61,9 @@ class RenameDispatcher(BatchMPDispatcher):
             elif args['sub_cmd'] == RenamerCommands.STATS:
                 self.stats(args)
 
+            elif args['sub_cmd'] == RenamerCommands.ORGANIZE:
+                self.organize(args)
+
             else:
                 print('Nothing to dispatch')
                 return False
@@ -117,6 +120,9 @@ class RenameDispatcher(BatchMPDispatcher):
         fs_entry_params = FSEntryParamsExt(args)
         Renamer.delete(fs_entry_params)
 
+    def organize(self, args):
+        fs_entry_params = FSEntryParamsBase(args)
+        DHandler.print_dir(fs_entry_params)
 
 def main():
     ''' Renamer entry point

@@ -295,7 +295,7 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
                                       (shows hidden files excluded by default)
 
         Target output Directory     Target output directory. When omitted, will be
-        [-td, --target-dir]         automatically created at the parent level of
+        [-td, --target-dir]         automatically created inside the parent level of
                                     the input source. For recursive processing,
                                     the processed files directory structure there
                                     will be the same as for the original files.

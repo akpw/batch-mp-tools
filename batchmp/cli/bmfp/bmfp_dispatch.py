@@ -94,7 +94,9 @@ class BMFPDispatcher(BatchMPDispatcher):
         ff_entry_params = FFEntryParamsExt(args)
         Fragmenter().fragment(ff_entry_params,
                 fragment_starttime = args['fragment_starttime'].total_seconds(),
-                fragment_duration = args['fragment_duration'].total_seconds())
+                fragment_duration = args['fragment_duration'].total_seconds(),
+                fragment_trim = args['fragment_trim'].total_seconds(),
+                )
 
     def segment(self, args):
         ff_entry_params = FFEntryParamsExt(args)

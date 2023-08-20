@@ -146,8 +146,9 @@ class BMFPArgParser(BatchMPArgParser):
         target_output_group = parser.add_argument_group('Target Output Directory')
         target_output_group.add_argument("-td", "--target-dir", dest = "target_dir",
                     type = lambda d: self._is_valid_dir_path(parser, d),
+                    default = '.',
                     help = "Target output directory. When omitted, will be automatically "
-                            "created at the parent level of the input source. "
+                            "created inside the parent level of the input source. "
                             "For recursive processing, the processed files directory structure there "
                             "will be the same as for the original files.")
 
@@ -254,6 +255,10 @@ class BMFPArgParser(BatchMPArgParser):
                 help = 'Fragment duration, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: self._is_timedelta(parser, f),
                 default = timedelta(days = 380))
+        group.add_argument('-ft', '--trim', dest='fragment_trim',
+                help = 'Fragment trimming at the end, in seconds or in the "hh:mm:ss[.xxx]" format',
+                type = lambda f: self._is_timedelta(parser, f),
+                default = timedelta(0))
 
         # Segment
         segment_parser = subparsers.add_parser(BMFPCommands.SEGMENT,

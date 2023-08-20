@@ -74,6 +74,7 @@ class RenamerCommands(BatchMPBaseCommands):
     FLATTEN = 'flatten'
     DELETE = 'delete'
     STATS = 'stats'
+    ORGANIZE = 'organize'
 
     @classmethod
     def commands_meta(cls):
@@ -89,7 +90,8 @@ class RenamerCommands(BatchMPBaseCommands):
                         '{}, '.format(cls.DELETE),
                         '{}, '.format(cls.STATS),                        
                         '{}, '.format(cls.INFO),
-                        '{}'.format(cls.VERSION),
+                        '{}, '.format(cls.VERSION),
+                        '{}'  .format(cls.ORGANIZE),
                         '}'))
 
 
@@ -297,6 +299,15 @@ class RenameArgParser(BatchMPArgParser):
                                             formatter_class = BatchMPHelpFormatter)
         _add_include_mode_group(delete_parser)
         self._add_arg_display_curent_state_mode(delete_parser)
+
+
+        # Organize
+        organize_parser = subparsers.add_parser(RenamerCommands.ORGANIZE,
+                                            description = 'Organize selected files into derectories by specified attributes',
+                                            formatter_class = BatchMPHelpFormatter)
+        _add_include_mode_group(organize_parser)
+        self._add_arg_display_curent_state_mode(organize_parser)
+
 
 
     # Args Checking
