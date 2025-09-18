@@ -43,7 +43,7 @@ import re
 import base64
 import math
 import struct
-import imghdr
+import filetype
 import os
 import traceback
 import enum
@@ -255,19 +255,10 @@ def _sc_encode(gain, peak):
 def _image_mime_type(data):
     """Return the MIME type of the image data (a bytestring).
     """
-    kind = imghdr.what(None, h=data)
-    if kind in ['gif', 'jpeg', 'png', 'tiff', 'bmp']:
-        return 'image/{0}'.format(kind)
-    elif kind == 'pgm':
-        return 'image/x-portable-graymap'
-    elif kind == 'pbm':
-        return 'image/x-portable-bitmap'
-    elif kind == 'ppm':
-        return 'image/x-portable-pixmap'
-    elif kind == 'xbm':
-        return 'image/x-xbitmap'
-    else:
-        return 'image/x-{0}'.format(kind)
+    kind = filetype.guess(data)
+    if kind is None:
+        return 'application/octet-stream'
+    return kind.mime
 
 
 class ImageType(enum.Enum):

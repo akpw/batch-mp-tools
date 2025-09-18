@@ -31,7 +31,7 @@ class CueLineParser:
     ''' Cue Lines Parser
     '''
     def __init__(self):
-        self._line_matcher = re.compile('^([A-Z]+)\s+(.*)$')
+        self._line_matcher = re.compile(r'^([A-Z]+)\s+(.*)$')
 
     def parse_line(self, line):
         ''' Parses a line read from a *.cue file
@@ -83,7 +83,7 @@ class CueParser:
                             'TRACK':      self._parse_track
                             }
 
-        self._time_offset_matcher = re.compile('^(\d{1,3}):(\d{1,2}):(\d{1,2})$')
+        self._time_offset_matcher = re.compile(r'^(\d{1,3}):(\d{1,2}):(\d{1,2})$')
         self._line_parser = CueLineParser()
         self._lines = None
         self._cuesheet = None

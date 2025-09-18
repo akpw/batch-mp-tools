@@ -247,7 +247,7 @@ class BMFPArgParser(BatchMPArgParser):
                                             description = 'Extracts a fragment via specified start time & duration',
                                             formatter_class = BatchMPHelpFormatter)
         group = fragment_parser.add_argument_group('Fragment parameters')
-        group.add_argument('-fs', '--starttime', dest='fragment_starttime',
+        group.add_argument('-fs', '--start', dest='fragment_starttime',
                 help = 'Fragment start time, in seconds or in the "hh:mm:ss[.xxx]" format',
                 type = lambda f: self._is_timedelta(parser, f),
                 required = True)

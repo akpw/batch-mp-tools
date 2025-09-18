@@ -120,15 +120,15 @@ class Segmenter(FFMPRunner):
         '''
         tasks = []
         if segment_size_MB or segment_length_secs:
-            if segment_length_secs:
-                # here need to determine media length
-                pass_filter = lambda fpath: self._media_duration(fpath) > segment_length_secs
-            elif segment_size_MB:
-                # simple media selection by size
-                pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
+#           if segment_length_secs:
+#               # here need to determine media length
+#               pass_filter = lambda fpath: self._media_duration(fpath) > segment_length_secs
+#           elif segment_size_MB:
+#               # simple media selection by size
+#               pass_filter = lambda fpath: FFH.ffmpeg_supported_media(fpath) and (self._media_size_MB(fpath) > segment_size_MB)
 
             ff_entry_params.target_dir_prefix = 'segmented'
-            media_files, target_dirs = self._prepare_files(ff_entry_params, pass_filter = pass_filter)
+            media_files, target_dirs = self._prepare_files(ff_entry_params)
 
             # build tasks
             tasks_params = [(media_file, target_dir_path, ff_entry_params.log_level,

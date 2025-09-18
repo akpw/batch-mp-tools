@@ -36,9 +36,7 @@ setup(
     packages=find_packages(exclude=['test*']),
     keywords = 'batch processing media video audio CLI rename tags ID3',
 
-    install_requires = ['mutagen>=1.27', 'pygtrie>=2.3.2'], ##, 'profilehooks>=1.11.0'],
-
-    test_suite = 'tests.batch_mp_test_suite',
+    install_requires = ['mutagen>=1.27', 'pygtrie>=2.3.2', 'filetype>=1.0.7'], ##, 'profilehooks>=1.11.0'],
 
     entry_points={'console_scripts': [
         'batchmp = batchmp.cli.base.bmp_dispatch:main',

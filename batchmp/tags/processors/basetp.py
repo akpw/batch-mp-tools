@@ -260,7 +260,7 @@ class BaseTagProcessor:
                 fcnt += 1
 
         # print summary
-        if not quiet:
+        if not fs_entry_params.quiet:
             print('Detauched art from {0} media entries'.format(fcnt))
 
 

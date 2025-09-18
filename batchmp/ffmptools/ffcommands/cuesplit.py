@@ -99,7 +99,7 @@ class CueSplitterTask(ConvertorTask):
         with temp_dir() as tmp_dir:
             # prepare the tmp output path
             conv_fname = '{0:02d} {1}'.format(self.track_number, self.track_title)
-            conv_fname = re.sub('[^\w\-_\. ]', '_', conv_fname)
+            conv_fname = re.sub(r'[^\w\-_\. ]', '_', conv_fname)
             conv_fname = ''.join((conv_fname, self.target_format))
             conv_fpath = os.path.join(tmp_dir, conv_fname)
 
@@ -198,12 +198,12 @@ class CueSplitter(FFMPRunner):
                     if cue_sheet.rem:
                         for rem_item in cue_sheet.rem:
                             if not tag_holder.year:
-                                match = re.match('DATE.+(\d{4})', rem_item)
+                                match = re.match(r'DATE.+(\d{4})', rem_item)
                                 if match:
                                     tag_holder.year = match.group(1)
                                     continue
                             if not tag_holder.genre:
-                                match = re.match('GENRE\s+(.+)$', rem_item)
+                                match = re.match(r'GENRE\s+(.+)$', rem_item)
                                 if match:
                                     tag_holder.genre = match.group(1)
                         tag_holder.comments = ', '.join(cue_sheet.rem)

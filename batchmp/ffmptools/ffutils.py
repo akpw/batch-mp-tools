@@ -239,8 +239,8 @@ class FFH:
         except CmdProcessingError as e:
             return None
         else:
-            silence_starts = re.findall('(?<=silence_start:)(?:\D*)(\d*\.?\d+)', output)
-            silence_ends = re.findall('(?<=silence_end:)(?:\D*)(\d*\.?\d+)', output)
+            silence_starts = re.findall(r'(?<=silence_start:)(?:\D*)(\d*\.?\d+)', output)
+            silence_ends = re.findall(r'(?<=silence_end:)(?:\D*)(\d*\.?\d+)', output)
 
             SilenceEntry = namedtuple('SilenceEntry', ['silence_start', 'silence_end'])
             silence_entries = []
@@ -250,7 +250,7 @@ class FFH:
             if len(silence_entries) < len(silence_starts):
                 # matched non-balanced silence at the end
                 # try to parse output audio duration and use it as the silence_end value
-                found = re.findall('(?<=Duration:)(?:\D*)([\d:\.]*)', output)
+                found = re.findall(r'(?<=Duration:)(?:\D*)([\d:\.]*)', output)
                 if found:
                     duration = MiscHelpers.time_delta(found[0]).total_seconds()
                 else:
@@ -282,12 +282,12 @@ class FFH:
             mean_volume = max_volume = 0
 
             # mean volume
-            found = re.findall('(?<=mean_volume:)(?:\D*)(\d*\.?\d+)', output)
+            found = re.findall(r'(?<=mean_volume:)(?:\D*)(\d*\.?\d+)', output)
             if found:
                 mean_volume = float(found[0])
 
             # max volume
-            found = re.findall('(?<=max_volume:)(?:\D*)(\d*\.?\d+)', output)
+            found = re.findall(r'(?<=max_volume:)(?:\D*)(\d*\.?\d+)', output)
             if found:
                 max_volume = float(found[0])
 
