@@ -303,8 +303,20 @@ class RenameArgParser(BatchMPArgParser):
 
         # Organize
         organize_parser = subparsers.add_parser(RenamerCommands.ORGANIZE,
-                                            description = 'Organize selected files into derectories by specified attributes',
-                                            formatter_class = BatchMPHelpFormatter)
+                                            description='Organize selected files into directories by specified attributes',
+                                            formatter_class=BatchMPHelpFormatter)
+        organize_parser.add_argument('-b', '--by', dest='by',
+                                     help='Organization strategy: by type or by date',
+                                     type=str,
+                                     choices=['type', 'date'],
+                                     required=True)
+        organize_parser.add_argument('-df', '--date-format', dest='date_format',
+                                     help='Date format for subdirectories (e.g., %%Y/%%m)',
+                                     type=str,
+                                     default='%Y-%m-%d')
+        organize_parser.add_argument('-td', '--target-dir', dest='target_dir',
+                                     help='Target directory to organize files into',
+                                     type=str)
         _add_include_mode_group(organize_parser)
         self._add_arg_display_curent_state_mode(organize_parser)
 

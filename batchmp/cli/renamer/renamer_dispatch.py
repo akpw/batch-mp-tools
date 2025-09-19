@@ -16,7 +16,7 @@ from batchmp.cli.base.bmp_dispatch import BatchMPDispatcher
 from batchmp.cli.renamer.renamer_options import RenameArgParser, RenamerCommands
 from batchmp.fstools.dirtools import DHandler
 from batchmp.fstools.rename import Renamer
-from batchmp.fstools.builders.fsprms import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten
+from batchmp.fstools.builders.fsprms import FSEntryParamsBase, FSEntryParamsExt, FSEntryParamsFlatten, FSEntryParamsOrganize
 from batchmp.fstools.builders.fsb import FSEntryBuilderBase
 
 class RenameDispatcher(BatchMPDispatcher):
@@ -121,8 +121,8 @@ class RenameDispatcher(BatchMPDispatcher):
         Renamer.delete(fs_entry_params)
 
     def organize(self, args):
-        fs_entry_params = FSEntryParamsBase(args)
-        DHandler.print_dir(fs_entry_params)
+        fs_entry_params = FSEntryParamsOrganize(args)
+        DHandler.organize(fs_entry_params)
 
 def main():
     ''' Renamer entry point

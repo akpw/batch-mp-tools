@@ -162,6 +162,7 @@ I will follow up with more examples and common use-cases in future blogs.
           .. remove     Removes n characters from files and directories names
           .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
+          .. organize   Organizes files into subdirectories based on their attributes (e.g., media type, date)
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
     Global Options:

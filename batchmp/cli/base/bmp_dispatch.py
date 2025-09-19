@@ -12,7 +12,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
 
-import pkg_resources
+from importlib import metadata
 import batchmp.cli.base.vchk
 from batchmp.cli.base.bmp_options import BatchMPArgParser, BatchMPBaseCommands
 
@@ -43,7 +43,7 @@ class BatchMPDispatcher:
     def print_version(self):
         ''' Prints BatchMP version info
         '''
-        version = pkg_resources.require("batchmp")[0].version
+        version = metadata.version("batchmp")
         print('BatchMP tools version {}'.format(version))
 
     def print_info(self):

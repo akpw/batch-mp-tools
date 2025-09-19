@@ -361,5 +361,14 @@ class FSEntryParamsFlatten(FSEntryParamsExt):
 class FSEntryParamsOrganize(FSEntryParamsExt):
     ''' Organize Entry attributes
     '''
+    fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderOrganize')
+
+    by = PropertyDescriptor()
+    date_format = PropertyDescriptor()
+    target_dir = PropertyDescriptor()
+
     def __init__(self, args = {}):
-        super().__init__(args)  
+        super().__init__(args)
+        self.by = args.get('by')
+        self.date_format = args.get('date_format')
+        self.target_dir = args.get('target_dir')

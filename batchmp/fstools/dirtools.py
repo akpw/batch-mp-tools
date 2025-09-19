@@ -316,5 +316,40 @@ class DHandler:
         if not fs_entry_params.quiet:
             print('Removed: {0} files, {1} folders'.format(fcnt, dcnt))
 
+    @staticmethod
+    def organize(fs_entry_params):
+        """ Organizes files into subdirectories based on specified attributes
+        """
+        def formatter(entry):
+            if entry.type == FSEntryType.FILE and hasattr(entry, 'target_path'):
+                return f"{entry.basename} -> {os.path.relpath(os.path.dirname(entry.target_path), fs_entry_params.src_dir)}"
+            return entry.basename
+
+        if fs_entry_params.quiet:
+            proceed = True
+            fcnt = sum(1 for entry in DWalker.entries(fs_entry_params) if entry.type == FSEntryType.FILE)
+        else:
+            proceed, fcnt, _ = DHandler.visualise_changes(fs_entry_params, formatter=formatter)
+
+        if proceed and fcnt > 0:
+            moved_files_cnt = 0
+            with progress_bar(refresh_rate=CmdProgressBarRefreshRate.FAST) as p_bar:
+                p_bar.info_msg = f'Organizing {fcnt} files'
+                for entry in DWalker.entries(fs_entry_params):
+                    if entry.type == FSEntryType.FILE and hasattr(entry, 'target_path'):
+                        target_dir = os.path.dirname(entry.target_path)
+                        if not os.path.exists(target_dir):
+                            os.makedirs(target_dir)
+                        if FSH.move_FS_entry(entry.realpath, entry.target_path):
+                            moved_files_cnt += 1
+                    if fcnt > 0:
+                        p_bar.progress += 100 / fcnt
+
+            if not fs_entry_params.quiet:
+                print(f'Organized: {moved_files_cnt} files')
+
+        if not fs_entry_params.quiet:
+            print('\\nDone')
+
 
 

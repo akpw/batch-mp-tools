@@ -158,7 +158,33 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
 
 
 
+from batchmp.ffmptools.ffutils import FFH
+import datetime
+
 class FSEntryBuilderOrganize(FSEntryBuilder):
     @staticmethod
-    def build_entry(fs_entry_params):                
-        pass
+    def build_entry(fs_entry_params):
+        base_target_dir = fs_entry_params.target_dir if fs_entry_params.target_dir else fs_entry_params.src_dir
+
+        for fname in fs_entry_params.fnames:
+            fpath = os.path.join(fs_entry_params.rpath, fname)
+            entry = FSEntry(type=FSEntryType.FILE,
+                            basename=fname,
+                            realpath=fpath,
+                            indent=fs_entry_params.siblings_indent)
+
+            if fs_entry_params.by == 'type':
+                media_type = FFH.media_type(fpath=fpath, fast_scan=fs_entry_params.fast_scan)
+                subdir = str(media_type.name).lower()
+                target_dir = os.path.join(base_target_dir, subdir)
+            elif fs_entry_params.by == 'date':
+                mtime = os.path.getmtime(fpath)
+                date = datetime.datetime.fromtimestamp(mtime)
+                subdir = date.strftime(fs_entry_params.date_format)
+                target_dir = os.path.join(base_target_dir, subdir)
+            else:
+                # Should not happen if arguments are parsed correctly
+                target_dir = base_target_dir
+
+            entry.target_path = os.path.join(target_dir, fname)
+            yield entry
