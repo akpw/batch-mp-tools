@@ -10,10 +10,10 @@ A rainy weekends project under occasional development :)
 - latest from source repository: `$ pip install git+https://github.com/akpw/batch-mp-tools.git`
 
 #### Blogs:
-- [Practical BatchMP](http://www.akpdev.com/tags.html#BatchMP+Tools)
-- [BatchMP Tools Tutorial](http://www.akpdev.com/articles/2015/04/10/batchmp-tutorial-part-i.html)
-- [The BatchMP Tools Project](http://www.akpdev.com/articles/2015/03/21/the-batchmp-project.html)
-- [Parallel batch media processing with FFmpeg and Python](http://www.akpdev.com/articles/2014/11/24/batch-media-processing-ffmpeg-python.html)
+- [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools)
+- [BatchMP Tools Tutorial](https://akpw.github.io//articles/2015/04/10/batchmp-tutorial-part-i.html)
+- [The BatchMP Tools Project](https://akpw.github.io//articles/2015/03/21/the-batchmp-project.html)
+- [Parallel batch media processing with FFmpeg and Python](https://akpw.github.io//articles/2014/11/24/batch-media-processing-ffmpeg-python.html)
 
 ## Description
 
