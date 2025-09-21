@@ -22,11 +22,11 @@ class DWalker:
         a sequence of structured FS elements (FSEntry)
     '''
     @staticmethod
-    def entries(fs_entry_params):
+    def entries(fs_entry_params, walker=os.walk):
         ''' generates a sequence of FSEntries elements
         '''
         # let's walk
-        for rpath, dnames, fnames in os.walk(fs_entry_params.src_dir):
+        for rpath, dnames, fnames in walker(fs_entry_params.src_dir):
             # set the current dir
             fs_entry_params.rpath = rpath
 

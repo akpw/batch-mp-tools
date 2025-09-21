@@ -143,7 +143,6 @@ class FSEntryParamsBase():
     media_scan = BooleanPropertyDescriptor()
 
     fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderBase')
-
     '''Runtime attrbutes
     '''
     rpath = FSEntryRPathDescriptor()
@@ -163,7 +162,6 @@ class FSEntryParamsBase():
         self.filter_files = not args.get('all_files', False)   
         self.show_size = args.get('show_size', False)
         self.fast_scan = not args.get('media_scan', False)
-        self._args = args
 
         #self._media_extensions_cache = set()
 
@@ -361,7 +359,7 @@ class FSEntryParamsFlatten(FSEntryParamsExt):
 class FSEntryParamsOrganize(FSEntryParamsExt):
     ''' Organize Entry attributes
     '''
-    fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderOrganize')
+    fs_entry_builder = LazyClassPropertyDescriptor('batchmp.fstools.builders.fsb.FSEntryBuilderOrganizeWorker')
 
     by = PropertyDescriptor()
     date_format = PropertyDescriptor()

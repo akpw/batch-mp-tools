@@ -161,7 +161,38 @@ class FSEntryBuilderFlatten(FSEntryBuilder):
 from batchmp.ffmptools.ffutils import FFH
 import datetime
 
-class FSEntryBuilderOrganize(FSEntryBuilder):
+class FSEntryBuilderOrganize(FSEntryBuilderBase):
+    @staticmethod
+    def build_entry(fs_entry_params):
+        """ Build entries for virtual directory preview """
+        # not much there for enclosing entries 
+        if fs_entry_params.isEnclosingEntry and not fs_entry_params.isEnclosingFilesContainterEntry: 
+            return
+
+        ## Files processing - for virtual preview, just show the files ##        
+        for fname in fs_entry_params.fnames:
+            entry = FSEntry(type = FSEntryType.FILE,
+                                basename = fname, 
+                                realpath = os.path.join(fs_entry_params.rpath, fname),  # Virtual path for display
+                                indent = fs_entry_params.siblings_indent)
+            yield entry
+
+        ## Directories processing ##
+        for dname in fs_entry_params.dnames.passed:
+           dpath = os.path.join(fs_entry_params.rpath, dname)
+
+           # check the current_level from root
+           if fs_entry_params.current_level == fs_entry_params.end_level:
+               # not going any deeper
+               # yield the dir
+               entry = FSEntry(type = FSEntryType.DIR,
+                                basename = dname, 
+                                realpath = dpath, 
+                                indent = fs_entry_params.siblings_indent[:-1] + os.path.sep)
+               yield entry
+
+
+class FSEntryBuilderOrganizeWorker(FSEntryBuilder):
     @staticmethod
     def build_entry(fs_entry_params):
         base_target_dir = fs_entry_params.target_dir if fs_entry_params.target_dir else fs_entry_params.src_dir

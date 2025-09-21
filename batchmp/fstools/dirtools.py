@@ -16,10 +16,11 @@ import os, sys
 from collections import namedtuple
 from collections.abc import Iterable
 from distutils.util import strtobool
+import pygtrie
 from batchmp.fstools.walker import DWalker
 from batchmp.fstools.fsutils import FSH
 from batchmp.fstools.builders.fsentry import FSEntry, FSEntryType, FSEntryDefaults
-from batchmp.fstools.builders.fsprms import FSEntryParamsExt
+from batchmp.fstools.builders.fsprms import FSEntryParamsExt, FSEntryParamsOrganize
 from batchmp.commons.progressbar import progress_bar, CmdProgressBarRefreshRate
 # from profilehooks import profile
 
@@ -29,7 +30,7 @@ class DHandler:
     '''
     @staticmethod
 #    @profile
-    def print_dir(fs_entry_params, formatter = None, selected_files_description = None):
+    def print_dir(fs_entry_params, walker=os.walk, formatter = None, selected_files_description = None):
         """ Prints content of given directory
             Supports additional display name processing via formatter supplied by the caller
         """
@@ -47,7 +48,7 @@ class DHandler:
         total_size = 0
         shared_cache = {}
 
-        for entry in DWalker.entries(fs_entry_params):
+        for entry in DWalker.entries(fs_entry_params, walker):
             # get formatted output
             formatted_output = ''
             if isinstance(formatter, Iterable):
@@ -162,7 +163,7 @@ class DHandler:
         return answer
 
     @staticmethod
-    def visualise_changes(fs_entry_params, 
+    def visualise_changes(fs_entry_params, walker=os.walk,
                             before_msg = 'Current source directory:',
                             after_msg = 'Targeted after processing:',                
                             preformatter = None, formatter = None, reset_formatters = None,
@@ -175,7 +176,7 @@ class DHandler:
 
         if fs_preprocess_entry_params.display_current:
             print(before_msg)
-            DHandler.print_dir(fs_preprocess_entry_params,
+            DHandler.print_dir(fs_preprocess_entry_params, os.walk,
                                 formatter = preformatter,
                                 selected_files_description = selected_files_description)
             if reset_formatters:
@@ -183,7 +184,7 @@ class DHandler:
             print()
 
         print(after_msg)
-        fcnt, dcnt = DHandler.print_dir(fs_entry_params,
+        fcnt, dcnt = DHandler.print_dir(fs_entry_params, walker,
                                             formatter = formatter,
                                             selected_files_description = selected_files_description)
         if fcnt == dcnt == 0:
@@ -320,22 +321,83 @@ class DHandler:
     def organize(fs_entry_params):
         """ Organizes files into subdirectories based on specified attributes
         """
-        def formatter(entry):
+        # Build a trie of the target directory structure
+        dir_trie = pygtrie.StringTrie(separator=os.path.sep)
+        entries_to_process = list(DWalker.entries(fs_entry_params))
+        fcnt = 0
+        for entry in entries_to_process:
             if entry.type == FSEntryType.FILE and hasattr(entry, 'target_path'):
-                return f"{entry.basename} -> {os.path.relpath(os.path.dirname(entry.target_path), fs_entry_params.src_dir)}"
-            return entry.basename
+                fcnt += 1
+                target_dir = os.path.dirname(entry.target_path)
+                if not dir_trie.has_key(target_dir):
+                    dir_trie[target_dir] = []
+                dir_trie[target_dir].append(entry)
 
+        if fcnt == 0:
+            print("Nothing to process")
+            return
+
+        # Create a custom walker for the virtual tree preview
+        def virtual_walker(root_dir):
+            # Build hierarchical tree structure from trie
+            tree = {}
+            for target_path, files in dir_trie.items():
+                rel_path = os.path.relpath(target_path, root_dir)
+                if rel_path == '.': continue  # Skip files that stay in root
+                
+                # Build nested tree structure
+                parts = rel_path.split(os.path.sep)
+                node = tree
+                for part in parts:
+                    node = node.setdefault(part, {})
+                node['__files__'] = [f.basename for f in files]
+
+            # Recursive function to yield all levels of the tree
+            def walk_tree(current_path, subtree):
+                # Get directories and files at current level
+                subdirs = sorted([k for k in subtree.keys() if k != '__files__'])
+                files = sorted(subtree.get('__files__', []))
+                
+                # Yield current directory
+                yield current_path, subdirs, files
+                
+                # Recursively yield subdirectories
+                for subdir in subdirs:
+                    subdir_path = os.path.join(current_path, subdir)
+                    yield from walk_tree(subdir_path, subtree[subdir])
+            
+            # Start walking from root
+            yield from walk_tree(root_dir, tree)
+
+        # Visualize the changes
         if fs_entry_params.quiet:
             proceed = True
-            fcnt = sum(1 for entry in DWalker.entries(fs_entry_params) if entry.type == FSEntryType.FILE)
         else:
-            proceed, fcnt, _ = DHandler.visualise_changes(fs_entry_params, formatter=formatter)
+            # Calculate required depth based on organization structure
+            max_depth = 0
+            for target_path in dir_trie.keys():
+                rel_path = os.path.relpath(target_path, fs_entry_params.src_dir)
+                if rel_path != '.':
+                    depth = len(rel_path.split(os.path.sep))
+                    max_depth = max(max_depth, depth)
+            
+            # Create preview parameters directly
+            preview_params = FSEntryParamsOrganize({
+                'all_files': True,
+                'all_dirs': True,
+                'end_level': max_depth
+            })
+            preview_params.src_dir = fs_entry_params.src_dir  # Explicitly set src_dir
+            # Override builder for preview
+            from batchmp.fstools.builders.fsb import FSEntryBuilderOrganize
+            preview_params.__dict__['fs_entry_builder'] = FSEntryBuilderOrganize()
+            proceed, _, _ = DHandler.visualise_changes(preview_params, virtual_walker)
 
         if proceed and fcnt > 0:
             moved_files_cnt = 0
             with progress_bar(refresh_rate=CmdProgressBarRefreshRate.FAST) as p_bar:
                 p_bar.info_msg = f'Organizing {fcnt} files'
-                for entry in DWalker.entries(fs_entry_params):
+                for entry in entries_to_process:
                     if entry.type == FSEntryType.FILE and hasattr(entry, 'target_path'):
                         target_dir = os.path.dirname(entry.target_path)
                         if not os.path.exists(target_dir):
