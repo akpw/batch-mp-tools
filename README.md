@@ -11,6 +11,7 @@ A rainy weekends project under occasional development :)
 
 #### Blogs:
 - [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools)
+- [Organize & Virtual View](https://akpw.github.io/articles/2025/09/22/Print-and-Organize.html)
 - [BatchMP Tools Tutorial](https://akpw.github.io//articles/2015/04/10/batchmp-tutorial-part-i.html)
 - [The BatchMP Tools Project](https://akpw.github.io//articles/2015/03/21/the-batchmp-project.html)
 - [Parallel batch media processing with FFmpeg and Python](https://akpw.github.io//articles/2014/11/24/batch-media-processing-ffmpeg-python.html)
