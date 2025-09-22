@@ -412,6 +412,138 @@ class DHandler:
 
         if not fs_entry_params.quiet:
             print('\\nDone')
+    
+    @staticmethod
+    def print_organized_view(fs_entry_params):
+        """ Print hierarchical organized-like virtual view
+        """
+        # Build a trie of the virtual directory structure
+        dir_trie = pygtrie.StringTrie(separator=os.path.sep)
+        entries_to_process = list(DWalker.entries(fs_entry_params))
+        fcnt = 0
+        
+        for entry in entries_to_process:
+            if entry.type == FSEntryType.FILE and hasattr(entry, 'target_path'):
+                fcnt += 1
+                target_dir = os.path.dirname(entry.target_path)
+                if not dir_trie.has_key(target_dir):
+                    dir_trie[target_dir] = []
+                dir_trie[target_dir].append(entry)
+        
+        if fcnt == 0:
+            print("No files to organize view")
+            return
+        
+        # Create a custom walker for the virtual tree preview
+        def virtual_walker(root_dir):
+            # Build hierarchical tree structure from trie
+            tree = {}
+            for target_path, files in dir_trie.items():
+                rel_path = os.path.relpath(target_path, root_dir)
+                if rel_path == '.': 
+                    # Files that stay in root
+                    tree.setdefault('__files__', []).extend([f.basename for f in files])
+                    continue
+                
+                # Build nested tree structure
+                parts = rel_path.split(os.path.sep)
+                node = tree
+                for part in parts:
+                    node = node.setdefault(part, {})
+                node['__files__'] = [f.basename for f in files]
+            
+            # Recursive function to yield all levels of the tree
+            def walk_tree(current_path, subtree):
+                # Get directories and files at current level
+                subdirs = sorted([k for k in subtree.keys() if k != '__files__'])
+                files = sorted(subtree.get('__files__', []))
+                
+                # Yield current directory
+                yield current_path, subdirs, files
+                
+                # Recursively yield subdirectories
+                for subdir in subdirs:
+                    subdir_path = os.path.join(current_path, subdir)
+                    yield from walk_tree(subdir_path, subtree[subdir])
+            
+            # Start walking from root
+            yield from walk_tree(root_dir, tree)
+        
+        # Calculate required depth based on organization structure
+        max_depth = 0
+        for target_path in dir_trie.keys():
+            rel_path = os.path.relpath(target_path, fs_entry_params.src_dir)
+            if rel_path != '.':
+                depth = len(rel_path.split(os.path.sep))
+                max_depth = max(max_depth, depth)
+        
+        # Pre-calculate directory sizes by aggregating file sizes
+        dir_sizes = {}
+        if fs_entry_params.show_size:
+            for target_path, files in dir_trie.items():
+                total_size = 0
+                for file_entry in files:
+                    try:
+                        fsize = os.path.getsize(file_entry.realpath)
+                        total_size += fsize
+                    except (OSError, IOError):
+                        pass
+                dir_sizes[target_path] = total_size
+        
+        # Create a custom formatter that shows sizes for both files and virtual dirs
+        def size_aware_formatter(entry):
+            if fs_entry_params.show_size:
+                if entry.type == FSEntryType.FILE:
+                    # For files, show size from their real path (original file location)
+                    # Find the original file in our file mapping
+                    original_file = None
+                    for target_path, files in dir_trie.items():
+                        for file_entry in files:
+                            if file_entry.basename == entry.basename:
+                                original_file = file_entry
+                                break
+                        if original_file:
+                            break
+                    
+                    if original_file:
+                        try:
+                            fsize = os.path.getsize(original_file.realpath)
+                            size_str = FSH.fs_size(fsize)
+                            return f" {size_str} {entry.basename}"
+                        except (OSError, IOError):
+                            pass
+                            
+                elif entry.type == FSEntryType.DIR:
+                    # For virtual directories, show aggregated size of contained files
+                    # Find the corresponding target path for this virtual directory
+                    virtual_path = entry.realpath
+                    if virtual_path in dir_sizes:
+                        total_size = dir_sizes[virtual_path]
+                        if total_size > 0:
+                            size_str = FSH.fs_size(total_size)
+                            return f" {size_str} {entry.basename}"
+            
+            # For directories without size info or when size not requested, just return basename
+            return entry.basename
+        
+        # Create preview parameters
+        from batchmp.fstools.builders.fsprms import FSEntryParamsOrganize
+        from batchmp.fstools.builders.fsb import FSEntryBuilderOrganize
+        
+        preview_params = FSEntryParamsOrganize({
+            'all_files': True,
+            'all_dirs': True,
+            'end_level': max_depth,
+            'show_size': False  # We handle sizes with custom formatter
+        })
+        preview_params.src_dir = fs_entry_params.src_dir
+        
+        # Override builder for preview
+        preview_params.__dict__['fs_entry_builder'] = FSEntryBuilderOrganize()
+        
+        # Print the virtual view
+        print(f"Virtual view by {fs_entry_params.by}:")
+        DHandler.print_dir(preview_params, virtual_walker, formatter=size_aware_formatter)
 
 
 

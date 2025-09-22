@@ -144,6 +144,14 @@ class RenameArgParser(BatchMPArgParser):
         print_parser.add_argument('-ss', '--show-size', dest = 'show_size',
                 help ='Show files size',
                 action = 'store_true')
+        print_parser.add_argument('-b', '--by', dest = 'by',
+                help = 'Show organized virtual view by type or date',
+                type = str,
+                choices = ['type', 'date'])
+        print_parser.add_argument('-df', '--date-format', dest = 'date_format',
+                help = 'Date format for subdirectories when using -b date (e.g., %%Y/%%m)',
+                type = str,
+                default = '%Y-%m-%d')
 
         # Stats
         stats_parser = subparsers.add_parser(RenamerCommands.STATS,

@@ -72,8 +72,13 @@ class RenameDispatcher(BatchMPDispatcher):
 
     # Dispatched Methods
     def print_dir(self, args):
-        fs_entry_params = FSEntryParamsBase(args)
-        DHandler.print_dir(fs_entry_params)
+        # Check if organize view is requested
+        if args.get('by'):
+            fs_entry_params = FSEntryParamsOrganize(args)
+            DHandler.print_organized_view(fs_entry_params)
+        else:
+            fs_entry_params = FSEntryParamsBase(args)
+            DHandler.print_dir(fs_entry_params)
 
     def stats(self, args):
         fs_entry_params = FSEntryParamsBase(args)
@@ -123,7 +128,7 @@ class RenameDispatcher(BatchMPDispatcher):
     def organize(self, args):
         fs_entry_params = FSEntryParamsOrganize(args)
         DHandler.organize(fs_entry_params)
-
+    
 def main():
     ''' Renamer entry point
     '''

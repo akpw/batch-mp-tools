@@ -12,8 +12,7 @@
 ## GNU General Public License for more details.
 
 
-from batchmp.tags.extern.mediafile import MediaFile, UnreadableFileError
-from batchmp.tags.extern.mediafile import MutagenError
+from mediafile import MediaFile, UnreadableFileError, MutagenError
 from batchmp.tags.handlers.basehandler import TagHandler
 
 
