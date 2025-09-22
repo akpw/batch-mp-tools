@@ -34,7 +34,7 @@ By default the tools always visualize targeted changes (whenever possible) befor
 
 A little bit more details on each utility:
 
-[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as expandable template processing during replace, multi-level indexing across nested directories, flattening folders, and cleaning up non-media files.
+[**Renamer**](https://github.com/akpw/batch-mp-tools#renamer) is a multi-platform batch rename tool. In addition to common operations such as regexp-based replace, adding text / dates, etc. it also supports advanced operations such as expandable template processing during replace, multi-level indexing across nested directories, flattening folders, organizing files by type or date, etc. The enhanced print command now supports virtual views to preview organization without moving files.
 At its simplest, Renamer can be used to print out the content of current directory:
 ```
     $ renamer
@@ -62,6 +62,34 @@ For multi-level indexing of all M4A files in all sub-directories of the current 
     Proceed? [y/n]:
 ```
 Sequential indexing is supported as well using the `-sq` switch.  An important detail here, by default Renamer is visualizing the targeted changes and asking for permission to proceed before actually doing anything.
+
+For organizing files by media type:
+```
+    $ renamer organize -b type
+    ~/Downloads
+      |- image/
+        |- photo1.jpg
+        |- screenshot.png  
+      |- video/
+        |- movie.mp4
+      |- audio/
+        |- song.mp3
+    
+    Proceed? [y/n]:
+```
+
+Or preview how files would look organized by date without moving them:
+```
+    $ renamer print -b date --date-format "%Y/%m"
+    Virtual view by date:
+    ~/Downloads
+      |- 2025/
+        |- 01/
+          |- document.pdf
+          |- photo.jpg
+        |- 02/
+          |- video.mp4
+```
 
 
 
@@ -150,7 +178,9 @@ I will follow up with more examples and common use-cases in future blogs.
       . display sorting:
           .. by size/date, ascending/descending
       . action commands:
-          .. print      Prints source directory
+          .. print      Prints source directory. Enhanced with virtual organization views:
+                          $ renamer print -b type          # Preview organize by media type
+                          $ renamer print -b date -df "%Y/%m"  # Preview organize by date
           .. flatten    Flatten all folders below target level, moving the
                         files up at the target level. By default, deletes all empty flattened folders
           .. index      Adds index to files and directories names
@@ -163,7 +193,10 @@ I will follow up with more examples and common use-cases in future blogs.
           .. remove     Removes n characters from files and directories names
           .. capitalize Capitalizes words in files / directories names
           .. delete     Delete selected files and directories
-          .. organize   Organizes files into subdirectories based on their attributes (e.g., media type, date)
+          .. organize   Organizes files into subdirectories based on their attributes:
+                          $ renamer organize -b type                    # By media type (image/, video/, audio/)
+                          $ renamer organize -b date -df "%Y-%m"         # By date (2025-01/, 2025-02/)
+                          $ renamer organize -b date -df "%Y/%m" -td ~/Sorted  # To target directory
 
     Usage: renamer [-h] [-d DIR] [-f FILE] [Global Options] {Commands} [Commands Options]
     Global Options:
@@ -188,7 +221,7 @@ I will follow up with more examples and common use-cases in future blogs.
         [-q, --quiet]               Do not visualise changes / show messages during processing
 
       Commands:
-        {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, version, info}
+        {print, index, add_date, add_text, remove, replace, capitalize, flatten, delete, organize, version, info}
         $ renamer {command} -h  #run this for detailed help on individual commands
 
 ### tagger
@@ -321,8 +354,23 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 ## Installing Development version
 - Clone the repo, then run: `$ python -m pip install .`
 
-**Running Tests**
-- Run via: `$ python setup.py test`
+## Running Tests
+
+**Using pytest (recommended):**
+```bash
+$ pytest -v --tb=short                              # Run all tests with verbose output
+$ pytest tests/                                     # Run all tests  
+$ pytest tests/fs/test_fs_organize.py              # Test organize functionality
+$ pytest tests/fs/test_fsutils.py                  # Test core filesystem utilities
+$ pytest tests/cli/test_renamer_cli.py             # Test renamer CLI
+$ pytest -k "test_organize"                        # Run tests matching pattern
+```
+
+**Using unittest (fallback):**
+```bash
+$ python -m unittest discover tests -v             # Run all tests with verbose output
+$ python -m unittest tests.fs.test_fs_organize     # Run specific test module
+```
 
 
 
