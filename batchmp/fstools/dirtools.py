@@ -434,6 +434,37 @@ class DHandler:
             print("No files to organize view")
             return
         
+        # Helper function to sort entries when FSEntry can't handle virtual paths  
+        def _sort_entries_by_size(items, is_dir):
+            """Sort items by size when FSEntry sorting would fail due to virtual paths"""
+            if not items:
+                return items
+                
+            if is_dir:
+                # For directories, use aggregated sizes from dir_sizes
+                def size_key(dirname):
+                    # Find the virtual directory path that corresponds to this dirname
+                    for target_path in dir_sizes.keys():
+                        if target_path.endswith(os.sep + dirname) or target_path.endswith(dirname):
+                            return dir_sizes.get(target_path, 0)
+                    return 0
+                sort_key = size_key
+            else:
+                # For files, look up original file size from dir_trie
+                def file_size_key(filename):
+                    # Find the file entry in dir_trie to get its real path
+                    for target_path, files in dir_trie.items():
+                        for file_entry in files:
+                            if file_entry.basename == filename:
+                                try:
+                                    return os.path.getsize(file_entry.realpath)
+                                except (OSError, IOError):
+                                    return 0
+                    return 0
+                sort_key = file_size_key
+            
+            return sorted(items, key=sort_key, reverse=fs_entry_params.descending)
+        
         # Create a custom walker for the virtual tree preview
         def virtual_walker(root_dir):
             # Build hierarchical tree structure from trie
@@ -455,11 +486,16 @@ class DHandler:
             # Recursive function to yield all levels of the tree
             def walk_tree(current_path, subtree):
                 # Get directories and files at current level
-                subdirs = sorted([k for k in subtree.keys() if k != '__files__'])
-                files = sorted(subtree.get('__files__', []))
+                subdirs = [k for k in subtree.keys() if k != '__files__']
+                files = subtree.get('__files__', [])
                 
-                # Yield current directory
-                yield current_path, subdirs, files
+                # Apply custom sorting for size-based sorts (FSEntry can't handle virtual paths)
+                if fs_entry_params.by_size:
+                    subdirs = _sort_entries_by_size(subdirs, is_dir=True)
+                    files = _sort_entries_by_size(files, is_dir=False)
+                
+                # Yield current directory (use copies to prevent DWalker from modifying our sorted lists)
+                yield current_path, subdirs.copy(), files.copy()
                 
                 # Recursively yield subdirectories
                 for subdir in subdirs:
@@ -530,13 +566,53 @@ class DHandler:
         from batchmp.fstools.builders.fsprms import FSEntryParamsOrganize
         from batchmp.fstools.builders.fsb import FSEntryBuilderOrganize
         
-        preview_params = FSEntryParamsOrganize({
-            'all_files': True,
-            'all_dirs': True,
-            'end_level': max_depth,
-            'show_size': False  # We handle sizes with custom formatter
-        })
-        preview_params.src_dir = fs_entry_params.src_dir
+        # For size-based sorting, we need to completely bypass FSEntry sorting
+        # since it tries to access virtual file paths that don't exist
+        if fs_entry_params.by_size:
+            # Create a custom FSEntry class that bypasses sorting
+            class NoSortFSEntryParamsOrganize(FSEntryParamsOrganize):
+                class NoSortFilesDescriptor:
+                    def __set__(self, instance, value):
+                        # Just store the files without any sorting or filtering
+                        # The virtual walker already sorted them correctly
+                        instance._fnames = value
+                    def __get__(self, instance, owner):
+                        return getattr(instance, '_fnames', [])
+                
+                class NoSortDirsDescriptor:
+                    def __set__(self, instance, value):
+                        # Just store the dirs without any sorting or filtering
+                        # The virtual walker already sorted them correctly
+                        from collections import namedtuple
+                        DNames = namedtuple('DNames', ['passed', 'enclosing'])
+                        instance._dnames = DNames(value, [])
+                    def __get__(self, instance, owner):
+                        from collections import namedtuple
+                        DNames = namedtuple('DNames', ['passed', 'enclosing'])
+                        return getattr(instance, '_dnames', DNames([], []))
+                
+                # Override the descriptors to bypass sorting
+                fnames = NoSortFilesDescriptor()
+                dnames = NoSortDirsDescriptor()
+            
+            preview_params = NoSortFSEntryParamsOrganize({
+                'all_files': True,
+                'all_dirs': True,
+                'end_level': max_depth,
+                'show_size': False  # We handle sizes with custom formatter
+            })
+            preview_params.src_dir = fs_entry_params.src_dir
+            preview_params.sort = 'na'  # Won't be used due to custom descriptors
+        else:
+            # For name-based sorting, let FSEntry handle it normally
+            preview_params = FSEntryParamsOrganize({
+                'all_files': True,
+                'all_dirs': True,
+                'end_level': max_depth,
+                'show_size': False  # We handle sizes with custom formatter
+            })
+            preview_params.src_dir = fs_entry_params.src_dir
+            preview_params.sort = fs_entry_params.sort
         
         # Override builder for preview
         preview_params.__dict__['fs_entry_builder'] = FSEntryBuilderOrganize()
