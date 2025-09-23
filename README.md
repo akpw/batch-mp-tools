@@ -90,11 +90,10 @@ Or preview how files would look organized by date without moving them:
         |- 02/
           |- video.mp4
 ```
-
-*For more detailed examples and advanced organize / virtual views functionality, see:
-- [Renamer Organize & Virtual Views](https://akpw.github.io/articles/2025/09/22/Print-and-Organize.html).*
+For more detailed examples and advanced organize / virtual views functionality, see:
+- [Renamer Organize & Virtual Views](https://akpw.github.io/articles/2025/09/22/Print-and-Organize.html)
 - [BatchMP Tools Tutorial, Part II: renaming files with renamer](https://akpw.github.io/articles/2015/04/11/batchmp-tutorial-part-ii.html)
-- Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools).*
+- Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools)
 
 
 [**Tagger**](https://github.com/akpw/batch-mp-tools#tagger) manages media metadata, such as tags and artwork. Setting those in selected media file over multiple nested directories now becomes a breeze, with just a few simple commands working uniformly over almost any practically imaginable audio / video media formats. While easy to use, Tagger supports advanced metadata manipulation such as regexp-based replace, expandable template processing, etc. For example, to set the title tag to respective file names followed by the values of track and tracktotal tags:
@@ -121,9 +120,10 @@ Or preview how files would look organized by date without moving them:
 ```
 The commands above show some of the available global options:  `-r` for recursion into nested folders and `-in` to select media files. In the example above just one file was selected (for the sake of output brevity), which also could be achived via using `-f` for the file source mode.
 
-*For comprehensive tutorials and practical examples, see: 
- - [BatchMP Tools Tutorial Part III: setting tags and artwork with tagger][https://akpw.github.io/articles/2015/04/12/batchmp-tutorial-part-iii.html)
- - Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools).*
+For more practical examples, see: 
+ - [BatchMP Tools Tutorial Part III: setting tags and artwork with tagger](https://akpw.github.io/articles/2015/04/12/batchmp-tutorial-part-iii.html)
+ - Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools)
+
 
 
 [**BMFP**](https://github.com/akpw/batch-mp-tools/blob/master/README.md#bmfp-requires-ffmpeg) is all about efficient media content processing, such as conversion between various formats, normalizing sound volume, segmenting / fragmenting media files, denoising audio, detaching individual audio / video streams, etc. As processing media files can typically be resource consuming, BMFP is designed to take advantage of multi-core processors. By default, it automatically breaks up jobs into individual tasks that are then run as separate processes on available CPU cores.
@@ -172,9 +172,10 @@ To check on the result, lets's just use the [tagger's](https://github.com/akpw/b
 ```
 From a brief glance, all looks OK. BMFP used FFmpeg to do the actual conversion, while taking care of all other things like preserving tags / artwork, etc.
 
-*For comprehensive tutorials and practical examples, see:
+For more practical examples, see: 
  - [BatchMP Tools Tutorial, splitting a long media file with bmfp](https://akpw.github.io/articles/2015/04/10/batchmp-tutorial-part-i.html)
- - Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools).*
+ - Other related posts in [Practical BatchMP](https://akpw.github.io//tags.html#BatchMP+Tools)
+
 
 
 ## Brief Description of CLI Commands (use -h to expand on details for individual commands)
