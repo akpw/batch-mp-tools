@@ -363,9 +363,22 @@ Support via FFmpeg: 'AVI', 'FLV', 'MKV', 'MKA'
 
 
 ## Installing Development version
-- Clone the repo, then run: `$ python -m pip install .`
+- Clone the repo, create a virtual environment, and activate it: 
+  ```bash
+  $ python3 -m venv .venv
+  $ source .venv/bin/activate
+  ```
+- Install the project in editable mode:
+  ```bash
+  $ pip install -e .
+  ```
 
 ## Running Tests
+
+To run the test suite, first ensure you have installed the development dependencies:
+```bash
+$ pip install -e ".[test]"
+```
 
 **Using pytest (recommended):**
 ```bash

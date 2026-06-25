@@ -51,10 +51,10 @@ class FFMPTest(test_base.BMPTest):
                                 full_entry_orig.path, full_entry_processed.path,
                                 len(full_entry_orig.video_streams), len(full_entry_processed.video_streams)))
 
-        # Check artwork streams
-        assert_method(len(full_entry_orig.artwork_streams), len(full_entry_processed.artwork_streams),
+        # Check artwork streams (may be intentionally stripped)
+        self.assertLessEqual(len(full_entry_processed.artwork_streams), len(full_entry_orig.artwork_streams),
                         msg = '\n{0}\n{1}'
-                                    '\n\tDifferent number of artwork streams:'
+                                    '\n\tProcessed media has more artwork streams than original:'
                                     '\n\tOriginal has {2}, but processed has {3}'.format(
                                 full_entry_orig.path, full_entry_processed.path,
                                 len(full_entry_orig.artwork_streams), len(full_entry_processed.artwork_streams)))

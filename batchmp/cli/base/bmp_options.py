@@ -31,7 +31,7 @@
 
 import os, sys, string
 from argparse import ArgumentParser, HelpFormatter
-from distutils.util import strtobool
+from batchmp.commons.utils import strtobool
 from urllib.parse import urlparse
 from batchmp.commons.utils import MiscHelpers
 from batchmp.fstools.fsutils import FSH
